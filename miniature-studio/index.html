@@ -1288,6 +1288,145 @@ h1, h2, h3 {
     color: #fff;
 }
 
+/* ===== Artwork 区块 ===== */
+.artwork-section {
+    padding: 4rem 0;
+    background: var(--bg-secondary);
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+}
+
+.artwork-section .section-title {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+    letter-spacing: 0.2em;
+}
+
+.artwork-preview {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+.artwork-preview-item {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.artwork-preview-item:hover {
+    border-color: var(--accent-color);
+    transform: scale(1.05);
+}
+
+.artwork-btn {
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+    background: var(--accent-color);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease;
+}
+
+.artwork-btn:hover {
+    background: #c41e28;
+    transform: translateY(-2px);
+}
+
+/* Artwork 弹出窗口 */
+.artwork-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.artwork-modal.active {
+    display: flex;
+}
+
+.artwork-modal-content {
+    max-width: 90vw;
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+.artwork-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 40px;
+    color: #fff;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.artwork-modal-nav {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.artwork-modal-nav button {
+    padding: 0.6rem 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    transition: all 0.3s ease;
+}
+
+.artwork-modal-nav button:hover {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.artwork-thumbs {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 90vw;
+}
+
+.artwork-thumbs img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.artwork-thumbs img:hover,
+.artwork-thumbs img.active {
+    border-color: var(--accent-color);
+}
+
 /* ===== Follow Us 区块 ===== */
 .follow-section {
     padding: 4rem 0;
@@ -1442,6 +1581,31 @@ h1, h2, h3 {
                 </div>
 
     </section>
+
+    <!-- Artwork 作品展示区块 -->
+    <section class="artwork-section">
+        <div class="container">
+            <h2 class="section-title" data-key="artwork_title">ARTWORK</h2>
+            <div class="artwork-preview">
+                <img src="weisuo.image/art.p1.image" alt="Artwork 1" class="artwork-preview-item" onclick="openArtworkModal(0)">
+                <img src="weisuo.image/art.p2.image" alt="Artwork 2" class="artwork-preview-item" onclick="openArtworkModal(1)">
+                <img src="weisuo.image/art.p3.image" alt="Artwork 3" class="artwork-preview-item" onclick="openArtworkModal(2)">
+                <img src="weisuo.image/art.p4.image" alt="Artwork 4" class="artwork-preview-item" onclick="openArtworkModal(3)">
+            </div>
+            <button class="artwork-btn" onclick="openArtworkModal(0)" data-key="artwork_view">VIEW ALL</button>
+        </div>
+    </section>
+
+    <!-- Artwork 弹出窗口 -->
+    <div class="artwork-modal" id="artworkModal">
+        <button class="artwork-modal-close" onclick="closeArtworkModal()">&times;</button>
+        <img src="" alt="Artwork" class="artwork-modal-content" id="artworkMainImage">
+        <div class="artwork-thumbs" id="artworkThumbs"></div>
+        <div class="artwork-modal-nav">
+            <button onclick="prevArtwork()">◀ PREV</button>
+            <button onclick="nextArtwork()">NEXT ▶</button>
+        </div>
+    </div>
 
     <!-- 社交媒体区块 -->
     <section class="follow-section">
@@ -1633,6 +1797,72 @@ h1, h2, h3 {
     <script>
     let currentUser = localStorage.getItem('currentUser') || '';
     let cart = [];
+
+    // Artwork Modal 功能
+    const artworkImages = [
+        "weisuo.image/art.p1.image",
+        "weisuo.image/art.p2.image",
+        "weisuo.image/art.p3.image",
+        "weisuo.image/art.p4.image"
+    ];
+    let currentArtworkIndex = 0;
+
+    function openArtworkModal(index) {
+        currentArtworkIndex = index;
+        const modal = document.getElementById('artworkModal');
+        const mainImage = document.getElementById('artworkMainImage');
+        const thumbsContainer = document.getElementById('artworkThumbs');
+
+        mainImage.src = artworkImages[currentArtworkIndex];
+
+        // 生成缩略图
+        thumbsContainer.innerHTML = '';
+        artworkImages.forEach((src, i) => {
+            const thumb = document.createElement('img');
+            thumb.src = src;
+            thumb.className = i === currentArtworkIndex ? 'active' : '';
+            thumb.onclick = () => {
+                currentArtworkIndex = i;
+                updateArtworkModal();
+            };
+            thumbsContainer.appendChild(thumb);
+        });
+
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeArtworkModal() {
+        document.getElementById('artworkModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function updateArtworkModal() {
+        document.getElementById('artworkMainImage').src = artworkImages[currentArtworkIndex];
+        const thumbs = document.querySelectorAll('.artwork-thumbs img');
+        thumbs.forEach((thumb, i) => {
+            thumb.className = i === currentArtworkIndex ? 'active' : '';
+        });
+    }
+
+    function prevArtwork() {
+        currentArtworkIndex = (currentArtworkIndex - 1 + artworkImages.length) % artworkImages.length;
+        updateArtworkModal();
+    }
+
+    function nextArtwork() {
+        currentArtworkIndex = (currentArtworkIndex + 1) % artworkImages.length;
+        updateArtworkModal();
+    }
+
+    // ESC 键关闭弹窗
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeArtworkModal();
+        if (document.getElementById('artworkModal').classList.contains('active')) {
+            if (e.key === 'ArrowLeft') prevArtwork();
+            if (e.key === 'ArrowRight') nextArtwork();
+        }
+    });
 
     const cartIcon = document.getElementById('cartIcon');
     const cartSidebar = document.getElementById('cartSidebar');
@@ -2172,6 +2402,9 @@ detailModal.addEventListener("click", (e) => {
     p2_addbutton:"加入购物车",
     p3_name:"幼年河童",
 
+    artwork_title: "涂装作品",
+    artwork_view: "查看全部",
+
     about_title: "关于我们",
     about_subtitle: "About",
     about_desc1: "Miniature Bois工作坊诞生于2025年3月，由几位热爱微缩艺术的年轻人共同创立。我们不满足于仅仅涂装现有的战棋与大比例模型，而是希望将多年积累的审美与行业经验，注入每一件作品之中，打造出艺术品级别的微缩树脂产品。",
@@ -2251,6 +2484,9 @@ detailModal.addEventListener("click", (e) => {
     p2_name: "Executor of Four Gods · Bust",
     p2_addbutton:"Add to Cart",
     p2_scale: "1/12 Scale Figure",
+
+    artwork_title: "ARTWORK",
+    artwork_view: "VIEW ALL",
 
     about_title: "About Us",
     about_subtitle: "Story",
