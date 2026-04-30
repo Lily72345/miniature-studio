@@ -1945,7 +1945,7 @@ h1, h2, h3 {
                 <span data-key="cart_total">总计:</span>
                 <span id="cartTotal">¥0</span>
             </div>
-            <button class="checkout-btn" data-key="cart_checkout">结算</button>
+            <button class="checkout-btn" id="cartCheckoutBtn" data-key="cart_checkout">结算</button>
         </div>
     </div>
     <div class="cart-overlay" id="cartOverlay"></div>
@@ -2338,46 +2338,10 @@ h1, h2, h3 {
         }
     });
 
-    /* ===== 购买弹窗逻辑 ===== */
-    const payModal = document.getElementById('payModal');
-    const payClose = document.getElementById('payClose');
-    const buyNowBtn = document.getElementById('buyNowBtn');
-    const payProductName = document.getElementById('payProductName');
-    const payProductPrice = document.getElementById('payProductPrice');
-    let currentBuyProduct = null;
-
-    function openPayModal(productId) {
-        const lang = localStorage.getItem('lang') || 'zh';
-        const product = productData[lang][productId];
-        if (!product) return;
-        currentBuyProduct = productId;
-        payProductName.textContent = product.title;
-        payProductPrice.textContent = product.price;
-        payModal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closePayModal() {
-        payModal.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    payClose.addEventListener('click', closePayModal);
-    payModal.addEventListener('click', (e) => {
-        if (e.target === payModal) closePayModal();
-    });
-
-    buyNowBtn.addEventListener('click', () => {
-        if (currentBuyProduct) {
-            closeDetail();
-            setTimeout(() => openPayModal(currentBuyProduct), 300);
-        }
-    });
-
     updateUserUI();
     loadCart();
 
-    document.querySelector('.checkout-btn').addEventListener('click', () => {
+    document.getElementById('cartCheckoutBtn').addEventListener('click', () => {
         if (cart.length === 0) return;
         alert('这是演示版：已实现登录记忆和购物车记忆，真实支付后面再接。');
     });
@@ -2851,6 +2815,42 @@ detailModal.addEventListener("click", (e) => {
 
   const savedLang = localStorage.getItem("lang") || "zh";
   setLanguage(savedLang);
+
+/* ===== 购买弹窗逻辑 ===== */
+const payModal = document.getElementById('payModal');
+const payClose = document.getElementById('payClose');
+const buyNowBtn = document.getElementById('buyNowBtn');
+const payProductName = document.getElementById('payProductName');
+const payProductPrice = document.getElementById('payProductPrice');
+let currentBuyProduct = null;
+
+function openPayModal(productId) {
+    const lang = localStorage.getItem('lang') || 'zh';
+    const product = productData[lang][productId];
+    if (!product) return;
+    currentBuyProduct = productId;
+    payProductName.textContent = product.title;
+    payProductPrice.textContent = product.price;
+    payModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePayModal() {
+    payModal.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+payClose.addEventListener('click', closePayModal);
+payModal.addEventListener('click', (e) => {
+    if (e.target === payModal) closePayModal();
+});
+
+buyNowBtn.addEventListener('click', () => {
+    if (currentBuyProduct) {
+        closeDetail();
+        setTimeout(() => openPayModal(currentBuyProduct), 300);
+    }
+});
 
 </script>
 
