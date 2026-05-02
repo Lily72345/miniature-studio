@@ -1673,7 +1673,8 @@ h1, h2, h3 {
             </a>
             <ul class="nav-menu">
     <li><button onclick="setLanguage('zh')">中</button></li>
-    <li><button onclick="setLanguage('en')">EN</button></li>        
+    <li><button onclick="setLanguage('en')">EN</button></li>
+    <li><button onclick="setLanguage('es')">ES</button></li>
     <li><a href="#home" class="nav-link" data-key="home">首页</a> </li>
     <li><a href="#shop" class="nav-link" data-key="shop">商店</a> </li>
     <li><a href="#about" class="nav-link" data-key="about">关于</a> </li>
@@ -2504,6 +2505,51 @@ const productData = {
             "weisuo.image/b4.image",
            ]
     }
+  },
+  es: {
+    p1: {
+      title: "Ejecutor de los Cuatro Dioses | GIPETTO",
+      price: "Precio: £55",
+      scale: "1/10",
+      pieces: "19",
+      more: "Diseño original",
+      featuresTitle: "Detalles del Producto",
+      desc: "El dios de la guerra está arrasando por el infierno.",
+      features: [
+        "Diseño original de personaje",
+        "Adecuado para coleccionistas",
+        "Versión sin pintar",
+        "Soporta visualización de detalles"
+      ],
+      images: ["weisuo.image/a.image",
+            "weisuo.image/a1.image",
+            "weisuo.image/a2.image",
+            "weisuo.image/a3.image",
+            "weisuo.image/a4.image",
+            "weisuo.image/a5.image",]
+    },
+    p2: {
+      title: "Ejecutor de los Cuatro Dioses · Versión Busto | GIPETTO",
+      price: "Precio: £42",
+      scale: "1/12",
+      pieces: "12",
+      more: "Diseño original",
+      featuresTitle: "Detalles del Producto",
+      desc: "Un busto refinado a escala reducida, conservando las texturas musculares y los detalles de la armadura.",
+      features: [
+        "Busto a escala de la versión clásica",
+        "Detallado delicado en rostro y armadura",
+        "Compatible con dioramas de escala 1/12",
+        "Versión sin pintar",
+        "Incluye base de exhibición exclusiva"
+      ],
+      images: [
+            "weisuo.image/b1.image",
+            "weisuo.image/b2.image",
+            "weisuo.image/b3.image",
+            "weisuo.image/b4.image",
+          ]
+    }
   }
 };
 
@@ -2786,6 +2832,90 @@ detailModal.addEventListener("click", (e) => {
     pay_buy_now: "Buy Now",
     
 
+  },
+  es: {
+    hero_title_1: "Miniature",
+    hero_title_2: "Bois",
+    hero_subtitle: "Modelos en miniatura originales · Pintura artesanal · Edición limitada",
+    hero_desc: "Cada pieza es una obra de arte única, esculpida a mano por escultores profesionales, numerada y de edición limitada",
+    hero_button: "Explorar",
+    scroll_tip: "Desplazarse hacia abajo",
+    shop_title: "Tienda",
+    shop_subtitle: "Shop",
+    filter_all: "Todo",
+    filter_bust: "Serie Caos",
+    filter_figure: "Serie Obras Maestras",
+    filter_creature: "Serie Mitología China",
+    filter_painted: "Tribu Orco",
+    home: "Inicio",
+    shop: "Tienda",
+    about: "Sobre Nosotros",
+    contact: "Contacto",
+    login: "Iniciar Sesión",
+    p1_name: "Ejecutor de los Cuatro Dioses",
+    p1_hname:"Ejecutor de los Cuatro Dioses",
+    p1_addbutton:"Añadir al Carrito",
+    p2_name: "Ejecutor de los Cuatro Dioses--Versión Busto",
+    p2_scale: "Figura 1/12",
+    p2_addbutton:"Añadir al Carrito",
+    artwork_title: "OBRAS DE ARTE",
+    artwork_view: "VER TODO",
+    about_title: "Sobre Nosotros",
+    about_subtitle: "Nosotros",
+    about_desc1: "El taller Miniature Bois fue fundado en marzo de 2025 por un grupo de jóvenes apasionados por el arte en miniatura.",
+    about_desc2: "Creemos firmemente que las maquetas en miniatura brillarán con una diversidad aún mayor en China y en todo el mundo.",
+    about_desc3: "Nuestros servicios actuales incluyen:",
+    about_services: "🔸 Talleres de Pintura en Miniatura<br>🔸 Modelos de Resina de Alta Calidad y Productos de Impresión 3D<br>🔸 Encargos Personalizados Premium de Miniaturas<br>🔸 Jurado y Coaching en Concursos de Pintura",
+    about_desc4: "Dando forma a la luz con artesanía. Somos Miniature Bois y esperamos dar vida a tu imaginación contigo.",
+    feature1_title: "Diseño Original",
+    feature1_desc: "Cada pieza es una original exclusiva",
+    feature2_title: "Edición Limitada",
+    feature2_desc: "Estrictamente limitado con certificado",
+    feature3_title: "Pintado a Mano",
+    feature3_desc: "Artesanía de artistas profesionales",
+    contact_title: "Contacto",
+    contact_subtitle: "Contáctanos",
+    contact_email_label: "Correo Electrónico",
+    contact_wechat_label: "WeChat",
+    contact_hours_label: "Horario",
+    contact_hours: "Lun–Vie 10:00–18:00",
+    form_name_placeholder: "Su Nombre",
+    form_email_placeholder: "Correo Electrónico",
+    form_subject_default: "Asunto",
+    form_subject_product: "Consulta de Producto",
+    form_subject_custom: "Pedido Personalizado",
+    form_subject_coop: "Cooperación Comercial",
+    form_subject_other: "Otro",
+    form_message_placeholder: "Escriba su mensaje aquí...",
+    form_submit: "Enviar Mensaje",
+    footer_logo: "Miniature Studio",
+    social_weibo: "Weibo",
+    social_bilibili: "Bilibili",
+    social_xiaohongshu: "Xiaohongshu",
+    cart_title: "Carrito",
+    cart_empty: "El carrito está vacío",
+    cart_total: "Total:",
+    cart_checkout: "Finalizar Compra",
+    login_title: "Inicio de Sesión",
+    login_desc: "Ingrese su correo electrónico para acceder al sistema de demostración",
+    login_email_placeholder: "Ingrese su correo electrónico",
+    login_submit: "Iniciar Sesión",
+    btn_view_detail: "Ver Detalles",
+    badge_limited: "Limitado · 50 unidades",
+    badge_sold_out: "Agotado",
+    btn_sold_out: "Agotado",
+    features_title: "Detalles del Producto",
+    pay_title: "Comprar Ahora",
+    pay_wechat: "WeChat Pay",
+    pay_alipay: "Alipay",
+    pay_qr_placeholder: "Código QR<br>Placeholder",
+    pay_steps_title: "Cómo Comprar",
+    pay_step1: "Escanee el código QR con WeChat o Alipay",
+    pay_step2: "Agregue una nota: Nombre del producto + Su información de contacto",
+    pay_step3: "Capture el comprobante de pago y envíelo por WeChat o correo",
+    pay_step4: "Una vez confirmado, organizaremos el envío lo antes posible",
+    pay_note: "Si tiene alguna pregunta, por favor contáctenos. Responderemos lo antes posible.",
+    pay_buy_now: "Comprar Ahora",
   }
 };
 
