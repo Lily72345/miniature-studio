@@ -1,0 +1,2858 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微缩工坊 | Miniature Studio - 原创微缩模型与涂装</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 基础样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+    --primary-color: #0f0f10;      /* 主黑 */
+    --secondary-color: #171719;    /* 深黑灰 */
+    --accent-color: #a8181f;       /* 主红 */
+    --accent-dark: #7f1117;        /* 深红 */
+    --text-light: #f5f3ef;         /* 米白 */
+    --text-gray: #b8b0aa;          /* 浅灰白 */
+    --border-color: #2b2b2e;       /* 边框灰 */
+    --hover-color: #d83a43;        /* 亮红 */
+    --font-heading: 'Cinzel', 'Noto Serif SC', serif;
+    --font-body: 'Noto Serif SC', serif;
+}
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            line-height: 1.8;
+            overflow-x: hidden;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: var(--text-light);
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logo-icon {
+            color: var(--accent-color);
+            font-size: 1.8rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 3rem;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 0.95rem;
+            letter-spacing: 0.1em;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent-color);
+            transition: width 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--accent-color);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .bar {
+            width: 25px;
+            height: 2px;
+            background: var(--text-light);
+            margin: 3px 0;
+            transition: 0.3s;
+        }
+
+        /* Hero 区域 */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233a3a3a' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            padding: 0 2rem;
+        }
+
+        .hero-title {
+            font-family: var(--font-heading);
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 800;
+            letter-spacing: 0.2em;
+            margin-bottom: 1rem;
+            color: var(--text-light);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            letter-spacing: 0.3em;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+        }
+
+        .hero-desc {
+            font-size: 1.1rem;
+            color: var(--text-gray);
+            margin-bottom: 3rem;
+            line-height: 1.8;
+        }
+
+     .cta-button {
+    display: inline-block;
+    padding: 1rem 3rem;
+    background: transparent;
+    border: 2px solid var(--accent-color);
+    color: #f4f1ec;
+    text-decoration: none;
+    font-size: 1rem;
+    letter-spacing: 0.18em;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.05) inset;
+}
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--accent-color);
+            transition: left 0.3s;
+            z-index: -1;
+        }
+
+        .cta-button:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-button:hover::before {
+            left: 0;
+        }
+
+        .hero-scroll {
+            position: absolute;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-gray);
+            font-size: 0.85rem;
+            letter-spacing: 0.2em;
+            animation: bounce 2s infinite;
+        }
+
+        .scroll-arrow {
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, var(--accent-color), transparent);
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        /* 通用容器 */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* 区块标题 */
+        .section-title {
+            font-family: var(--font-heading);
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            position: relative;
+            display: inline-block;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 2px;
+            background: var(--accent-color);
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-gray);
+            letter-spacing: 0.3em;
+            font-size: 0.9rem;
+            margin-bottom: 4rem;
+            text-transform: uppercase;
+        }
+
+        /* 商店区域 */
+        .shop-section {
+            padding: 8rem 0;
+            background: var(--secondary-color);
+        }
+
+        .filter-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 4rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.8rem 2rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-gray);
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            background: rgba(201, 169, 97, 0.1);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 3rem;
+        }
+
+        .product-card {
+            background: var(--primary-color);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-color: var(--accent-color);
+        }
+
+        .product-image {
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 4/5;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .product-card:hover .product-image img {
+            transform: scale(1.05);
+        }
+
+        .product-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(26, 26, 26, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .product-card:hover .product-overlay {
+            opacity: 1;
+        }
+
+        .view-details {
+            padding: 1rem 2rem;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+        }
+
+        .stock-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            background: var(--accent-color);
+            color: var(--primary-color);
+        }
+
+        .stock-badge.sold-out {
+            background: #666;
+            color: var(--text-light);
+        }
+
+        .stock-badge.painted {
+            background: #4a7c59;
+            color: var(--text-light);
+        }
+
+        .product-info {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .product-name {
+            font-family: var(--font-heading);
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-light);
+        }
+
+        .product-scale {
+            color: var(--text-gray);
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-price {
+            font-size: 1.4rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .add-to-cart {
+            width: 100%;
+            padding: 1rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            transition: all 0.3s;
+        }
+
+        .add-to-cart:hover:not(:disabled) {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: var(--primary-color);
+        }
+
+        .add-to-cart:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 关于区域 */
+        .about-section {
+            padding: 8rem 0;
+            background: var(--primary-color);
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6rem;
+            align-items: center;
+        }
+
+        .about-text {
+            padding-right: 2rem;
+        }
+
+        .about-desc {
+            color: var(--text-gray);
+            margin-bottom: 1.5rem;
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .about-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature {
+            text-align: center;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .feature:hover {
+            border-color: var(--accent-color);
+            background: rgba(201, 169, 97, 0.05);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            color: var(--accent-color);
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .feature h4 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature p {
+            font-size: 0.85rem;
+            color: var(--text-gray);
+        }
+
+        .about-image {
+            position: relative;
+        }
+
+        .image-frame {
+            position: relative;
+            border: 2px solid var(--accent-color);
+            padding: 1rem;
+        }
+
+        .image-frame::before {
+            content: '';
+            position: absolute;
+            top: -1rem;
+            left: -1rem;
+            right: 1rem;
+            bottom: 1rem;
+            border: 1px solid var(--border-color);
+            z-index: -1;
+        }
+
+        .image-frame img {
+            width: 100%;
+            display: block;
+        }
+
+        /* 包装区域 */
+        .packaging-section {
+            padding: 8rem 0;
+            background: var(--secondary-color);
+            text-align: center;
+        }
+
+        .packaging-desc {
+            max-width: 600px;
+            margin: 0 auto 4rem;
+            color: var(--text-gray);
+            font-size: 1.05rem;
+        }
+
+        .packaging-gallery {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .pack-item {
+            border: 1px solid var(--border-color);
+            padding: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .pack-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-color);
+        }
+
+        .pack-item img {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        /* 联系区域 */
+        .contact-section {
+            padding: 8rem 0;
+            background: var(--primary-color);
+        }
+
+        .contact-content {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 6rem;
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .contact-item:hover {
+            border-color: var(--accent-color);
+            background: rgba(201, 169, 97, 0.05);
+        }
+
+        .contact-icon {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        .contact-item h4 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .contact-item p {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            background: var(--secondary-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .submit-btn {
+            padding: 1.2rem 3rem;
+            background: var(--accent-color);
+            border: none;
+            color: var(--primary-color);
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            transition: all 0.3s;
+            align-self: flex-start;
+        }
+
+        .submit-btn:hover {
+            background: var(--hover-color);
+            transform: translateY(-2px);
+        }
+
+        /* 页脚 */
+        .footer {
+            padding: 3rem 0;
+            background: #0a0a0a;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: var(--font-heading);
+            font-size: 1.3rem;
+        }
+
+        .copyright {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .social-link {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            transition: color 0.3s;
+        }
+
+        .social-link:hover {
+            color: var(--accent-color);
+        }
+
+        /* 购物车 */
+        .cart-icon {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 999;
+            box-shadow: 0 4px 15px rgba(201, 169, 97, 0.3);
+            transition: all 0.3s;
+        }
+
+        .cart-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(201, 169, 97, 0.4);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 24px;
+            height: 24px;
+            background: #fff;
+            color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .cart-sidebar {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: var(--secondary-color);
+            z-index: 1001;
+            transition: right 0.3s;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .cart-sidebar.open {
+            right: 0;
+        }
+
+        .cart-header {
+            padding: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cart-header h3 {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+        }
+
+        .close-cart {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 2rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 2rem;
+        }
+
+        .empty-cart {
+            text-align: center;
+            color: var(--text-gray);
+            margin-top: 3rem;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .cart-item-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border: 1px solid var(--border-color);
+        }
+
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-family: var(--font-heading);
+            margin-bottom: 0.3rem;
+        }
+
+        .cart-item-price {
+            color: var(--accent-color);
+            font-size: 0.9rem;
+        }
+
+        .remove-item {
+            background: none;
+            border: none;
+            color: var(--text-gray);
+            cursor: pointer;
+            font-size: 1.2rem;
+            align-self: flex-start;
+        }
+
+        .cart-footer {
+            padding: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            font-family: var(--font-heading);
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent-color);
+            border: none;
+            color: var(--primary-color);
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .checkout-btn:hover {
+            background: var(--hover-color);
+        }
+
+        .cart-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .cart-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .about-content,
+            .contact-content {
+                grid-template-columns: 1fr;
+                gap: 4rem;
+            }
+            
+            .about-text {
+                padding-right: 0;
+            }
+            
+            .about-image {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu {
+                position: fixed;
+                left: -100%;
+                top: 70px;
+                flex-direction: column;
+                background: var(--primary-color);
+                width: 100%;
+                text-align: center;
+                transition: 0.3s;
+                padding: 2rem 0;
+                border-bottom: 1px solid var(--border-color);
+            }
+            
+            .nav-menu.active {
+                left: 0;
+            }
+            
+            .hamburger {
+                display: flex;
+            }
+            
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .about-features {
+                grid-template-columns: 1fr;
+            }
+            
+            .cart-sidebar {
+                width: 100%;
+                right: -100%;
+            }
+        }
+
+        /* 滚动动画 */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s, transform 0.6s;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .view-details {
+    padding: 1rem 2rem;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.view-details:hover {
+    background: var(--accent-color);
+    color: var(--primary-color);
+}
+
+.detail-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    padding: 2rem;
+}
+
+.detail-modal.active {
+    display: flex;
+}
+
+.detail-modal-content {
+    width: min(1300px, 95vw);
+    max-height: 95vh;
+    overflow-y: auto;
+    background: #f7f5f0;
+    color: #222;
+    border-radius: 12px;
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 2.5rem;
+    position: relative;
+    align-items: start;
+}
+
+.detail-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    border: none;
+    background: #ddd;
+    color: #222;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    z-index: 10;
+}
+
+/* 图片区域容器 */
+.detail-image-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+    height: 100%;
+}
+
+.detail-main-image {
+    width: 100%;
+    height: 100%;
+    max-height: 55vh;
+    object-fit: contain;
+    background: #1a1a1c;
+    display: block;
+    border-radius: 8px;
+    flex: 1;
+}
+
+/* 缩略图横向一行 */
+.detail-thumbs {
+    display: flex;
+    gap: 0.6rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    flex-shrink: 0;
+}
+
+.detail-thumbs::-webkit-scrollbar {
+    height: 4px;
+}
+
+.detail-thumbs::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.1);
+    border-radius: 2px;
+}
+
+.detail-thumbs::-webkit-scrollbar-thumb {
+    background: var(--accent-color);
+    border-radius: 2px;
+}
+
+.detail-thumbs img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border: 2px solid transparent;
+    cursor: pointer;
+    background: #2a2a2e;
+    border-radius: 6px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.detail-thumbs img:hover {
+    border-color: rgba(168,24,31,0.5);
+}
+
+.detail-thumbs img.active {
+    border-color: var(--accent-color);
+    transform: scale(1.05);
+}
+
+.detail-title {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    margin-bottom: 0.6rem;
+    color: #1a1a1a;
+}
+
+.detail-price {
+    font-size: 1.4rem;
+    color: #8a6a2f;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.detail-meta {
+    color: #666;
+    margin-bottom: 1rem;
+    line-height: 1.8;
+}
+
+.detail-desc {
+    line-height: 1.9;
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+
+.detail-section-title {
+    font-weight: 700;
+    margin: 1.2rem 0 0.6rem;
+    color: #111;
+}
+
+.detail-list {
+    padding-left: 1.2rem;
+    color: #444;
+    line-height: 1.8;
+}
+
+@media (max-width: 900px) {
+    .detail-modal-content {
+        grid-template-columns: 1fr;
+        padding: 1.2rem;
+    }
+}
+/* ===== 新标题样式：Miniature Bois ===== */
+.logo-text {
+    font-family: var(--font-heading);
+    letter-spacing: 0.06em;
+}
+
+.hero-title-paint {
+    font-family: 'Arial Black', 'Impact', 'Noto Serif SC', sans-serif;
+    font-size: clamp(3.6rem, 9vw, 6.4rem);
+    line-height: 0.92;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    text-transform: none;
+
+    /* 核心：白色渐变 */
+    background: linear-gradient(180deg,#ffffff 0%,#e6e2dc 55%,#cfc8bf 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    /* 关键：红色脏印刷边缘 */
+    text-shadow:
+        0 2px 0 rgba(0,0,0,0.35),
+        2px 4px 0 rgba(0,0,0,0.25),
+        0 0 20px rgba(168,24,31,0.25),
+        -2px 0 0 rgba(168,24,31,0.15),
+        2px 0 0 rgba(168,24,31,0.15);
+     position: relative;
+}
+.hero-title-paint::after {
+    content: "Miniature Bois";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: rgba(168,24,31,0.15);
+    transform: translate(2px, 2px);
+    z-index: -1;
+}
+
+.hero-title-paint .line-break {
+    display: block;
+}
+
+/* 导航栏改黑红白 */
+.navbar {
+    background: rgba(15, 15, 16, 0.96);
+    border-bottom: 1px solid rgba(168,24,31,0.35);
+}
+
+.logo {
+    color: var(--text-light);
+}
+
+.logo-icon {
+    color: var(--accent-color);
+}
+
+.nav-link {
+    color: var(--text-light);
+}
+
+.nav-link::after {
+    background: var(--accent-color);
+}
+
+.nav-link:hover {
+    color: var(--accent-color);
+}
+
+/* 首页背景改黑红白 */
+.hero {
+    background:
+        radial-gradient(circle at 50% 35%, rgba(168,24,31,0.12), transparent 28%),
+        linear-gradient(135deg, #090909 0%, #141416 48%, #090909 100%);
+}
+
+.hero::before {
+    opacity: 0.18;
+    background:
+        linear-gradient(to right, rgba(255,255,255,0.025) 0, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 100%);
+    background-size: 42px 42px;
+}
+
+.hero-subtitle {
+    color: #c92a33;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+}
+
+.hero-desc {
+    color: #b9b2ab;
+}
+
+/* 按钮改红白黑 */
+.cta-button {
+    border: 2px solid var(--accent-color);
+    color: var(--text-light);
+    background: transparent;
+}
+
+.cta-button::before {
+    background: var(--accent-color);
+}
+
+.cta-button:hover {
+    color: #fff;
+}
+
+/* 标题统一 */
+.section-title,
+.detail-title,
+.footer-logo,
+h1, h2, h3 {
+    color: var(--text-light);
+}
+
+/* 弹窗详情页改黑红白 */
+.detail-modal-content {
+    background: #121214;
+    color: var(--text-light);
+}
+
+.detail-close {
+    background: #2a2a2e;
+    color: #fff;
+}
+
+.detail-main-image {
+    background: #1a1a1c;
+}
+
+.detail-thumbs img {
+    background: #2a2a2e;
+}
+
+.detail-price {
+    color: #d33a42;
+}
+
+.detail-meta {
+    color: #c1bab3;
+}
+
+.detail-desc,
+.detail-list {
+    color: #e6dfd8;
+}
+
+.detail-section-title {
+    color: #ffffff;
+}
+
+/* 商品卡片按钮改红 */
+.view-details {
+    border: 1px solid var(--accent-color);
+    color: var(--text-light);
+    background: rgba(168,24,31,0.08);
+}
+
+.view-details:hover {
+    background: var(--accent-color);
+    color: #fff;
+}
+
+/* ===== Artwork 区块 ===== */
+.artwork-section {
+    padding: 4rem 0;
+    background: var(--bg-secondary);
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+}
+
+.artwork-section .section-title {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+    letter-spacing: 0.2em;
+}
+
+.artwork-preview {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+.artwork-preview-item {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.artwork-preview-item:hover {
+    border-color: var(--accent-color);
+    transform: scale(1.05);
+}
+
+.artwork-btn {
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+    background: var(--accent-color);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease;
+}
+
+.artwork-btn:hover {
+    background: #c41e28;
+    transform: translateY(-2px);
+}
+
+/* Artwork 弹出窗口 */
+.artwork-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.artwork-modal.active {
+    display: flex;
+}
+
+.artwork-modal-content {
+    max-width: 90vw;
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+.artwork-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 40px;
+    color: #fff;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.artwork-modal-nav {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.artwork-modal-nav button {
+    padding: 0.6rem 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    transition: all 0.3s ease;
+}
+
+.artwork-modal-nav button:hover {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.artwork-thumbs {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 90vw;
+}
+
+.artwork-thumbs img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.artwork-thumbs img:hover,
+.artwork-thumbs img.active {
+    border-color: var(--accent-color);
+}
+
+/* ===== Follow Us 区块 ===== */
+.follow-section {
+    padding: 4rem 0;
+    background: var(--primary-color);
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.follow-title {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    letter-spacing: 0.35em;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+}
+
+.follow-icons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+}
+
+.follow-icons a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    background: #1c1c1e;
+    border: 1px solid rgba(168, 24, 31, 0.4);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.follow-icons a:hover {
+    background: rgba(168, 24, 31, 0.18);
+    border-color: var(--accent-color);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(168, 24, 31, 0.25);
+}
+
+.follow-icons img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    display: block;
+}
+
+/* social-bar (原固定悬浮，已迁移至页面内，保留空规则以防引用) */
+.social-bar { display: none; }
+
+/* ===== 购买弹窗 ===== */
+.pay-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 4000;
+    padding: 2rem;
+}
+
+.pay-modal.active {
+    display: flex;
+}
+
+.pay-modal-content {
+    width: min(580px, 95vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #121214;
+    color: var(--text-light);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2.5rem;
+    position: relative;
+    text-align: center;
+}
+
+.pay-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    border: none;
+    background: #2a2a2e;
+    color: #fff;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    z-index: 10;
+    transition: all 0.3s;
+}
+
+.pay-close:hover {
+    background: var(--accent-color);
+}
+
+.pay-title {
+    font-family: var(--font-heading);
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-light);
+}
+
+.pay-product-name {
+    font-size: 1.2rem;
+    color: var(--accent-color);
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+}
+
+.pay-product-price {
+    font-size: 1.4rem;
+    color: var(--accent-color);
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.pay-qr-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.pay-qr-item {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 1.2rem;
+    transition: all 0.3s;
+}
+
+.pay-qr-item:hover {
+    border-color: var(--accent-color);
+    background: rgba(168,24,31,0.06);
+}
+
+.pay-qr-label {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.pay-qr-img {
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    margin: 0 auto;
+    border-radius: 8px;
+    background: #fff;
+    display: block;
+}
+
+.pay-qr-placeholder {
+    width: 180px;
+    height: 180px;
+    background: #1c1c1e;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-gray);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 1rem;
+}
+
+.pay-steps {
+    text-align: left;
+    background: #1a1a1c;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.pay-steps-title {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.8rem;
+    color: var(--text-light);
+}
+
+.pay-step {
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+    margin-bottom: 0.6rem;
+    color: var(--text-gray);
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.pay-step-num {
+    background: var(--accent-color);
+    color: #fff;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.pay-note {
+    font-size: 0.85rem;
+    color: var(--text-gray);
+    line-height: 1.7;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+@media (max-width: 500px) {
+    .pay-qr-section {
+        grid-template-columns: 1fr;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <span class="logo-icon">✦</span>
+                <span class="logo-text">Miniature Bois</span>
+            </a>
+            <ul class="nav-menu">
+    <li><button onclick="setLanguage('zh')">中</button></li>
+    <li><button onclick="setLanguage('en')">EN</button></li>        
+    <li><a href="#home" class="nav-link" data-key="home">首页</a> </li>
+    <li><a href="#shop" class="nav-link" data-key="shop">商店</a> </li>
+    <li><a href="#about" class="nav-link" data-key="about">关于</a> </li>
+    <li><a href="#contact" class="nav-link" data-key="contact">联系</a> </li>
+    <li>
+  <a href="#" id="loginBtn" class="nav-link" data-key="login">登录</a>
+   </li>
+    <li><span id="userEmail" class="nav-user"></span></li>
+    <li><button id="logoutBtn" class="nav-link nav-login-btn" style="display:none;">退出</button></li>
+</ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+ <!-- 首页 Hero 区域 -->
+<section id="home" class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title hero-title-brush">
+            <span class="brush-line" data-key="hero_title_1">Miniature</span>
+            <span class="brush-line brush-line-2" data-key="hero_title_2">Bois</span>
+        </h1>
+
+        <p class="hero-subtitle" data-key="hero_subtitle">原创微缩模型 ・ 精细涂装 ・ 限量收藏</p>
+        <p class="hero-desc" data-key="hero_desc">每一件作品都是独一无二的艺术品，由资深原型师手工雕刻，限量编号发行</p>
+        <a href="#shop" class="cta-button" data-key="hero_button">探索作品</a>
+    </div>
+
+    <div class="hero-scroll">
+        <span data-key="scroll_tip">向下滚动</span>
+        <div class="scroll-arrow"></div>
+    </div>
+    </section>
+
+   <!-- 商店区域 -->
+<section id="shop" class="shop-section">
+    <div class="container">
+        <h2 class="section-title" data-key="shop_title">作品商店</h2>
+        <p class="section-subtitle" data-key="shop_subtitle">Shop</p>
+
+        <div class="filter-tabs">
+            <button class="filter-btn active" data-filter="all" data-key="filter_all">全部</button>
+            <button class="filter-btn" data-filter="bust" data-key="filter_bust">混沌人系列</button>
+            <button class="filter-btn" data-filter="figure" data-key="filter_figure">名画系列</button>
+            <button class="filter-btn" data-filter="creature" data-key="filter_creature">中华志怪系列</button>
+            <button class="filter-btn" data-filter="painted" data-key="filter_painted">兽人部落系列</button>
+        </div>
+
+            <div class="products-grid">
+                <!-- 产品卡片 1 -->
+                <div class="product-card" data-category="bust" onclick="openDetail('p1')">
+                    <div class="product-image">
+                        <img src=weisuo.image/a.image>
+                       <div class="product-overlay">
+    <button class="view-details" data-product="p1" data-key="btn_view_detail" onclick="event.stopPropagation(); openDetail('p1')">查询详情</button>
+</div>
+                        <span class="stock-badge limited" data-key="badge_limited">限量 50 体</span>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name" data-key="p1_name">四神行刑官</h3>
+                        <p class="product-scale"data-key="p1_hname">四神行刑官</p>
+                        <p class="product-price">£55</p>
+                        <button class="add-to-cart"data-key="p1_addbutton" onclick="event.stopPropagation();">加入购物车</button>
+                    </div>
+                </div>
+
+                <!-- 产品卡片 2 -->
+                <div class="product-card" data-category="bust" onclick="openDetail('p2')">
+                    <div class="product-image">
+                        <img src=weisuo.image/b1.image>
+                       <div class="product-overlay">
+    <button class="view-details" data-product="p2" data-key="btn_view_detail" onclick="event.stopPropagation(); openDetail('p2')">查询详情</button>
+</div>
+                        <span class="stock-badge sold-out" data-key="badge_sold_out">已售罄</span>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name" data-key="p2_name">四神行刑官--胸像版</h3>
+                        <p class="product-scale" data-key="p2_scale">1/12 比例人偶</p>
+                        <p class="product-price">£42</p>
+                        <button class="add-to-cart" disabled data-key="btn_sold_out" onclick="event.stopPropagation();">已售罄</button>
+                    </div>
+                </div>
+
+    </section>
+
+    <!-- Artwork 作品展示区块 -->
+    <section class="artwork-section">
+        <div class="container">
+            <h2 class="section-title" data-key="artwork_title">ARTWORK</h2>
+            <div class="artwork-preview">
+                <img src="weisuo.image/art.p1.image" alt="Artwork 1" class="artwork-preview-item" onclick="openArtworkModal(0)">
+                <img src="weisuo.image/art.p2.image" alt="Artwork 2" class="artwork-preview-item" onclick="openArtworkModal(1)">
+                <img src="weisuo.image/art.p3.image" alt="Artwork 3" class="artwork-preview-item" onclick="openArtworkModal(2)">
+                <img src="weisuo.image/art.p4.image" alt="Artwork 4" class="artwork-preview-item" onclick="openArtworkModal(3)">
+            </div>
+            <button class="artwork-btn" onclick="openArtworkModal(0)" data-key="artwork_view">VIEW ALL</button>
+        </div>
+    </section>
+
+    <!-- Artwork 弹出窗口 -->
+    <div class="artwork-modal" id="artworkModal">
+        <button class="artwork-modal-close" onclick="closeArtworkModal()">&times;</button>
+        <img src="" alt="Artwork" class="artwork-modal-content" id="artworkMainImage">
+        <div class="artwork-thumbs" id="artworkThumbs"></div>
+        <div class="artwork-modal-nav">
+            <button onclick="prevArtwork()">◀ PREV</button>
+            <button onclick="nextArtwork()">NEXT ▶</button>
+        </div>
+    </div>
+
+    <!-- 社交媒体区块 -->
+    <section class="follow-section">
+        <div class="container">
+            <p class="follow-title">FOLLOW US ON</p>
+            <div class="follow-icons">
+                <a href="https://xhslink.com/m/6uyUTTMFCU1" target="_blank" title="小红书">
+                    <img src="weisuo.image/xhs.image" alt="小红书">
+                </a>
+                <a href="https://www.instagram.com/xyxiang2006/" target="_blank" title="Instagram">
+                    <img src="weisuo.image/ins.image" alt="Instagram">
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 关于区域 -->
+    <section id="about" class="about-section">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2 class="section-title" data-key="about_title">关于我们</h2>
+                    <p class="section-subtitle" data-key="about_subtitle">About</p>
+                    <p class="about-desc" data-key="about_desc1">
+                        Miniature Bois工作坊诞生于2025年3月，由几位热爱微缩艺术的年轻人共同创立。我们不满足于仅仅涂装现有的战棋与大比例模型，而是希望将多年积累的审美与行业经验，注入每一件作品之中，打造出艺术品级别的微缩树脂产品。
+                    </p>
+                    <p class="about-desc" data-key="about_desc2">
+                        我们坚信，微缩模型在中国乃至全球，都将绽放出更加灿烂的多样性，不断突破创作边界。
+                     </p>
+                     <p class="about-desc" data-key="about_desc3">
+                       目前我们承接的业务包括：
+                     </p>
+                     <p class="about-desc" data-key="about_services">
+                      🔸微缩涂装工作坊<br>
+                      🔸高品质微缩树脂模型与3D打印产品<br>
+                      🔸高端微缩模型私人定制<br>
+                      🔸涂装比赛评审与指导<br>
+                     </p>
+                      <p class="about-desc" data-key="about_desc4">
+                       以匠心，塑微光。我们是Miniature Bois，期待与你一起，把想象捏进现实。
+此外我们还是第一个把AI动画融合到传统微缩模型的工作室。让整个IP变得更加丰满，有更多可探索的空间
+                     </p>
+                    <div class="about-features">
+                        <div class="feature">
+                            <span class="feature-icon">✦</span>
+                            <h4 data-key="feature1_title">原创设计</h4>
+                            <p data-key="feature1_desc">每件作品均为独家原创</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">◈</span>
+                            <h4 data-key="feature2_title">限量发行</h4>
+                            <p data-key="feature2_desc">严格限量，编号认证</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">◉</span>
+                            <h4 data-key="feature3_title">手工涂装</h4>
+                            <p data-key="feature3_desc">专业涂装师手工绘制</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <div class="image-frame">
+                        <img src=>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- 联系区域 -->
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <h2 class="section-title" data-key="contact_title">联系我们</h2>
+            <p class="section-subtitle" data-key="contact_subtitle">Contact</p>
+            
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <span class="contact-icon">✉</span>
+                        <div>
+                            <h4 data-key="contact_email_label">电子邮件</h4>
+                            <p>13381578385@163.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <span class="contact-icon">☎</span>
+                        <div>
+                            <h4 data-key="contact_wechat_label">微信</h4>
+                            <p>qazwsxedcrtyuiofghjk</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <span class="contact-icon">◈</span>
+                        <div>
+                            <h4 data-key="contact_hours_label">工作时间</h4>
+                            <p data-key="contact_hours">周一至周五 10:00-18:00</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <form class="contact-form" id="contactForm">
+                    <div class="form-group">
+                        <input type="text" id="name" required data-key="form_name_placeholder" data-placeholder="您的姓名">
+                    </div>
+                    <div class="form-group">
+                        <input type="email" id="email" required data-key="form_email_placeholder" data-placeholder="电子邮箱">
+                    </div>
+                    <div class="form-group">
+                        <select id="subject">
+                            <option value="" data-key="form_subject_default">咨询主题</option>
+                            <option value="product" data-key="form_subject_product">产品咨询</option>
+                            <option value="custom" data-key="form_subject_custom">定制服务</option>
+                            <option value="cooperation" data-key="form_subject_coop">商务合作</option>
+                            <option value="other" data-key="form_subject_other">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="message" rows="5" required data-key="form_message_placeholder" data-placeholder="请输入您的留言..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn" data-key="form_submit">发送消息</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <span class="logo-icon">✦</span>
+                    <span class="logo-text" data-key="footer_logo">微缩工坊</span>
+                </div>
+                <p class="copyright">© 2024 Miniature Studio. All rights reserved.</p>
+                <div class="social-links">
+                    <a href="#" class="social-link" data-key="social_weibo">微博</a>
+                    <a href="#" class="social-link" data-key="social_bilibili">B站</a>
+                    <a href="#" class="social-link" data-key="social_xiaohongshu">小红书</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 购物车侧边栏 -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3 data-key="cart_title">购物车</h3>
+            <button class="close-cart" id="closeCart">×</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <p class="empty-cart" data-key="cart_empty">购物车是空的</p>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span data-key="cart_total">总计:</span>
+                <span id="cartTotal">¥0</span>
+            </div>
+            <button class="checkout-btn" id="cartCheckoutBtn" data-key="cart_checkout">结算</button>
+        </div>
+    </div>
+    <div class="cart-overlay" id="cartOverlay"></div>
+
+    <!-- 购物车图标 -->
+    <div class="cart-icon" id="cartIcon">
+        <span class="cart-count" id="cartCount">0</span>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 6h15l-1.5 9h-12z"></path>
+            <circle cx="9" cy="20" r="1"></circle>
+            <circle cx="18" cy="20" r="1"></circle>
+            <path d="M6 6L5 3H2"></path>
+        </svg>
+    </div>
+
+    <div class="detail-modal" id="loginModal">
+    <div class="detail-modal-content" style="max-width:500px; grid-template-columns:1fr;">
+        <button class="detail-close" id="loginClose">×</button>
+        <h2 class="detail-title" data-key="login_title">邮箱登录</h2>
+        <div class="detail-desc" data-key="login_desc">输入邮箱即可进入演示版用户系统</div>
+
+        <input id="loginEmailInput" type="email" data-key="login_email_placeholder" data-placeholder="请输入邮箱"
+               style="padding:1rem; background:#1b1b1d; color:#fff; border:1px solid #333; margin:1rem 0;">
+
+        <button id="loginSubmitBtn" class="checkout-btn" data-key="login_submit">登录</button>
+    </div>
+</div>
+
+    <script>
+    let currentUser = localStorage.getItem('currentUser') || '';
+    let cart = [];
+
+    // Artwork Modal 功能
+    const artworkImages = [
+        "weisuo.image/art.p1.image",
+        "weisuo.image/art.p2.image",
+        "weisuo.image/art.p3.image",
+        "weisuo.image/art.p4.image"
+    ];
+    let currentArtworkIndex = 0;
+
+    function openArtworkModal(index) {
+        currentArtworkIndex = index;
+        const modal = document.getElementById('artworkModal');
+        const mainImage = document.getElementById('artworkMainImage');
+        const thumbsContainer = document.getElementById('artworkThumbs');
+
+        mainImage.src = artworkImages[currentArtworkIndex];
+
+        // 生成缩略图
+        thumbsContainer.innerHTML = '';
+        artworkImages.forEach((src, i) => {
+            const thumb = document.createElement('img');
+            thumb.src = src;
+            thumb.className = i === currentArtworkIndex ? 'active' : '';
+            thumb.onclick = () => {
+                currentArtworkIndex = i;
+                updateArtworkModal();
+            };
+            thumbsContainer.appendChild(thumb);
+        });
+
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeArtworkModal() {
+        document.getElementById('artworkModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function updateArtworkModal() {
+        document.getElementById('artworkMainImage').src = artworkImages[currentArtworkIndex];
+        const thumbs = document.querySelectorAll('.artwork-thumbs img');
+        thumbs.forEach((thumb, i) => {
+            thumb.className = i === currentArtworkIndex ? 'active' : '';
+        });
+    }
+
+    function prevArtwork() {
+        currentArtworkIndex = (currentArtworkIndex - 1 + artworkImages.length) % artworkImages.length;
+        updateArtworkModal();
+    }
+
+    function nextArtwork() {
+        currentArtworkIndex = (currentArtworkIndex + 1) % artworkImages.length;
+        updateArtworkModal();
+    }
+
+    // ESC 键关闭弹窗
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeArtworkModal();
+        if (document.getElementById('artworkModal').classList.contains('active')) {
+            if (e.key === 'ArrowLeft') prevArtwork();
+            if (e.key === 'ArrowRight') nextArtwork();
+        }
+    });
+
+    const cartIcon = document.getElementById('cartIcon');
+    const cartSidebar = document.getElementById('cartSidebar');
+    const cartOverlay = document.getElementById('cartOverlay');
+    const closeCart = document.getElementById('closeCart');
+    const cartItems = document.getElementById('cartItems');
+    const cartCount = document.getElementById('cartCount');
+    const cartTotal = document.getElementById('cartTotal');
+    const hamburger = document.querySelector('.hamburger');
+    const navMenu = document.querySelector('.nav-menu');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const productCards = document.querySelectorAll('.product-card');
+    const addToCartBtns = document.querySelectorAll('.add-to-cart');
+
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userEmail = document.getElementById('userEmail');
+    const loginModal = document.getElementById('loginModal');
+    const loginClose = document.getElementById('loginClose');
+    const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+    const loginEmailInput = document.getElementById('loginEmailInput');
+
+    function getCartKey(email) {
+        return 'cart_' + email;
+    }
+
+    function loadCart() {
+        if (!currentUser) {
+            cart = [];
+            updateCart();
+            return;
+        }
+        const savedCart = localStorage.getItem(getCartKey(currentUser));
+        cart = savedCart ? JSON.parse(savedCart) : [];
+        updateCart();
+    }
+
+    function saveCart() {
+        if (!currentUser) return;
+        localStorage.setItem(getCartKey(currentUser), JSON.stringify(cart));
+    }
+
+    function updateUserUI() {
+        if (currentUser) {
+            userEmail.textContent = currentUser;
+            loginBtn.style.display = 'none';
+            logoutBtn.style.display = 'inline-block';
+        } else {
+            userEmail.textContent = '';
+            loginBtn.style.display = 'inline-block';
+            logoutBtn.style.display = 'none';
+        }
+    }
+
+    function openLoginModal() {
+        loginModal.classList.add('active');
+    }
+
+    function closeLoginModal() {
+        loginModal.classList.remove('active');
+    }
+
+    loginBtn.addEventListener('click', openLoginModal);
+    loginClose.addEventListener('click', closeLoginModal);
+
+    loginModal.addEventListener('click', (e) => {
+        if (e.target === loginModal) closeLoginModal();
+    });
+
+    loginSubmitBtn.addEventListener('click', () => {
+        const email = loginEmailInput.value.trim();
+        if (!email) {
+            alert('请输入邮箱');
+            return;
+        }
+        currentUser = email;
+        localStorage.setItem('currentUser', currentUser);
+        updateUserUI();
+        loadCart();
+        closeLoginModal();
+        loginEmailInput.value = '';
+    });
+
+    logoutBtn.addEventListener('click', () => {
+        currentUser = '';
+        localStorage.removeItem('currentUser');
+        cart = [];
+        updateUserUI();
+        updateCart();
+    });
+
+    cartIcon.addEventListener('click', () => {
+        cartSidebar.classList.add('open');
+        cartOverlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    });
+
+    function closeCartSidebar() {
+        cartSidebar.classList.remove('open');
+        cartOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    closeCart.addEventListener('click', closeCartSidebar);
+    cartOverlay.addEventListener('click', closeCartSidebar);
+
+    hamburger.addEventListener('click', () => {
+        navMenu.classList.toggle('active');
+        hamburger.classList.toggle('active');
+    });
+
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+            navMenu.classList.remove('active');
+            hamburger.classList.remove('active');
+        });
+    });
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const filter = btn.getAttribute('data-filter');
+
+            productCards.forEach(card => {
+                if (filter === 'all' || card.getAttribute('data-category') === filter) {
+                    card.style.display = 'block';
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 10);
+                } else {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        card.style.display = 'none';
+                    }, 300);
+                }
+            });
+        });
+    });
+
+    addToCartBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation(); // 阻止事件冒泡，防止触发卡片点击
+            if (this.disabled) return;
+
+            if (!currentUser) {
+                alert('请先登录邮箱后再加入购物车');
+                openLoginModal();
+                return;
+            }
+
+            const card = this.closest('.product-card');
+            const name = card.querySelector('.product-name').textContent;
+            const price = card.querySelector('.product-price').textContent;
+            const image = card.querySelector('img').src;
+
+            const existingItem = cart.find(item => item.name === name);
+
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                const item = {
+                    id: Date.now(),
+                    name,
+                    price,
+                    image,
+                    quantity: 1
+                };
+                cart.push(item);
+            }
+
+            saveCart();
+            updateCart();
+
+            this.textContent = '已添加 ✓';
+            this.style.background = 'var(--accent-color)';
+            this.style.color = 'var(--primary-color)';
+            this.style.borderColor = 'var(--accent-color)';
+
+            setTimeout(() => {
+                this.textContent = '加入购物车';
+                this.style.background = '';
+                this.style.color = '';
+                this.style.borderColor = '';
+            }, 1500);
+
+            cartSidebar.classList.add('open');
+            cartOverlay.classList.add('open');
+        });
+    });
+
+    function updateCart() {
+        const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+        cartCount.textContent = totalCount;
+
+        if (cart.length === 0) {
+            cartItems.innerHTML = '<p class="empty-cart">购物车是空的</p>';
+            cartTotal.textContent = '¥0';
+            return;
+        }
+
+        let total = 0;
+        cartItems.innerHTML = cart.map(item => {
+            const priceNum = parseInt(item.price.replace(/[^\d]/g, '')) || 0;
+            total += priceNum * item.quantity;
+
+            return `
+                <div class="cart-item" data-id="${item.id}">
+                    <img src="${item.image}" alt="${item.name}" class="cart-item-image">
+                    <div class="cart-item-info">
+                        <h4 class="cart-item-name">${item.name}</h4>
+                        <p class="cart-item-price">${item.price} × ${item.quantity}</p>
+                    </div>
+                    <button class="remove-item" onclick="removeFromCart(${item.id})">×</button>
+                </div>
+            `;
+        }).join('');
+
+        cartTotal.textContent = '¥' + total.toLocaleString();
+    }
+
+    function removeFromCart(id) {
+        const target = cart.find(item => item.id === id);
+        if (!target) return;
+
+        if (target.quantity > 1) {
+            target.quantity -= 1;
+        } else {
+            cart = cart.filter(item => item.id !== id);
+        }
+
+        saveCart();
+        updateCart();
+    }
+
+    const contactForm = document.getElementById('contactForm');
+    contactForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const submitBtn = this.querySelector('.submit-btn');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = '消息已发送 ✓';
+        submitBtn.style.background = '#4a7c59';
+
+        setTimeout(() => {
+            submitBtn.textContent = originalText;
+            submitBtn.style.background = '';
+            contactForm.reset();
+        }, 2000);
+    });
+
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.product-card, .feature, .pack-item, .contact-item').forEach(el => {
+        el.classList.add('fade-in');
+        observer.observe(el);
+    });
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    const navbar = document.querySelector('.navbar');
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+        if (currentScroll > 100) {
+            navbar.style.background = 'rgba(26, 26, 26, 0.98)';
+        } else {
+            navbar.style.background = 'rgba(26, 26, 26, 0.95)';
+        }
+    });
+
+    updateUserUI();
+    loadCart();
+
+    document.getElementById('cartCheckoutBtn').addEventListener('click', () => {
+        if (cart.length === 0) return;
+        alert('这是演示版：已实现登录记忆和购物车记忆，真实支付后面再接。');
+    });
+
+    </script>
+
+    <!-- 购买弹窗 -->
+<div class="pay-modal" id="payModal">
+    <div class="pay-modal-content">
+        <button class="pay-close" id="payClose">×</button>
+        <h2 class="pay-title" data-key="pay_title">立即购买</h2>
+        <p class="pay-product-name" id="payProductName"></p>
+        <p class="pay-product-price" id="payProductPrice"></p>
+
+        <div class="pay-qr-section">
+            <!-- 微信支付 -->
+            <div class="pay-qr-item">
+                <p class="pay-qr-label">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#07C160"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm3.68 4.025c-3.694 0-6.691 2.462-6.691 5.498 0 3.036 2.997 5.498 6.691 5.498a7.96 7.96 0 0 0 2.23-.32.67.67 0 0 1 .563.076l1.495.872a.258.258 0 0 0 .13.043c.128 0 .232-.108.232-.239 0-.059-.024-.118-.038-.177l-.304-1.15a.462.462 0 0 1 .167-.519c1.395-1.032 2.311-2.574 2.311-4.084-.1-2.936-3-5.498-6.786-5.498zm-2.587 3.153c.507 0 .918.418.918.932a.925.925 0 0 1-.918.932.925.925 0 0 1-.918-.932c0-.514.411-.932.918-.932zm5.174 0c.507 0 .918.418.918.932a.925.925 0 0 1-.918.932.925.925 0 0 1-.918-.932c0-.514.411-.932.918-.932z"/></svg>
+                    <span data-key="pay_wechat">微信支付</span>
+                </p>
+                <img class="pay-qr-img" src="weisuo.image/wechat-pay.png" alt="WeChat Pay">
+            </div>
+
+            <!-- 支付宝 -->
+            <div class="pay-qr-item">
+                <p class="pay-qr-label">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#1677FF"><path d="M21.422 15.358c-3.32-1.326-6.092-2.786-6.092-2.786s.92-2.445 1.094-3.976H13.14V6.96h4.508V6.11H13.14V3.468h-2.166s-.074.074-.074.2V6.11H6.41v.85h4.49v1.636H6.04v.78h8.808c-.14 1.1-.67 2.714-.67 2.714s-4.14-1.724-6.346-1.99C5.18 9.698 2.4 11.232 2.4 14.18c0 2.936 2.88 4.48 5.92 4.48 2.786 0 5.452-1.538 7.374-3.76 2.556 1.578 7.482 3.684 7.482 3.684V15.358zM7.72 16.904c-2.232 0-3.712-1.048-3.712-2.712 0-1.665 1.47-3.056 3.69-2.748 1.88.258 4.128 1.262 5.412 2.054-1.652 1.92-3.66 3.406-5.39 3.406z"/></svg>
+                    <span data-key="pay_alipay">支付宝</span>
+                </p>
+                <img class="pay-qr-img" src="weisuo.image/alipay.png" alt="Alipay">
+            </div>
+        </div>
+
+        <div class="pay-steps">
+            <p class="pay-steps-title" data-key="pay_steps_title">购买流程</p>
+            <div class="pay-step"><span class="pay-step-num">1</span><span data-key="pay_step1">扫描上方二维码，选择微信或支付宝付款</span></div>
+            <div class="pay-step"><span class="pay-step-num">2</span><span data-key="pay_step2">付款时请备注：商品名称 + 您的联系方式</span></div>
+            <div class="pay-step"><span class="pay-step-num">3</span><span data-key="pay_step3">截图付款凭证，通过微信/邮件发送给我们</span></div>
+            <div class="pay-step"><span class="pay-step-num">4</span><span data-key="pay_step4">确认后我们将尽快为您安排发货</span></div>
+        </div>
+
+        <p class="pay-note" data-key="pay_note">如有任何问题，请通过下方联系方式与我们沟通，我们会尽快回复您。</p>
+    </div>
+</div>
+
+    <div class="detail-modal" id="detailModal">
+    <div class="detail-modal-content">
+        <button class="detail-close" id="detailClose">×</button>
+
+        <div class="detail-image-section">
+            <img id="detailMainImage" class="detail-main-image" src="" alt="">
+            <div class="detail-thumbs" id="detailThumbs"></div>
+        </div>
+
+        <div>
+            <h2 class="detail-title" id="detailTitle"></h2>
+            <div class="detail-price" id="detailPrice"></div>
+            <div class="detail-meta" id="detailMeta"></div>
+            <div class="detail-desc" id="detailDesc"></div>
+
+            <div class="detail-section-title" id="detailFeaturesTitle" data-key="features_title">商品介绍</div>
+            <ul class="detail-list" id="detailFeatures"></ul>
+
+            <!-- 立即购买按钮 -->
+            <button class="checkout-btn" id="buyNowBtn" style="margin-top:1.5rem;" data-key="pay_buy_now">立即购买</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const productData = {
+  zh: {
+    p1: {
+      title: "四神行刑官｜GIPETTO",
+      price: "Price: £55",
+      scale: "1/10",
+      pieces: "19",
+      more: "Original design",
+      featuresTitle: "商品介绍",
+      desc: "战神正在席卷地狱，大杀四方。",
+      features: [
+        "原创角色设定与结构设计",
+        "适合微缩爱好者收藏",
+        "未涂装版本",
+        "支持展示图、细节图、局部特写"
+      ],
+      images: ["weisuo.image/a.image",
+            "weisuo.image/a1.image",
+            "weisuo.image/a2.image",
+            "weisuo.image/a3.image",
+            "weisuo.image/a4.image",
+            "weisuo.image/a5.image",]
+    },
+    p2: {
+      title: "四神行刑官·胸像版｜GIPETTO",
+      price: "Price: £42",
+      scale: "1/12",
+      pieces: "12",
+      more: "Original design",
+      featuresTitle: "商品介绍",
+      desc: "取自四神行刑官全身版的精华胸像，保留了战神的肌肉纹理与铠甲细节，缩小比例更考验涂装功力。",
+      features: [
+        "取自经典全身版的等比缩小胸像",
+        "精细雕刻面部与铠甲细节",
+        "适合1/12比例人偶场景搭配",
+        "未涂装版本",
+        "附专属地台底座"
+      ],
+      images: [
+            "weisuo.image/b1.image",
+            "weisuo.image/b2.image",
+            "weisuo.image/b3.image",
+            "weisuo.image/b4.image",
+          ]
+    }
+  },
+
+  en: {
+    p1: {
+      title: "Executor of Four Gods | GIPETTO",
+      price: "Price: £55",
+      scale: "1/10",
+      pieces: "19",
+      more: "Original design",
+      featuresTitle: "Product Details",
+      desc: "The war god is sweeping through hell.",
+      features: [
+        "Original character design",
+        "Suitable for collectors",
+        "Unpainted version",
+        "Supports detail display"
+      ],
+      images: ["weisuo.image/a.image",
+            "weisuo.image/a1.image",
+            "weisuo.image/a2.image",
+            "weisuo.image/a3.image",
+            "weisuo.image/a4.image",
+            "weisuo.image/a5.image",]
+    },
+    p2: {
+      title: "Anatoly · Bust | GIPETTO",
+      price: "Price: £42",
+      scale: "1/12",
+      pieces: "12",
+      more: "Original design",
+      featuresTitle: "Product Details",
+      desc: "A refined bust scaled down from the full-figure Anatoly, preserving the muscle textures and armor details. The smaller scale puts painting skills to the test.",
+      features: [
+        "Scaled bust from the classic full-figure version",
+        "Delicate facial and armor detailing",
+        "Compatible with 1/12 scale dioramas",
+        "Unpainted version",
+        "Includes exclusive display base"
+      ],
+      images: [
+            "weisuo.image/b1.image",
+            "weisuo.image/b2.image",
+            "weisuo.image/b3.image",
+            "weisuo.image/b4.image",
+           ]
+    }
+  }
+};
+
+
+const detailModal = document.getElementById("detailModal");
+const detailClose = document.getElementById("detailClose");
+const detailTitle = document.getElementById("detailTitle");
+const detailPrice = document.getElementById("detailPrice");
+const detailMeta = document.getElementById("detailMeta");
+const detailDesc = document.getElementById("detailDesc");
+const detailFeatures = document.getElementById("detailFeatures");
+const detailFeaturesTitle = document.getElementById("detailFeaturesTitle");
+const detailMainImage = document.getElementById("detailMainImage");
+const detailThumbs = document.getElementById("detailThumbs");
+
+function openDetail(productId) {
+    const lang = localStorage.getItem("lang") || "zh";
+const product = productData[lang][productId];
+    if (!product) return;
+
+    detailTitle.innerHTML = product.title;
+    detailPrice.innerHTML = product.price;
+    detailMeta.innerHTML = `
+        Scale: ${product.scale || '-'}<br>
+        Pieces: ${product.pieces || '-'}<br>
+        ${product.more || ''}
+    `;
+    detailDesc.innerHTML = product.desc;
+    // 从翻译数据读取商品介绍标题（不受产品数据覆盖）
+    const currentLang = localStorage.getItem("lang") || "zh";
+    detailFeaturesTitle.innerHTML = langData[currentLang].features_title;
+
+    detailFeatures.innerHTML = "";
+    product.features.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        detailFeatures.appendChild(li);
+    });
+
+    detailMainImage.src = product.images[0];
+    detailThumbs.innerHTML = "";
+
+    product.images.forEach((imgSrc, index) => {
+        const thumb = document.createElement("img");
+        thumb.src = imgSrc;
+        thumb.alt = product.title + "缩略图" + (index + 1);
+        if (index === 0) thumb.classList.add("active");
+
+        thumb.addEventListener("click", () => {
+            detailMainImage.src = imgSrc;
+            detailThumbs.querySelectorAll("img").forEach(i => i.classList.remove("active"));
+            thumb.classList.add("active");
+        });
+
+        detailThumbs.appendChild(thumb);
+    });
+
+    // 确保大主图始终在缩略图上方（DOM 结构顺序保证）
+    const imageSection = detailModal.querySelector('.detail-image-section');
+    if (imageSection) {
+        const mainImg = imageSection.querySelector('#detailMainImage');
+        const thumbsDiv = imageSection.querySelector('#detailThumbs');
+        if (mainImg && thumbsDiv) {
+            // 恢复正确的 DOM 顺序：主图在前，缩略图在后
+            imageSection.insertBefore(mainImg, thumbsDiv);
+        }
+    }
+
+    detailModal.classList.add("active");
+}
+
+document.querySelectorAll(".view-details").forEach(btn => {
+    btn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        const productId = this.dataset.product;
+        openDetail(productId);
+    });
+});
+
+detailClose.addEventListener("click", () => {
+    detailModal.classList.remove("active");
+});
+
+function closeDetail() {
+    detailModal.classList.remove("active");
+}
+
+detailModal.addEventListener("click", (e) => {
+    if (e.target === detailModal) {
+        detailModal.classList.remove("active");
+    }
+});
+
+
+    const langData = {
+  zh: {
+    hero_title_1: "Miniature",
+    hero_title_2: "Bois",
+    hero_subtitle: "原创微缩模型 ・ 精细涂装 ・ 限量收藏",
+    hero_desc: "每一件作品都是独一无二的艺术品，由资深原型师手工雕刻，限量编号发行",
+    hero_button: "探索作品",
+    scroll_tip: "向下滚动",
+
+    shop_title: "作品商店",
+    shop_subtitle: "Shop",
+
+    filter_all: "全部",
+    filter_bust: "混沌人系列",
+    filter_figure: "名画系列",
+    filter_creature: "中华志怪系列",
+    filter_painted: "兽人部落系列",
+
+    home: "首页",
+    shop: "商店",
+    about: "关于",
+    contact: "联系",
+    login: "登录",
+    
+    p1_name: "四神行刑官",
+    p1_hname:"四神行刑官",
+    p1_addbutton:"加入购物车",
+    p2_name: "四神行刑官--胸像版",
+    p2_scale: "1/12 比例人偶",
+    p2_addbutton:"加入购物车",
+    p3_name:"幼年河童",
+
+    artwork_title: "涂装作品",
+    artwork_view: "查看全部",
+
+    about_title: "关于我们",
+    about_subtitle: "About",
+    about_desc1: "Miniature Bois工作坊诞生于2025年3月，由几位热爱微缩艺术的年轻人共同创立。我们不满足于仅仅涂装现有的战棋与大比例模型，而是希望将多年积累的审美与行业经验，注入每一件作品之中，打造出艺术品级别的微缩树脂产品。",
+    about_desc2: "我们坚信，微缩模型在中国乃至全球，都将绽放出更加灿烂的多样性，不断突破创作边界。",
+    about_desc3: "目前我们承接的业务包括：",
+    about_services: "🔸微缩涂装工作坊<br>🔸高品质微缩树脂模型与3D打印产品<br>🔸高端微缩模型私人定制<br>🔸涂装比赛评审与指导",
+    about_desc4: "以匠心，塑微光。我们是Miniature Bois，期待与你一起，把想象捏进现实。此外我们还是第一个把AI动画融合到传统微缩模型的工作室，让整个IP变得更加丰满，有更多可探索的空间",
+    feature1_title: "原创设计",
+    feature1_desc: "每件作品均为独家原创",
+    feature2_title: "限量发行",
+    feature2_desc: "严格限量，编号认证",
+    feature3_title: "手工涂装",
+    feature3_desc: "专业涂装师手工绘制",
+
+    contact_title: "联系我们",
+    contact_subtitle: "Contact",
+    contact_email_label: "电子邮件",
+    contact_wechat_label: "微信",
+    contact_hours_label: "工作时间",
+    contact_hours: "周一至周五 10:00-18:00",
+    form_name_placeholder: "您的姓名",
+    form_email_placeholder: "电子邮箱",
+    form_subject_default: "咨询主题",
+    form_subject_product: "产品咨询",
+    form_subject_custom: "定制服务",
+    form_subject_coop: "商务合作",
+    form_subject_other: "其他",
+    form_message_placeholder: "请输入您的留言...",
+    form_submit: "发送消息",
+    footer_logo: "微缩工坊",
+    social_weibo: "微博",
+    social_bilibili: "B站",
+    social_xiaohongshu: "小红书",
+    cart_title: "购物车",
+    cart_empty: "购物车是空的",
+    cart_total: "总计:",
+    cart_checkout: "结算",
+    login_title: "邮箱登录",
+    login_desc: "输入邮箱即可进入演示版用户系统",
+    login_email_placeholder: "请输入邮箱",
+    login_submit: "登录",
+    btn_view_detail: "查询详情",
+    badge_limited: "限量 50 体",
+    badge_sold_out: "已售罄",
+    btn_sold_out: "已售罄",
+    features_title: "商品介绍",
+    pay_title: "立即购买",
+    pay_wechat: "微信支付",
+    pay_alipay: "支付宝",
+    pay_qr_placeholder: "请放置<br>收款码",
+    pay_steps_title: "购买流程",
+    pay_step1: "扫描上方二维码，选择微信或支付宝付款",
+    pay_step2: "付款时请备注：商品名称 + 您的联系方式",
+    pay_step3: "截图付款凭证，通过微信/邮件发送给我们",
+    pay_step4: "确认后我们将尽快为您安排发货",
+    pay_note: "如有任何问题，请通过下方联系方式与我们沟通，我们会尽快回复您。",
+    pay_buy_now: "立即购买",
+
+  },
+
+  en: {
+    hero_title_1: "Miniature",
+    hero_title_2: "Bois",
+    hero_subtitle: "Original Miniatures · Hand-painted · Limited Edition",
+    hero_desc: "Each piece is a unique artwork, handcrafted by professional sculptors, limited and numbered",
+    hero_button: "Explore",
+    scroll_tip: "Scroll Down",
+    p3_name:"aaaa",
+
+    shop_title: "Shop",
+    shop_subtitle: "Collection",
+
+    filter_all: "All",
+    filter_bust: "Chaos Series",
+    filter_figure: "Masterpiece Series",
+    filter_creature: "Myth Series",
+    filter_painted: "Orc Tribe",
+
+    home: "Home",
+    shop: "Shop",
+    about: "About",
+    contact: "Contact",
+    login: "Login",
+    p1_name: "Forest Guardian",
+    p1_hname:"Anatoly",
+    p1_addbutton:"Add to Cart",
+    p1_scale:"1/10",
+    p2_name: "Executor of Four Gods · Bust",
+    p2_addbutton:"Add to Cart",
+    p2_scale: "1/12 Scale Figure",
+
+    artwork_title: "ARTWORK",
+    artwork_view: "VIEW ALL",
+
+    about_title: "About Us",
+    about_subtitle: "Story",
+    about_desc1: "Miniature Bois Workshop was founded in March 2025 by a group of young artists passionate about miniature art. We don't settle for simply painting existing wargaming and large-scale models — we aim to pour years of accumulated aesthetic sense and industry experience into every piece, creating museum-quality resin miniatures.",
+    about_desc2: "We believe that miniature art will shine with even greater diversity in China and around the world, constantly pushing the boundaries of creative expression.",
+    about_desc3: "Our current services include:",
+    about_services: "🔸 Miniature Painting Workshops<br>🔸 High-quality Resin Models & 3D Printed Products<br>🔸 Premium Miniature Custom Commissions<br>🔸 Painting Competition Judging & Coaching",
+    about_desc4: "Shaping light with craftsmanship. We are Miniature Bois, and we look forward to bringing your imagination to life with you. We are also the first workshop to integrate AI animation into traditional miniatures, making our IP richer and more immersive.",
+    feature1_title: "Original Design",
+    feature1_desc: "Every piece is an exclusive original",
+    feature2_title: "Limited Edition",
+    feature2_desc: "Strictly limited with certificate",
+    feature3_title: "Hand-painted",
+    feature3_desc: "Professional artist craftsmanship",
+
+    contact_title: "Contact Us",
+    contact_subtitle: "Get in Touch",
+    contact_email_label: "Email",
+    contact_wechat_label: "WeChat",
+    contact_hours_label: "Business Hours",
+    contact_hours: "Mon–Fri 10:00–18:00",
+    form_name_placeholder: "Your Name",
+    form_email_placeholder: "Email Address",
+    form_subject_default: "Subject",
+    form_subject_product: "Product Inquiry",
+    form_subject_custom: "Custom Order",
+    form_subject_coop: "Business Cooperation",
+    form_subject_other: "Other",
+    form_message_placeholder: "Write your message here...",
+    form_submit: "Send Message",
+    footer_logo: "Miniature Studio",
+    social_weibo: "Weibo",
+    social_bilibili: "Bilibili",
+    social_xiaohongshu: "Xiaohongshu",
+    cart_title: "Cart",
+    cart_empty: "Your cart is empty",
+    cart_total: "Total:",
+    cart_checkout: "Checkout",
+    login_title: "Email Login",
+    login_desc: "Enter your email to access the demo system",
+    login_email_placeholder: "Enter your email",
+    login_submit: "Login",
+    btn_view_detail: "View Details",
+    badge_limited: "Limited · 50pcs",
+    badge_sold_out: "Sold Out",
+    btn_sold_out: "Sold Out",
+    features_title: "Product Details",
+    pay_title: "Buy Now",
+    pay_wechat: "WeChat Pay",
+    pay_alipay: "Alipay",
+    pay_qr_placeholder: "QR Code<br>Placeholder",
+    pay_steps_title: "How to Purchase",
+    pay_step1: "Scan the QR code above with WeChat or Alipay",
+    pay_step2: "Add a note with: Product name + Your contact info",
+    pay_step3: "Screenshot your payment receipt and send it to us via WeChat or Email",
+    pay_step4: "Once confirmed, we will arrange shipment as soon as possible",
+    pay_note: "If you have any questions, please contact us through the information below. We will respond as soon as possible.",
+    pay_buy_now: "Buy Now",
+    
+
+  }
+};
+
+  function setLanguage(lang) {
+    document.querySelectorAll("[data-key]").forEach(el => {
+      const key = el.getAttribute("data-key");
+      if (langData[lang][key]) {
+        // 支持 HTML 内容（如 <br> 换行）
+        el.innerHTML = langData[lang][key];
+      }
+      // 处理 placeholder
+      if (el.hasAttribute("data-placeholder") && langData[lang][key]) {
+        el.placeholder = langData[lang][key];
+      }
+    });
+    // 处理 select option 的 placeholder
+    document.querySelectorAll("select option[data-key]").forEach(opt => {
+      const key = opt.getAttribute("data-key");
+      if (langData[lang][key]) {
+        opt.textContent = langData[lang][key];
+      }
+    });
+    localStorage.setItem("lang", lang);
+  }
+
+  window.setLanguage = setLanguage;
+
+  const savedLang = localStorage.getItem("lang") || "zh";
+  setLanguage(savedLang);
+
+/* ===== 购买弹窗逻辑 ===== */
+const payModal = document.getElementById('payModal');
+const payClose = document.getElementById('payClose');
+const buyNowBtn = document.getElementById('buyNowBtn');
+const payProductName = document.getElementById('payProductName');
+const payProductPrice = document.getElementById('payProductPrice');
+let currentBuyProduct = null;
+
+function openPayModal(productId) {
+    const lang = localStorage.getItem('lang') || 'zh';
+    const product = productData[lang][productId];
+    if (!product) return;
+    currentBuyProduct = productId;
+    payProductName.textContent = product.title;
+    payProductPrice.textContent = product.price;
+    payModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePayModal() {
+    payModal.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+payClose.addEventListener('click', closePayModal);
+payModal.addEventListener('click', (e) => {
+    if (e.target === payModal) closePayModal();
+});
+
+buyNowBtn.addEventListener('click', () => {
+    if (currentBuyProduct) {
+        closeDetail();
+        setTimeout(() => openPayModal(currentBuyProduct), 300);
+    }
+});
+
+</script>
+
+</body>
+</html>
