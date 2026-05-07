@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>微缩工坊 | Miniature Studio - 原创微缩模型与涂装</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* 基础样式重置 */
         * {
@@ -1965,19 +1966,52 @@ h1, h2, h3 {
     <div class="detail-modal" id="loginModal">
     <div class="detail-modal-content" style="max-width:500px; grid-template-columns:1fr;">
         <button class="detail-close" id="loginClose">×</button>
-        <h2 class="detail-title" data-key="login_title">邮箱登录</h2>
-        <div class="detail-desc" data-key="login_desc">输入邮箱即可进入演示版用户系统</div>
+        <h2 class="detail-title" id="loginTitle" data-key="login_title">登录 / 注册</h2>
+        <div class="detail-desc" id="loginDesc" data-key="login_desc">输入邮箱和密码即可登录或注册新账号</div>
 
         <input id="loginEmailInput" type="email" data-key="login_email_placeholder" data-placeholder="请输入邮箱"
-               style="padding:1rem; background:#1b1b1d; color:#fff; border:1px solid #333; margin:1rem 0;">
+               style="padding:1rem; background:#1b1b1d; color:#fff; border:1px solid #333; margin:0.5rem 0;" required>
+
+        <input id="loginPasswordInput" type="password" placeholder="请输入密码"
+               style="padding:1rem; background:#1b1b1d; color:#fff; border:1px solid #333; margin:0.5rem 0;" required>
+
+        <div id="loginError" style="color:#ff6b6b; font-size:0.9rem; margin:0.5rem 0; display:none;"></div>
 
         <button id="loginSubmitBtn" class="checkout-btn" data-key="login_submit">登录</button>
+        <button id="loginSwitchBtn" class="checkout-btn" style="background:#333; margin-top:0.5rem;" data-key="login_switch">没有账号？点此注册</button>
+
+        <div id="loginLoading" style="display:none; text-align:center; margin-top:1rem;">
+            <span style="color:#b8b0aa;">加载中...</span>
+        </div>
     </div>
 </div>
 
     <script>
+    // ===== Supabase 配置 =====
+    const SUPABASE_URL = 'https://pbllylagxbyllgwdvtkl.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_uQlcj1EPlijP1lNmLV-EpA_EzRJJeIz';
+    let supabase = null;
+
+    // 初始化 Supabase
+    async function initSupabase() {
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            // 检查当前 session
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                currentUser = session.user.email;
+                updateUserUI();
+                loadCart();
+            }
+            console.log('Supabase 初始化成功');
+        } catch (error) {
+            console.error('Supabase 初始化失败:', error);
+        }
+    }
+
     let currentUser = localStorage.getItem('currentUser') || '';
     let cart = [];
+    let isLoginMode = true; // true=登录模式，false=注册模式
 
     // Artwork Modal 功能
     const artworkImages = [
@@ -2064,7 +2098,13 @@ h1, h2, h3 {
     const loginModal = document.getElementById('loginModal');
     const loginClose = document.getElementById('loginClose');
     const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+    const loginSwitchBtn = document.getElementById('loginSwitchBtn');
     const loginEmailInput = document.getElementById('loginEmailInput');
+    const loginPasswordInput = document.getElementById('loginPasswordInput');
+    const loginError = document.getElementById('loginError');
+    const loginLoading = document.getElementById('loginLoading');
+    const loginTitle = document.getElementById('loginTitle');
+    const loginDesc = document.getElementById('loginDesc');
 
     function getCartKey(email) {
         return 'cart_' + email;
@@ -2113,21 +2153,112 @@ h1, h2, h3 {
         if (e.target === loginModal) closeLoginModal();
     });
 
-    loginSubmitBtn.addEventListener('click', () => {
+    // 切换登录/注册模式
+    function toggleLoginMode() {
+        isLoginMode = !isLoginMode;
+        if (isLoginMode) {
+            loginTitle.textContent = '登录';
+            loginDesc.textContent = '输入邮箱和密码登录您的账号';
+            loginSubmitBtn.textContent = '登录';
+            loginSwitchBtn.textContent = '没有账号？点此注册';
+        } else {
+            loginTitle.textContent = '注册';
+            loginDesc.textContent = '创建一个新账号';
+            loginSubmitBtn.textContent = '注册';
+            loginSwitchBtn.textContent = '已有账号？点此登录';
+        }
+        loginError.style.display = 'none';
+    }
+
+    loginSwitchBtn.addEventListener('click', toggleLoginMode);
+
+    // 登录/注册提交
+    loginSubmitBtn.addEventListener('click', async () => {
         const email = loginEmailInput.value.trim();
-        if (!email) {
-            alert('请输入邮箱');
+        const password = loginPasswordInput.value;
+
+        loginError.style.display = 'none';
+        loginLoading.style.display = 'block';
+        loginSubmitBtn.disabled = true;
+
+        if (!email || !password) {
+            loginError.textContent = '请输入邮箱和密码';
+            loginError.style.display = 'block';
+            loginLoading.style.display = 'none';
+            loginSubmitBtn.disabled = false;
             return;
         }
-        currentUser = email;
-        localStorage.setItem('currentUser', currentUser);
-        updateUserUI();
-        loadCart();
-        closeLoginModal();
-        loginEmailInput.value = '';
+
+        if (!supabase) {
+            loginError.textContent = '服务暂不可用，请刷新页面重试';
+            loginError.style.display = 'block';
+            loginLoading.style.display = 'none';
+            loginSubmitBtn.disabled = false;
+            return;
+        }
+
+        try {
+            if (isLoginMode) {
+                // 登录
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                currentUser = data.user.email;
+                localStorage.setItem('currentUser', currentUser);
+                updateUserUI();
+                loadCart();
+                closeLoginModal();
+                loginEmailInput.value = '';
+                loginPasswordInput.value = '';
+                isLoginMode = true;
+                toggleLoginMode(); // 重置为登录模式
+
+            } else {
+                // 注册
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                // 注册成功后自动登录
+                if (data.user) {
+                    currentUser = data.user.email;
+                    localStorage.setItem('currentUser', currentUser);
+                    updateUserUI();
+                    loadCart();
+                    alert('注册成功！欢迎 ' + email);
+                    closeLoginModal();
+                    loginEmailInput.value = '';
+                    loginPasswordInput.value = '';
+                    isLoginMode = true;
+                    toggleLoginMode();
+                } else {
+                    // 需要邮箱验证
+                    alert('注册成功！请前往邮箱 ' + email + ' 验证您的账号，然后登录。');
+                    isLoginMode = true;
+                    toggleLoginMode();
+                }
+            }
+        } catch (error) {
+            console.error('Auth error:', error);
+            loginError.textContent = error.message || '操作失败，请重试';
+            loginError.style.display = 'block';
+        }
+
+        loginLoading.style.display = 'none';
+        loginSubmitBtn.disabled = false;
     });
 
-    logoutBtn.addEventListener('click', () => {
+    logoutBtn.addEventListener('click', async () => {
+        if (supabase) {
+            await supabase.auth.signOut();
+        }
         currentUser = '';
         localStorage.removeItem('currentUser');
         cart = [];
@@ -2339,11 +2470,16 @@ h1, h2, h3 {
         }
     });
 
-    updateUserUI();
-    loadCart();
+    // 初始化 Supabase
+    initSupabase();
 
     document.getElementById('cartCheckoutBtn').addEventListener('click', () => {
         if (cart.length === 0) return;
+        if (!currentUser) {
+            alert('请先登录');
+            openLoginModal();
+            return;
+        }
         alert('这是演示版：已实现登录记忆和购物车记忆，真实支付后面再接。');
     });
 
@@ -2716,10 +2852,12 @@ detailModal.addEventListener("click", (e) => {
     cart_empty: "购物车是空的",
     cart_total: "总计:",
     cart_checkout: "结算",
-    login_title: "邮箱登录",
-    login_desc: "输入邮箱即可进入演示版用户系统",
+    login_title: "登录 / 注册",
+    login_desc: "输入邮箱和密码即可登录或注册新账号",
     login_email_placeholder: "请输入邮箱",
+    login_password_placeholder: "请输入密码",
     login_submit: "登录",
+    login_switch: "没有账号？点此注册",
     btn_view_detail: "查询详情",
     badge_limited: "限量 50 体",
     badge_sold_out: "已售罄",
@@ -2810,10 +2948,12 @@ detailModal.addEventListener("click", (e) => {
     cart_empty: "Your cart is empty",
     cart_total: "Total:",
     cart_checkout: "Checkout",
-    login_title: "Email Login",
-    login_desc: "Enter your email to access the demo system",
+    login_title: "Login / Register",
+    login_desc: "Enter your email and password to login or register",
     login_email_placeholder: "Enter your email",
+    login_password_placeholder: "Enter your password",
     login_submit: "Login",
+    login_switch: "No account? Register here",
     btn_view_detail: "View Details",
     badge_limited: "Limited · 50pcs",
     badge_sold_out: "Sold Out",
@@ -2896,10 +3036,12 @@ detailModal.addEventListener("click", (e) => {
     cart_empty: "El carrito está vacío",
     cart_total: "Total:",
     cart_checkout: "Finalizar Compra",
-    login_title: "Inicio de Sesión",
-    login_desc: "Ingrese su correo electrónico para acceder al sistema de demostración",
+    login_title: "Iniciar Sesión / Registro",
+    login_desc: "Ingrese su correo y contraseña para iniciar sesión o registrarse",
     login_email_placeholder: "Ingrese su correo electrónico",
+    login_password_placeholder: "Ingrese su contraseña",
     login_submit: "Iniciar Sesión",
+    login_switch: "¿Sin cuenta? Regístrese aquí",
     btn_view_detail: "Ver Detalles",
     badge_limited: "Limitado · 50 unidades",
     badge_sold_out: "Agotado",
