@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>微缩工坊 | Miniature Studio - 原创微缩模型与涂装</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/supabase-js/2.39.3/supabase.min.js"></script>
     <style>
         /* 基础样式重置 */
         * {
@@ -1995,6 +1995,9 @@ h1, h2, h3 {
     // 初始化 Supabase
     async function initSupabase() {
         try {
+            if (typeof window.supabase === 'undefined') {
+                throw new Error('Supabase SDK 未加载');
+            }
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             // 检查当前 session
             const { data: { session } } = await supabase.auth.getSession();
@@ -2006,6 +2009,8 @@ h1, h2, h3 {
             console.log('Supabase 初始化成功');
         } catch (error) {
             console.error('Supabase 初始化失败:', error);
+            document.getElementById('loginError').textContent = '服务加载失败，请检查网络后刷新重试';
+            document.getElementById('loginError').style.display = 'block';
         }
     }
 
