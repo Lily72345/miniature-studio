@@ -3106,6 +3106,13 @@ const payProductPrice = document.getElementById('payProductPrice');
 let currentBuyProduct = null;
 
 function openPayModal(productId) {
+    // 购物车结算模式（无 productId）
+    if (!productId) {
+        payModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        return;
+    }
+    // 单独购买模式（有 productId）
     const lang = localStorage.getItem('lang') || 'zh';
     const product = productData[lang][productId];
     if (!product) return;
