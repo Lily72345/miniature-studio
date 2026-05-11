@@ -6,7 +6,7 @@
     <title>微缩工坊 | Miniature Studio - 原创微缩模型与涂装</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
-    <script src="https://www.paypal.com/sdk/js?client-id=ATp0gKRaR80Fz1U2Bp25yPMPlC8CJPgzBWnvLuav8A5wkKktnOMaUMHs3zrP3AQo9OXsThYhXNUvQMvm&currency=GBP"></script>
+    <!-- PayPal SDK 改为动态加载（根据语言选择 locale） -->
     <style>
         /* 基础样式重置 */
         * {
@@ -3116,12 +3116,53 @@ detailModal.addEventListener("click", (e) => {
       }
     });
     localStorage.setItem("lang", lang);
+    // 如果支付弹窗开着，重新加载 PayPal 按钮（切换语言）
+    if (payModal && payModal.classList.contains('active')) {
+      // 清除旧的 PayPal 容器内容
+      const container = document.getElementById('paypal-button-container');
+      if (container) container.innerHTML = '';
+      // 延迟一秒让 SDK 重新加载并渲染
+      setTimeout(() => {
+        const pid = currentBuyProduct;
+        const amt = getCurrentAmount(pid);
+        renderPayPalButtons(amt);
+      }, 200);
+    }
   }
 
   window.setLanguage = setLanguage;
 
   const savedLang = localStorage.getItem("lang") || "zh";
   setLanguage(savedLang);
+
+/* ===== PayPal 语言映射 & 动态加载 ===== */
+const PAYPAL_LOCALE_MAP = {
+  zh: 'zh_CN',
+  en: 'en_US',
+  es: 'es_ES'
+};
+const PAYPAL_CLIENT_ID = 'ATp0gKRaR80Fz1U2Bp25yPMPlC8CJPgzBWnvLuav8A5wkKktnOMaUMHs3zrP3AQo9OXsThYhXNUvQMvm';
+let paypalLoadPromise = null;
+
+function loadPayPalSDK(locale) {
+  // 如果已经加载了相同 locale 的 SDK，直接返回
+  const existingScript = document.querySelector('script[data-paypal-sdk]');
+  if (existingScript && existingScript.src.includes('locale=' + locale)) {
+    return Promise.resolve();
+  }
+  // 移除旧的 script 标签和全局 paypal 对象
+  if (existingScript) existingScript.remove();
+  if (window.paypal) delete window.paypal;
+  paypalLoadPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.setAttribute('data-paypal-sdk', '');
+    script.src = 'https://www.paypal.com/sdk/js?client-id=' + PAYPAL_CLIENT_ID + '&currency=GBP&locale=' + locale;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+  return paypalLoadPromise;
+}
 
 /* ===== 购买弹窗逻辑 ===== */
 const payModal = document.getElementById('payModal');
@@ -3160,12 +3201,19 @@ function renderPayPalButtons(amount) {
         return;
     }
 
-    // 等一帧确保 DOM 更新
-    setTimeout(() => {
+    const lang = localStorage.getItem('lang') || 'zh';
+    const locale = PAYPAL_LOCALE_MAP[lang] || 'en_US';
+
+    // 显示加载提示
+    container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载中，请稍候...</p>';
+
+    // 先动态加载 SDK（带正确 locale），再渲染按钮
+    loadPayPalSDK(locale).then(() => {
         if (typeof paypal === 'undefined' || typeof paypal.Buttons === 'undefined') {
-            container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载中，请稍候...</p>';
+            container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载失败，请刷新页面重试</p>';
             return;
         }
+        container.innerHTML = '';
         paypal.Buttons({
             style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
             createOrder: function(data, actions) {
@@ -3196,7 +3244,10 @@ function renderPayPalButtons(amount) {
                 alert('PayPal 支付出错，请重试');
             }
         }).render('#paypal-button-container');
-    }, 100);
+    }).catch(function(err) {
+        console.error('PayPal SDK 加载失败:', err);
+        container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载失败，请刷新页面重试</p>';
+    });
 }
 
 function openPayModal(productId) {
