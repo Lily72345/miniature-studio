@@ -2397,13 +2397,13 @@ h1, h2, h3 {
 
         if (cart.length === 0) {
             cartItems.innerHTML = '<p class="empty-cart">购物车是空的</p>';
-            cartTotal.textContent = '¥0';
+            cartTotal.textContent = '£0';
             return;
         }
 
         let total = 0;
         cartItems.innerHTML = cart.map(item => {
-            const priceNum = parseInt(item.price.replace(/[^\d]/g, '')) || 0;
+            const priceNum = parseFloat(item.price.replace(/[^0-9.]/g, '')) || 0;
             total += priceNum * item.quantity;
 
             return `
@@ -2418,7 +2418,7 @@ h1, h2, h3 {
             `;
         }).join('');
 
-        cartTotal.textContent = '¥' + total.toLocaleString();
+        cartTotal.textContent = '£' + total.toFixed(2);
     }
 
     function removeFromCart(id) {
@@ -3253,6 +3253,10 @@ function renderPayPalButtons(amount) {
 
 function openPayModal(productId) {
     if (!productId) {
+        // 购物车结算模式
+        const total = getCurrentAmount(null);
+        payProductName.textContent = '购物车总计';
+        payProductPrice.textContent = '£' + total.toFixed(2);
         payModal.classList.add('active');
         document.body.style.overflow = 'hidden';
     } else {
@@ -3261,7 +3265,7 @@ function openPayModal(productId) {
         if (!product) return;
         currentBuyProduct = productId;
         payProductName.textContent = product.title;
-        payProductPrice.textContent = product.price;
+        payProductPrice.textContent = '£' + parsePrice(product.price).toFixed(2);
         payModal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
