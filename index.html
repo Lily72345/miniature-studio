@@ -3159,7 +3159,7 @@ function loadPayPalSDK(locale) {
   paypalLoadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.setAttribute('data-paypal-sdk', '');
-    script.src = 'https://www.paypal.com/sdk/js?client-id=' + PAYPAL_CLIENT_ID + '&currency=EUR&locale=' + locale;
+    script.src = 'https://www.sandbox.paypal.com/sdk/js?client-id=' + PAYPAL_CLIENT_ID + '&currency=EUR&locale=' + locale;
     script.onload = resolve;
     script.onerror = reject;
     document.head.appendChild(script);
