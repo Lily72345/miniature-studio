@@ -3117,14 +3117,15 @@ detailModal.addEventListener("click", (e) => {
     });
     localStorage.setItem("lang", lang);
     // 如果支付弹窗开着，重新加载 PayPal 按钮（切换语言）
-    if (payModal && payModal.classList.contains('active')) {
+    var payModalEl = document.getElementById('payModal');
+    if (payModalEl && payModalEl.classList.contains('active')) {
       // 清除旧的 PayPal 容器内容
-      const container = document.getElementById('paypal-button-container');
+      var container = document.getElementById('paypal-button-container');
       if (container) container.innerHTML = '';
-      // 延迟一秒让 SDK 重新加载并渲染
-      setTimeout(() => {
-        const pid = currentBuyProduct;
-        const amt = getCurrentAmount(pid);
+      // 延迟让 SDK 重新加载并渲染
+      setTimeout(function() {
+        var pid = currentBuyProduct;
+        var amt = getCurrentAmount(pid);
         renderPayPalButtons(amt);
       }, 200);
     }
