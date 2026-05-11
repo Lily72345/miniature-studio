@@ -2738,6 +2738,8 @@ function openDetail(productId) {
 const product = productData[lang][productId];
     if (!product) return;
 
+    currentBuyProduct = productId; // 记录当前查看的商品，使"立即购买"按钮可用
+
     detailTitle.innerHTML = product.title;
     detailPrice.innerHTML = product.price;
     detailMeta.innerHTML = `
