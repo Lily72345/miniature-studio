@@ -3258,7 +3258,7 @@ function openPayModal(productId) {
         // 购物车结算模式
         const total = getCurrentAmount(null);
         payProductName.textContent = '购物车总计';
-        payProductPrice.textContent = '€' + total.toFixed(2);
+        payProductPrice.textContent = '$' + total.toFixed(2);
         payModal.classList.add('active');
         document.body.style.overflow = 'hidden';
     } else {
@@ -3267,7 +3267,7 @@ function openPayModal(productId) {
         if (!product) return;
         currentBuyProduct = productId;
         payProductName.textContent = product.title;
-        payProductPrice.textContent = '€' + parsePrice(product.price).toFixed(2);
+        payProductPrice.textContent = '$' + parsePrice(product.price).toFixed(2);
         payModal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
