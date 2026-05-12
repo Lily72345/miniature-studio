@@ -3159,7 +3159,7 @@ function loadPayPalSDK(locale) {
   paypalLoadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.setAttribute('data-paypal-sdk', '');
-    script.src = 'https://www.sandbox.paypal.com/sdk/js?client-id=' + PAYPAL_CLIENT_ID + '&currency=USD&locale=' + locale;
+    script.src = 'https://www.sandbox.paypal.com/sdk/js?client-id=' + PAYPAL_CLIENT_ID + '&currency=USD&locale=' + locale + '&intent=capture';
     script.onload = resolve;
     script.onerror = reject;
     document.head.appendChild(script);
@@ -3227,24 +3227,59 @@ function renderPayPalButtons(amount) {
                             currency_code: 'USD'
                         },
                         description: 'Miniature Bois 微缩模型'
-                    }]
+                    }],
+                    application_context: {
+                        shipping_preference: 'NO_SHIPPING',
+                        user_action: 'PAY_NOW'
+                    }
                 });
             },
             onApprove: function(data, actions) {
+                // 显示处理中状态
+                document.getElementById('paypal-button-container').innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">正在处理付款，请稍候...</p>';
                 return actions.order.capture().then(function(details) {
-                    alert('付款成功！谢谢 ' + (details.payer.name.given_name || ''));
-                    cart = [];
-                    saveCart();
-                    updateCart();
-                    closePayModal();
+                    if (details.status === 'COMPLETED') {
+                        alert('付款成功！谢谢 ' + (details.payer.name.given_name || ''));
+                        cart = [];
+                        saveCart();
+                        updateCart();
+                        closePayModal();
+                    } else {
+                        console.error('PayPal 支付状态异常:', details);
+                        alert('PayPal 支付未完成，状态: ' + details.status + '，请联系客服');
+                    }
+                }).catch(function(captureErr) {
+                    console.error('PayPal capture 失败:', captureErr);
+                    // 尝试获取更详细的错误信息
+                    var errMsg = 'PayPal 支付出错';
+                    if (captureErr && captureErr.message) errMsg += ': ' + captureErr.message;
+                    if (captureErr && captureErr.details && captureErr.details.length > 0) {
+                        errMsg += ' (' + captureErr.details[0].issue + ')';
+                    }
+                    alert(errMsg + '，请重试');
                 });
             },
             onCancel: function(data) {
                 console.log('付款已取消');
+                document.getElementById('paypal-button-container').innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">付款已取消，可重新选择支付</p>';
+                // 3秒后重新渲染按钮
+                setTimeout(function() {
+                    var amt = getCurrentAmount(currentBuyProduct);
+                    if (amt > 0) renderPayPalButtons(amt);
+                }, 3000);
             },
             onError: function(err) {
                 console.error('PayPal 错误:', err);
-                alert('PayPal 支付出错，请重试');
+                var errMsg = 'PayPal 支付出错';
+                if (err && err.message) errMsg += ': ' + err.message;
+                if (err && typeof err === 'string') errMsg += ': ' + err;
+                alert(errMsg + '，请重试');
+                // 重新渲染按钮让用户重试
+                document.getElementById('paypal-button-container').innerHTML = '';
+                setTimeout(function() {
+                    var amt = getCurrentAmount(currentBuyProduct);
+                    if (amt > 0) renderPayPalButtons(amt);
+                }, 1000);
             }
         }).render('#paypal-button-container');
     }).catch(function(err) {
