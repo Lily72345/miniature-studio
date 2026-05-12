@@ -3159,7 +3159,7 @@ function loadPayPalSDK(locale) {
   paypalLoadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.setAttribute('data-paypal-sdk', '');
-    script.src = 'https://www.sandbox.paypal.com/sdk/js?client-id=' + PAYPAL_CLIENT_ID + '&currency=EUR&locale=' + locale;
+    script.src = 'https://www.sandbox.paypal.com/sdk/js?client-id=' + PAYPAL_CLIENT_ID + '&currency=USD&locale=' + locale;
     script.onload = resolve;
     script.onerror = reject;
     document.head.appendChild(script);
@@ -3224,7 +3224,7 @@ function renderPayPalButtons(amount) {
                     purchase_units: [{
                         amount: {
                             value: amount.toFixed(2),
-                            currency_code: 'EUR'
+                            currency_code: 'USD'
                         },
                         description: 'Miniature Bois 微缩模型'
                     }]
