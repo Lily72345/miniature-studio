@@ -3235,8 +3235,7 @@ function renderPayPalButtons(amount) {
                 });
             },
             onApprove: function(data, actions) {
-                // 显示处理中状态
-                document.getElementById('paypal-button-container').innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">正在处理付款，请稍候...</p>';
+                // 不要在这里替换容器内容，否则会中断 PayPal SDK 的 post-robot 通信
                 return actions.order.capture().then(function(details) {
                     if (details.status === 'COMPLETED') {
                         alert('付款成功！谢谢 ' + (details.payer.name.given_name || ''));
@@ -3248,15 +3247,22 @@ function renderPayPalButtons(amount) {
                         console.error('PayPal 支付状态异常:', details);
                         alert('PayPal 支付未完成，状态: ' + details.status + '，请联系客服');
                     }
+                    // capture 完成后才安全替换容器
+                    document.getElementById('paypal-button-container').innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">支付已完成</p>';
                 }).catch(function(captureErr) {
                     console.error('PayPal capture 失败:', captureErr);
-                    // 尝试获取更详细的错误信息
                     var errMsg = 'PayPal 支付出错';
                     if (captureErr && captureErr.message) errMsg += ': ' + captureErr.message;
                     if (captureErr && captureErr.details && captureErr.details.length > 0) {
                         errMsg += ' (' + captureErr.details[0].issue + ')';
                     }
                     alert(errMsg + '，请重试');
+                    // 出错后也才替换容器
+                    document.getElementById('paypal-button-container').innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">支付出错，可重新选择</p>';
+                    setTimeout(function() {
+                        var amt = getCurrentAmount(currentBuyProduct);
+                        if (amt > 0) renderPayPalButtons(amt);
+                    }, 2000);
                 });
             },
             onCancel: function(data) {
