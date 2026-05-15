@@ -1663,6 +1663,105 @@ h1, h2, h3 {
     }
 }
 
+/* ===== 支付成功页面样式 ===== */
+.pay-success-page {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.pay-success-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #1a3a2a;
+    color: #4ade80;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.2rem;
+    border: 2px solid #4ade80;
+}
+
+.pay-success-title {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    color: #4ade80;
+    margin-bottom: 0.3rem;
+}
+
+.pay-success-name {
+    font-size: 1rem;
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+}
+
+.pay-success-section {
+    text-align: left;
+    background: #1a1a1c;
+    border-radius: 10px;
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.pay-success-section h3 {
+    font-size: 0.95rem;
+    color: var(--accent-color);
+    margin-bottom: 0.6rem;
+    font-weight: 600;
+}
+
+.pay-success-address p {
+    font-size: 0.9rem;
+    color: var(--text-gray);
+    line-height: 1.6;
+    margin-bottom: 0.3rem;
+}
+
+.pay-success-order p {
+    font-size: 0.9rem;
+    color: var(--text-gray);
+    line-height: 1.6;
+    margin-bottom: 0.3rem;
+}
+
+.pay-no-address {
+    color: var(--text-gray);
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+.pay-order-id {
+    font-size: 0.8rem !important;
+    color: #666 !important;
+    margin-top: 0.5rem;
+}
+
+.pay-success-note {
+    font-size: 0.85rem;
+    color: var(--text-gray);
+    line-height: 1.7;
+    margin: 1.2rem 0 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.pay-success-close-btn {
+    background: var(--accent-color);
+    color: #fff;
+    border: none;
+    padding: 0.7rem 2.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.pay-success-close-btn:hover {
+    background: var(--hover-color);
+}
+
 /* ===== PayPal 支付区域 ===== */
 .pay-paypal-section {
     margin-top: 1.2rem;
@@ -3518,6 +3617,13 @@ function showPaySuccessPage(details) {
     document.querySelector('.pay-note').style.display = 'none';
     document.querySelector('.pay-title').style.display = 'none';
     paySuccessPage.style.display = 'block';
+    
+    // 5秒后自动关闭弹窗
+    setTimeout(function() {
+        closePayModal();
+        // 可选：跳转回首页
+        // window.location.href = '/';
+    }, 5000);
 }
 
 // 关闭支付弹窗时重置页面状态
