@@ -3138,16 +3138,23 @@ detailModal.addEventListener("click", (e) => {
   const savedLang = localStorage.getItem("lang") || "zh";
   setLanguage(savedLang);
 
+/* ===== PayPal 模式配置 ===== */
+// ⚠️ 切换模式：'sandbox' 或 'live'
+const PAYPAL_MODE = 'sandbox';
+const PAYPAL_SANDBOX_ID = 'AWtqKrJzGbkQrvLnpIZd9rM29FjR0YLq_7z4l1TapvIyCzdcHKvKVHqG3F3fCzParAAyFjUWdLxw0Q2A';
+const PAYPAL_LIVE_ID = '这里填入你的 live client-id';
+
 /* ===== PayPal 语言映射 & 动态加载 ===== */
 const PAYPAL_LOCALE_MAP = {
   zh: 'zh_CN',
   en: 'en_US',
   es: 'es_ES'
 };
-const PAYPAL_CLIENT_ID = 'AWtqKrJzGbkQrvLnpIZd9rM29FjR0YLq_7z4l1TapvIyCzdcHKvKVHqG3F3fCzParAAyFjUWdLxw0Q2A';
 let paypalLoadPromise = null;
 
 function loadPayPalSDK(locale) {
+  const clientId = PAYPAL_MODE === 'live' ? PAYPAL_LIVE_ID : PAYPAL_SANDBOX_ID;
+  const baseUrl = PAYPAL_MODE === 'live' ? 'https://www.paypal.com' : 'https://www.sandbox.paypal.com';
   // 如果已经加载了相同 locale 的 SDK，直接返回
   const existingScript = document.querySelector('script[data-paypal-sdk]');
   if (existingScript && existingScript.src.includes('locale=' + locale)) {
@@ -3159,7 +3166,7 @@ function loadPayPalSDK(locale) {
   paypalLoadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.setAttribute('data-paypal-sdk', '');
-    script.src = 'https://www.sandbox.paypal.com/sdk/js?client-id=' + PAYPAL_CLIENT_ID + '&currency=USD&locale=' + locale + '&intent=capture';
+    script.src = baseUrl + '/sdk/js?client-id=' + clientId + '&currency=USD&locale=' + locale + '&intent=capture';
     script.onload = resolve;
     script.onerror = reject;
     document.head.appendChild(script);
