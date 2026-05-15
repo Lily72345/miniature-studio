@@ -3152,12 +3152,13 @@ const PAYPAL_LOCALE_MAP = {
 };
 let paypalLoadPromise = null;
 
-function loadPayPalSDK(locale) {
+function loadPayPalSDK(locale, currency) {
   const clientId = PAYPAL_MODE === 'live' ? PAYPAL_LIVE_ID : PAYPAL_SANDBOX_ID;
   const baseUrl = PAYPAL_MODE === 'live' ? 'https://www.paypal.com' : 'https://www.sandbox.paypal.com';
-  // 如果已经加载了相同 locale 的 SDK，直接返回
+  const currencyCode = currency || 'EUR';
+  // 如果已经加载了相同 locale 和 currency 的 SDK，直接返回
   const existingScript = document.querySelector('script[data-paypal-sdk]');
-  if (existingScript && existingScript.src.includes('locale=' + locale)) {
+  if (existingScript && existingScript.src.includes('locale=' + locale) && existingScript.src.includes('currency=' + currencyCode)) {
     return Promise.resolve();
   }
   // 移除旧的 script 标签和全局 paypal 对象
@@ -3166,7 +3167,7 @@ function loadPayPalSDK(locale) {
   paypalLoadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.setAttribute('data-paypal-sdk', '');
-    script.src = baseUrl + '/sdk/js?client-id=' + clientId + '&currency=USD&locale=' + locale + '&intent=capture';
+    script.src = baseUrl + '/sdk/js?client-id=' + clientId + '&currency=' + currencyCode + '&locale=' + locale + '&intent=capture';
     script.onload = resolve;
     script.onerror = reject;
     document.head.appendChild(script);
@@ -3186,12 +3187,22 @@ function parsePrice(priceStr) {
     return parseFloat(priceStr.replace(/[^0-9.]/g, '')) || 0;
 }
 
+// 检测价格字符串中的货币，返回 { symbol, code } 如 { symbol: '€', code: 'EUR' }
+function detectCurrency(priceStr) {
+    if (priceStr.includes('€')) return { symbol: '€', code: 'EUR' };
+    if (priceStr.includes('£')) return { symbol: '£', code: 'GBP' };
+    if (priceStr.includes('$')) return { symbol: '$', code: 'USD' };
+    return { symbol: '€', code: 'EUR' }; // 默认欧元
+}
+
 function getCurrentAmount(productId) {
     if (!productId) {
-        // 购物车结算模式
-        return cart.reduce((sum, item) => {
-            return sum + (parsePrice(item.price) * item.quantity);
-        }, 0);
+        // 购物车结算模式：累加金额和检测货币
+        let total = 0;
+        cart.forEach(item => {
+            total += parsePrice(item.price) * item.quantity;
+        });
+        return total;
     } else {
         // 单独购买模式
         const lang = localStorage.getItem('lang') || 'zh';
@@ -3201,7 +3212,23 @@ function getCurrentAmount(productId) {
     }
 }
 
-function renderPayPalButtons(amount) {
+// 获取当前货币信息（用于购物车结算）
+function getCurrentCurrency(productId) {
+    if (!productId) {
+        // 购物车：检测第一件商品的货币作为参考
+        if (cart.length > 0) {
+            return detectCurrency(cart[0].price);
+        }
+        return { symbol: '€', code: 'EUR' };
+    } else {
+        const lang = localStorage.getItem('lang') || 'zh';
+        const product = productData[lang][productId];
+        if (!product) return { symbol: '€', code: 'EUR' };
+        return detectCurrency(product.price);
+    }
+}
+
+function renderPayPalButtons(amount, currency) {
     const container = document.getElementById('paypal-button-container');
     if (!container) return;
     container.innerHTML = '';
@@ -3213,12 +3240,13 @@ function renderPayPalButtons(amount) {
 
     const lang = localStorage.getItem('lang') || 'zh';
     const locale = PAYPAL_LOCALE_MAP[lang] || 'en_US';
+    const currencyCode = currency.code || 'EUR';
 
     // 显示加载提示
     container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载中，请稍候...</p>';
 
-    // 先动态加载 SDK（带正确 locale），再渲染按钮
-    loadPayPalSDK(locale).then(() => {
+    // 先动态加载 SDK（带正确 locale 和 currency），再渲染按钮
+    loadPayPalSDK(locale, currencyCode).then(() => {
         if (typeof paypal === 'undefined' || typeof paypal.Buttons === 'undefined') {
             container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载失败，请刷新页面重试</p>';
             return;
@@ -3231,7 +3259,7 @@ function renderPayPalButtons(amount) {
                     purchase_units: [{
                         amount: {
                             value: amount.toFixed(2),
-                            currency_code: 'USD'
+                            currency_code: currencyCode
                         },
                         description: 'Miniature Bois 微缩模型'
                     }],
@@ -3268,7 +3296,8 @@ function renderPayPalButtons(amount) {
                     document.getElementById('paypal-button-container').innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">支付出错，可重新选择</p>';
                     setTimeout(function() {
                         var amt = getCurrentAmount(currentBuyProduct);
-                        if (amt > 0) renderPayPalButtons(amt);
+                        var cur = getCurrentCurrency(currentBuyProduct);
+                        if (amt > 0) renderPayPalButtons(amt, cur);
                     }, 2000);
                 });
             },
@@ -3278,7 +3307,8 @@ function renderPayPalButtons(amount) {
                 // 3秒后重新渲染按钮
                 setTimeout(function() {
                     var amt = getCurrentAmount(currentBuyProduct);
-                    if (amt > 0) renderPayPalButtons(amt);
+                    var cur = getCurrentCurrency(currentBuyProduct);
+                    if (amt > 0) renderPayPalButtons(amt, cur);
                 }, 3000);
             },
             onError: function(err) {
@@ -3291,7 +3321,8 @@ function renderPayPalButtons(amount) {
                 document.getElementById('paypal-button-container').innerHTML = '';
                 setTimeout(function() {
                     var amt = getCurrentAmount(currentBuyProduct);
-                    if (amt > 0) renderPayPalButtons(amt);
+                    var cur = getCurrentCurrency(currentBuyProduct);
+                    if (amt > 0) renderPayPalButtons(amt, cur);
                 }, 1000);
             }
         }).render('#paypal-button-container');
@@ -3305,8 +3336,9 @@ function openPayModal(productId) {
     if (!productId) {
         // 购物车结算模式
         const total = getCurrentAmount(null);
+        const currency = getCurrentCurrency(null);
         payProductName.textContent = '购物车总计';
-        payProductPrice.textContent = '$' + total.toFixed(2);
+        payProductPrice.textContent = currency.symbol + total.toFixed(2);
         payModal.classList.add('active');
         document.body.style.overflow = 'hidden';
     } else {
@@ -3314,14 +3346,16 @@ function openPayModal(productId) {
         const product = productData[lang][productId];
         if (!product) return;
         currentBuyProduct = productId;
+        const currency = detectCurrency(product.price);
         payProductName.textContent = product.title;
-        payProductPrice.textContent = '$' + parsePrice(product.price).toFixed(2);
+        payProductPrice.textContent = currency.symbol + parsePrice(product.price).toFixed(2);
         payModal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
     // 渲染 PayPal 按钮
     const amount = getCurrentAmount(productId);
-    renderPayPalButtons(amount);
+    const currency = getCurrentCurrency(productId);
+    renderPayPalButtons(amount, currency);
 }
 
 function closePayModal() {
