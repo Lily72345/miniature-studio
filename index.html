@@ -1762,6 +1762,19 @@ h1, h2, h3 {
     background: var(--hover-color);
 }
 
+.pay-success-countdown {
+    color: var(--text-gray);
+    font-size: 0.85rem;
+    margin: 1.2rem 0 0.8rem 0;
+    text-align: center;
+}
+
+.pay-success-countdown span {
+    color: var(--accent-color);
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
 /* ===== PayPal 支付区域 ===== */
 .pay-paypal-section {
     margin-top: 1.2rem;
@@ -2726,21 +2739,22 @@ h1, h2, h3 {
         <!-- 支付成功确认页面 -->
         <div id="paySuccessPage" class="pay-success-page" style="display:none;">
             <div class="pay-success-icon">✓</div>
-            <h2 class="pay-success-title" data-key="pay_success_title">支付成功！</h2>
-            <p class="pay-success-name">谢谢 <span id="paySuccessName"></span>！</p>
+            <h2 class="pay-success-title" data-key="pay_success_title">Payment Successful!</h2>
+            <p class="pay-success-name">Thank you, <span id="paySuccessName"></span>!</p>
             
             <div class="pay-success-section">
-                <h3 data-key="pay_success_address">📍 收货地址</h3>
+                <h3 data-key="pay_success_address">📍 Shipping Address</h3>
                 <div id="paySuccessAddress" class="pay-success-address"></div>
             </div>
             
             <div class="pay-success-section">
-                <h3 data-key="pay_success_order">📦 订单信息</h3>
+                <h3 data-key="pay_success_order">📦 Order Info</h3>
                 <div id="paySuccessOrder" class="pay-success-order"></div>
             </div>
             
-            <p class="pay-success-note" data-key="pay_success_note">我们已收到您的付款，会尽快安排发货。如有疑问，请联系我们。</p>
-            <button class="pay-success-close-btn" onclick="closePayModal()" data-key="pay_success_close">关闭</button>
+            <p class="pay-success-note" data-key="pay_success_note">We have received your payment and will arrange shipping soon. If you have any questions, please contact us.</p>
+            <p class="pay-success-countdown" id="paySuccessCountdown">This window will close in <span id="countdownSeconds">10</span> seconds</p>
+            <button class="pay-success-close-btn" onclick="closePayModal()" data-key="pay_success_close">Return to Website</button>
         </div>
     </div>
 </div>
@@ -3097,7 +3111,10 @@ detailModal.addEventListener("click", (e) => {
     pay_note: "如有任何问题，请通过下方联系方式与我们沟通，我们会尽快回复您。",
     pay_buy_now: "立即购买",
     pay_or: "— 或使用 —",
-
+    pay_success_title: "支付成功！",
+    pay_success_note: "我们已收到您的付款，会尽快安排发货。如有疑问，请联系我们。",
+    pay_success_close: "返回网站",
+    
   },
 
   en: {
@@ -3194,7 +3211,9 @@ detailModal.addEventListener("click", (e) => {
     pay_note: "If you have any questions, please contact us through the information below. We will respond as soon as possible.",
     pay_buy_now: "Buy Now",
     pay_or: "— Or pay with —",
-    
+    pay_success_title: "Payment Successful!",
+    pay_success_note: "We have received your payment and will arrange shipping soon. If you have any questions, please contact us.",
+    pay_success_close: "Return to Website",
 
   },
   es: {
@@ -3283,6 +3302,9 @@ detailModal.addEventListener("click", (e) => {
     pay_note: "Si tiene alguna pregunta, por favor contáctenos. Responderemos lo antes posible.",
     pay_buy_now: "Comprar Ahora",
     pay_or: "— O paga con —",
+    pay_success_title: "¡Pago Exitoso!",
+    pay_success_note: "Hemos recibido su pago y organizaremos el envío lo antes posible. Si tiene alguna pregunta, contáctenos.",
+    pay_success_close: "Volver al Sitio"
   }
 };
 
@@ -3566,6 +3588,7 @@ buyNowBtn.addEventListener('click', () => {
 });
 
 // 显示支付成功页面
+let paySuccessTimer = null;
 function showPaySuccessPage(details) {
     const paySuccessPage = document.getElementById('paySuccessPage');
     const payProductName = document.getElementById('payProductName');
@@ -3574,7 +3597,7 @@ function showPaySuccessPage(details) {
     // 填充买家姓名
     const payerName = details.payer.name;
     const fullName = [payerName.given_name, payerName.surname].filter(Boolean).join(' ');
-    document.getElementById('paySuccessName').textContent = fullName || details.payer.email_address || '顾客';
+    document.getElementById('paySuccessName').textContent = fullName || details.payer.email_address || 'Customer';
     
     // 填充收货地址
     const shipping = details.purchase_units?.[0]?.shipping;
@@ -3595,7 +3618,7 @@ function showPaySuccessPage(details) {
             <p>${addressLines}</p>
         `;
     } else {
-        addressDiv.innerHTML = '<p class="pay-no-address">未提供收货地址</p>';
+        addressDiv.innerHTML = '<p class="pay-no-address">No shipping address provided</p>';
     }
     
     // 填充订单信息
@@ -3603,9 +3626,9 @@ function showPaySuccessPage(details) {
     const amount = purchaseUnit?.amount;
     const orderDiv = document.getElementById('paySuccessOrder');
     orderDiv.innerHTML = `
-        <p><strong>${payProductName?.textContent || '商品'}</strong></p>
+        <p><strong>${payProductName?.textContent || 'Product'}</strong></p>
         <p>${amount?.currency_code || 'EUR'} ${amount?.value || '0.00'}</p>
-        <p class="pay-order-id">订单号: ${details.id}</p>
+        <p class="pay-order-id">Order ID: ${details.id}</p>
     `;
     
     // 隐藏购买表单，显示成功页面
@@ -3618,17 +3641,36 @@ function showPaySuccessPage(details) {
     document.querySelector('.pay-title').style.display = 'none';
     paySuccessPage.style.display = 'block';
     
-    // 5秒后自动关闭弹窗
-    setTimeout(function() {
-        closePayModal();
-        // 可选：跳转回首页
-        // window.location.href = '/';
-    }, 5000);
+    // 添加倒计时功能
+    let secondsLeft = 10;
+    const countdownSpan = document.getElementById('countdownSeconds');
+    const countdownText = document.getElementById('paySuccessCountdown');
+    if (countdownSpan) countdownSpan.textContent = secondsLeft;
+    
+    // 清除之前的定时器
+    if (paySuccessTimer) {
+        clearInterval(paySuccessTimer);
+    }
+    
+    // 启动倒计时
+    paySuccessTimer = setInterval(function() {
+        secondsLeft--;
+        if (countdownSpan) countdownSpan.textContent = secondsLeft;
+        if (secondsLeft <= 0) {
+            clearInterval(paySuccessTimer);
+            closePayModal();
+        }
+    }, 1000);
 }
 
 // 关闭支付弹窗时重置页面状态
 const originalClosePayModal = closePayModal;
 closePayModal = function() {
+    // 清除倒计时
+    if (paySuccessTimer) {
+        clearInterval(paySuccessTimer);
+        paySuccessTimer = null;
+    }
     originalClosePayModal();
     // 重置显示状态
     const paySuccessPage = document.getElementById('paySuccessPage');
