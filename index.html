@@ -3687,13 +3687,45 @@ function renderPayPalButtons(amount, currency) {
             },
             onApprove: function(data, actions) {
                 // 不要在这里替换容器内容，否则会中断 PayPal SDK 的 post-robot 通信
-                return actions.order.capture().then(function(details) {
+                return actions.order.capture().then(async function(details) {
                     if (details.status === 'COMPLETED') {
                         // 清空购物车
                         cart = [];
                         saveCart();
                         updateCart();
-                        
+
+                        // 收集订单信息写入 Supabase
+                        try {
+                            const emailInput = document.getElementById('shippingEmail');
+                            const buyerEmail = emailInput ? emailInput.value.trim() : '';
+                            const lang = localStorage.getItem('lang') || 'zh';
+                            const productId = currentBuyProduct || null;
+                            let productName = '购物车总计';
+                            if (productId && productData[lang] && productData[lang][productId]) {
+                                productName = productData[lang][productId].title;
+                            }
+                            const orderData = {
+                                paypal_order_id: details.id || data.orderID,
+                                buyer_email: buyerEmail || null,
+                                product_id: productId,
+                                product_name: productName,
+                                amount: amount,
+                                currency: currencyCode,
+                                region: selectedShippingRegion || 'other',
+                                status: details.status,
+                                paypal_details: details
+                            };
+                            if (supabase) {
+                                const { error: insertErr } = await supabase.from('orders').insert(orderData);
+                                if (insertErr) console.error('Supabase 写入订单失败:', insertErr);
+                                else console.log('订单已写入 Supabase:', orderData);
+                            } else {
+                                console.warn('Supabase 未初始化，订单未保存');
+                            }
+                        } catch (dbErr) {
+                            console.error('保存订单到 Supabase 出错:', dbErr);
+                        }
+
                         // 显示成功页面
                         showPaySuccessPage(details);
                     } else {
