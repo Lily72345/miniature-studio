@@ -3481,6 +3481,7 @@ const PAYPAL_LOCALE_MAP = {
   es: 'es_ES'
 };
 let paypalLoadPromise = null;
+let paypalButtonInstance = null;  // 保存当前 PayPal 按钮实例，用于关闭
 
 function loadPayPalSDK(locale, currency) {
   const clientId = PAYPAL_MODE === 'live' ? PAYPAL_LIVE_ID : PAYPAL_SANDBOX_ID;
@@ -3490,6 +3491,11 @@ function loadPayPalSDK(locale, currency) {
   const existingScript = document.querySelector('script[data-paypal-sdk]');
   if (existingScript && existingScript.src.includes('locale=' + locale) && existingScript.src.includes('currency=' + currencyCode)) {
     return Promise.resolve();
+  }
+  // 关闭旧的 PayPal 按钮实例（避免 zoid 冲突）
+  if (paypalButtonInstance && typeof paypalButtonInstance.close === 'function') {
+    try { paypalButtonInstance.close(); } catch (e) {}
+    paypalButtonInstance = null;
   }
   // 移除旧的 script 标签和全局 paypal 对象
   if (existingScript) existingScript.remove();
@@ -3660,7 +3666,11 @@ function renderPayPalButtons(amount, currency) {
             return;
         }
         container.innerHTML = '';
-        paypal.Buttons({
+        // 先关闭旧实例再渲染新按钮
+        if (paypalButtonInstance && typeof paypalButtonInstance.close === 'function') {
+            try { paypalButtonInstance.close(); } catch (e) {}
+        }
+        paypalButtonInstance = paypal.Buttons({
             style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
             createOrder: function(data, actions) {
                 return actions.order.create({
@@ -3735,7 +3745,8 @@ function renderPayPalButtons(amount, currency) {
                     if (amt > 0) renderPayPalButtons(amt, cur);
                 }, 1000);
             }
-        }).render('#paypal-button-container');
+        });
+        paypalButtonInstance.render('#paypal-button-container');
     }).catch(function(err) {
         console.error('PayPal SDK 加载失败:', err);
         container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载失败，请刷新页面重试</p>';
