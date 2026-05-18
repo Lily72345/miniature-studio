@@ -3448,18 +3448,13 @@ detailModal.addEventListener("click", (e) => {
       }
     });
     localStorage.setItem("lang", lang);
-    // 如果支付弹窗开着，重新加载 PayPal 按钮（切换语言）
+    // 如果支付弹窗开着，重新渲染 PayPal 按钮（切换语言）
     var payModalEl = document.getElementById('payModal');
     if (payModalEl && payModalEl.classList.contains('active')) {
-      // 关闭旧按钮实例，避免 zoid 冲突
-      if (paypalButtonInstance && typeof paypalButtonInstance.close === 'function') {
-        try { paypalButtonInstance.close(); } catch (e) {}
-        paypalButtonInstance = null;
-      }
       // 清除旧的 PayPal 容器内容
       var container = document.getElementById('paypal-button-container');
       if (container) container.innerHTML = '';
-      // 延迟让 SDK 重新加载并渲染
+      // 延迟重新渲染按钮（SDK 已加载，不重新加载）
       setTimeout(function() {
         var pid = currentBuyProduct;
         var amt = getCurrentAmount(pid);
@@ -3487,32 +3482,30 @@ const PAYPAL_LOCALE_MAP = {
   es: 'es_ES'
 };
 let paypalLoadPromise = null;
-let paypalButtonInstance = null;  // 保存当前 PayPal 按钮实例，用于关闭
-let paypalLoadedCurrency = null;  // 记录当前已加载的 SDK currency
+let paypalButtonInstance = null;  // 保存当前 PayPal 按钮实例
+let paypalSdkReady = false;      // 标记 SDK 是否已加载就绪
 
-function loadPayPalSDK(locale, currency) {
-  const clientId = PAYPAL_MODE === 'live' ? PAYPAL_LIVE_ID : PAYPAL_SANDBOX_ID;
-  const baseUrl = PAYPAL_MODE === 'live' ? 'https://www.paypal.com' : 'https://www.sandbox.paypal.com';
-  const currencyCode = currency || 'EUR';
-  // 如果已经加载了相同 locale 和 currency 的 SDK，直接返回
-  const existingScript = document.querySelector('script[data-paypal-sdk]');
-  if (existingScript && existingScript.src.includes('locale=' + locale) && existingScript.src.includes('currency=' + currencyCode)) {
+// ⚠️ SDK 只加载一次！固定 EUR + zh_CN
+// 切换地区/货币时不重新加载 SDK（避免 zoid 冲突）
+// PayPal 按钮支持 createOrder 动态指定金额和货币
+function loadPayPalSDKOnce(locale) {
+  if (paypalSdkReady && typeof paypal !== 'undefined') {
     return Promise.resolve();
   }
-  // 关闭旧的 PayPal 按钮实例（避免 zoid 冲突）
-  if (paypalButtonInstance && typeof paypalButtonInstance.close === 'function') {
-    try { paypalButtonInstance.close(); } catch (e) {}
-    paypalButtonInstance = null;
-  }
-  // 移除旧的 script 标签和全局 paypal 对象
-  if (existingScript) existingScript.remove();
-  if (window.paypal) delete window.paypal;
-  paypalLoadedCurrency = currencyCode;
+  const clientId = PAYPAL_MODE === 'live' ? PAYPAL_LIVE_ID : PAYPAL_SANDBOX_ID;
+  const baseUrl = PAYPAL_MODE === 'live' ? 'https://www.paypal.com' : 'https://www.sandbox.paypal.com';
+  const localeCode = locale || 'zh_CN';
+  // 如果已有 script 在加载中，等待它
+  if (paypalLoadPromise) return paypalLoadPromise;
+
   paypalLoadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.setAttribute('data-paypal-sdk', '');
-    script.src = baseUrl + '/sdk/js?client-id=' + clientId + '&currency=' + currencyCode + '&locale=' + locale + '&intent=capture';
-    script.onload = resolve;
+    script.src = baseUrl + '/sdk/js?client-id=' + clientId + '&currency=EUR&locale=' + localeCode + '&intent=capture';
+    script.onload = function() {
+      paypalSdkReady = true;
+      resolve();
+    };
     script.onerror = reject;
     document.head.appendChild(script);
   });
@@ -3566,20 +3559,15 @@ function selectShippingRegion(region) {
         const currency = getEffectiveCurrency(productId, region);
         renderPayPalButtons(amount, currency);
     } else {
-        // 其他地区：PayPal 暂时隐藏或只付商品价格（后续补付）
+        // 其他地区：显示提示+邮箱输入，PayPal 按钮渲染商品价格
         const container = document.getElementById('paypal-button-container');
         if (container) {
-            const lang2 = localStorage.getItem('lang') || 'zh';
-            const hints = {
-                zh: '请填写邮箱，我们确认运费后发送支付链接，您再付运费。<br>商品款项可先行支付：',
-                en: 'Please enter your email. We will send you a payment link for shipping after confirmation.<br>You may pay for the item first:',
-                es: 'Ingrese su email. Le enviaremos el enlace de pago para el envío.<br>Puede pagar el artículo primero:'
-            };
-            container.innerHTML = '<p style="color:var(--text-gray);font-size:0.82rem;margin-bottom:0.6rem;">' + (hints[lang2] || hints.en) + '</p>';
+            // 先清空容器
+            container.innerHTML = '';
             // 渲染仅商品价格的 PayPal 按钮
             const amt = getCurrentAmount(productId);
             const cur = getCurrentCurrency(productId);
-            setTimeout(function() { renderPayPalButtons(amt, cur); }, 100);
+            renderPayPalButtons(amt, cur);
         }
     }
 }
@@ -3667,12 +3655,8 @@ function renderPayPalButtons(amount, currency) {
     // 显示加载提示
     container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载中，请稍候...</p>';
 
-    // 先动态加载 SDK（带正确 locale 和 currency），再渲染按钮
-    // 策略：如果 currency 没变，只重新渲染按钮（不重新加载 SDK，避免 zoid 冲突）
-    const needReloadSDK = !window.paypal || !paypalLoadedCurrency || paypalLoadedCurrency !== currencyCode;
-    const sdkPromise = needReloadSDK ? loadPayPalSDK(locale, currencyCode) : Promise.resolve();
-
-    sdkPromise.then(() => {
+    // 先加载 SDK（只加载一次），再渲染按钮
+    loadPayPalSDKOnce(locale).then(() => {
         if (typeof paypal === 'undefined' || typeof paypal.Buttons === 'undefined') {
             container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载失败，请刷新页面重试</p>';
             return;
@@ -3804,11 +3788,6 @@ function openPayModal(productId) {
 function closePayModal() {
     payModal.classList.remove('active');
     document.body.style.overflow = '';
-    // 关闭 PayPal 按钮实例，避免下次打开时 zoid 冲突
-    if (paypalButtonInstance && typeof paypalButtonInstance.close === 'function') {
-        try { paypalButtonInstance.close(); } catch (e) {}
-        paypalButtonInstance = null;
-    }
 }
 
 payClose.addEventListener('click', closePayModal);
@@ -3907,7 +3886,8 @@ closePayModal = function() {
         clearInterval(paySuccessTimer);
         paySuccessTimer = null;
     }
-    originalClosePayModal();
+    payModal.classList.remove('active');
+    document.body.style.overflow = '';
     // 重置运费选择
     selectedShippingRegion = null;
     document.querySelectorAll('.shipping-option').forEach(btn => btn.classList.remove('selected'));
