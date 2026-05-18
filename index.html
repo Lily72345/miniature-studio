@@ -1860,6 +1860,82 @@ h1, h2, h3 {
     opacity: 0.8;
 }
 
+/* ===== 运费选择器 ===== */
+.shipping-section {
+    margin: 1rem 0 0.8rem;
+    text-align: left;
+}
+.shipping-section label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-gray);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+}
+.shipping-options {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+.shipping-option {
+    flex: 1;
+    min-width: 80px;
+    padding: 0.55rem 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-gray);
+    font-size: 0.82rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+}
+.shipping-option:hover {
+    border-color: var(--accent-color);
+    color: var(--text-light);
+}
+.shipping-option.selected {
+    border-color: var(--accent-color);
+    background: rgba(168,24,31,0.15);
+    color: var(--text-light);
+}
+.shipping-fee-note {
+    margin-top: 0.45rem;
+    font-size: 0.8rem;
+    color: var(--accent-color);
+    min-height: 1.2em;
+}
+.shipping-email-row {
+    display: none;
+    margin-top: 0.6rem;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+.shipping-email-row.visible {
+    display: flex;
+}
+.shipping-email-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: #1e1e20;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-light);
+    font-size: 0.85rem;
+    font-family: var(--font-body);
+    outline: none;
+    transition: border-color 0.2s;
+}
+.shipping-email-input:focus {
+    border-color: var(--accent-color);
+}
+.shipping-email-hint {
+    font-size: 0.78rem;
+    color: var(--text-gray);
+    line-height: 1.4;
+}
+
     </style>
 </head>
 <body>
@@ -2723,6 +2799,23 @@ h1, h2, h3 {
             <!-- PayPal 支付选项 -->
             <div class="pay-paypal-section">
                 <div class="pay-divider"><span data-key="pay_or">— 或使用 —</span></div>
+
+                <!-- 运费区域选择 -->
+                <div class="shipping-section" id="shippingSection">
+                    <label data-key="shipping_label">🚚 Shipping Region</label>
+                    <div class="shipping-options">
+                        <button class="shipping-option" data-region="europe" onclick="selectShippingRegion('europe')" data-key="shipping_europe">Europe</button>
+                        <button class="shipping-option" data-region="us" onclick="selectShippingRegion('us')" data-key="shipping_us">United States</button>
+                        <button class="shipping-option" data-region="other" onclick="selectShippingRegion('other')" data-key="shipping_other">Other</button>
+                    </div>
+                    <p class="shipping-fee-note" id="shippingFeeNote"></p>
+                    <!-- 其他地区邮箱输入 -->
+                    <div class="shipping-email-row" id="shippingEmailRow">
+                        <input type="email" class="shipping-email-input" id="shippingEmail" placeholder="your@email.com" data-placeholder="shipping_email_placeholder" />
+                        <span class="shipping-email-hint" data-key="shipping_email_hint">We will contact you by email with the shipping cost after receiving your order.</span>
+                    </div>
+                </div>
+
                 <div id="paypal-button-container"></div>
             </div>
 
@@ -3114,6 +3207,15 @@ detailModal.addEventListener("click", (e) => {
     pay_success_title: "支付成功！",
     pay_success_note: "我们已收到您的付款，会尽快安排发货。如有疑问，请联系我们。",
     pay_success_close: "返回网站",
+    shipping_label: "🚚 运费地区",
+    shipping_europe: "🇪🇺 欧洲",
+    shipping_us: "🇺🇸 美国",
+    shipping_other: "🌍 其他地区",
+    shipping_fee_europe: "欧洲运费：约 €13（¥120）",
+    shipping_fee_us: "美国运费：约 $20（¥150）",
+    shipping_fee_other: "运费将另行通知，请填写您的邮箱",
+    shipping_email_placeholder: "您的邮箱地址",
+    shipping_email_hint: "收到订单后，我们会发邮件告知具体运费，请按邮件中的 PayPal 账号补付。",
     
   },
 
@@ -3214,6 +3316,15 @@ detailModal.addEventListener("click", (e) => {
     pay_success_title: "Payment Successful!",
     pay_success_note: "We have received your payment and will arrange shipping soon. If you have any questions, please contact us.",
     pay_success_close: "Return to Website",
+    shipping_label: "🚚 Shipping Region",
+    shipping_europe: "🇪🇺 Europe",
+    shipping_us: "🇺🇸 United States",
+    shipping_other: "🌍 Other",
+    shipping_fee_europe: "Shipping to Europe: approx. €13",
+    shipping_fee_us: "Shipping to USA: approx. $20",
+    shipping_fee_other: "Shipping cost will be notified by email — please enter yours below.",
+    shipping_email_placeholder: "your@email.com",
+    shipping_email_hint: "After receiving your order, we will email you the exact shipping cost. Please pay via the PayPal link provided.",
 
   },
   es: {
@@ -3304,7 +3415,16 @@ detailModal.addEventListener("click", (e) => {
     pay_or: "— O paga con —",
     pay_success_title: "¡Pago Exitoso!",
     pay_success_note: "Hemos recibido su pago y organizaremos el envío lo antes posible. Si tiene alguna pregunta, contáctenos.",
-    pay_success_close: "Volver al Sitio"
+    pay_success_close: "Volver al Sitio",
+    shipping_label: "🚚 Región de Envío",
+    shipping_europe: "🇪🇺 Europa",
+    shipping_us: "🇺🇸 Estados Unidos",
+    shipping_other: "🌍 Otro",
+    shipping_fee_europe: "Envío a Europa: aprox. €13",
+    shipping_fee_us: "Envío a EE.UU.: aprox. $20",
+    shipping_fee_other: "El costo de envío se notificará por correo — ingrese su email.",
+    shipping_email_placeholder: "su@correo.com",
+    shipping_email_hint: "Tras recibir su pedido, le enviaremos el costo exacto de envío. Por favor, pague a través del enlace de PayPal que le proporcionemos."
   }
 };
 
@@ -3395,6 +3515,84 @@ let currentBuyProduct = null;
 
 function parsePrice(priceStr) {
     return parseFloat(priceStr.replace(/[^0-9.]/g, '')) || 0;
+}
+
+// ===== 运费配置 =====
+// 欧洲运费：¥120 ≈ €13；美国运费：¥150 ≈ $20
+const SHIPPING_FEES = {
+    europe: { amount: 13, currency: 'EUR', symbol: '€' },
+    us:     { amount: 20, currency: 'USD', symbol: '$' },
+    other:  null  // 另行通知
+};
+
+let selectedShippingRegion = null;  // 'europe' | 'us' | 'other' | null
+
+function selectShippingRegion(region) {
+    selectedShippingRegion = region;
+    // 更新按钮高亮
+    document.querySelectorAll('.shipping-option').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.region === region);
+    });
+    // 更新运费说明
+    const lang = localStorage.getItem('lang') || 'zh';
+    const noteEl = document.getElementById('shippingFeeNote');
+    const emailRow = document.getElementById('shippingEmailRow');
+    if (noteEl) {
+        const key = 'shipping_fee_' + region;
+        noteEl.textContent = (langData[lang] && langData[lang][key]) ? langData[lang][key] : '';
+    }
+    // 是否显示邮箱输入
+    if (emailRow) {
+        emailRow.classList.toggle('visible', region === 'other');
+    }
+    // 重新渲染 PayPal 按钮（加上运费金额）
+    const productId = typeof currentBuyProduct !== 'undefined' ? currentBuyProduct : null;
+    if (region !== 'other') {
+        const amount = getAmountWithShipping(productId);
+        const currency = getEffectiveCurrency(productId, region);
+        renderPayPalButtons(amount, currency);
+    } else {
+        // 其他地区：PayPal 暂时隐藏或只付商品价格（后续补付）
+        const container = document.getElementById('paypal-button-container');
+        if (container) {
+            const lang2 = localStorage.getItem('lang') || 'zh';
+            const hints = {
+                zh: '请填写邮箱，我们确认运费后发送支付链接，您再付运费。<br>商品款项可先行支付：',
+                en: 'Please enter your email. We will send you a payment link for shipping after confirmation.<br>You may pay for the item first:',
+                es: 'Ingrese su email. Le enviaremos el enlace de pago para el envío.<br>Puede pagar el artículo primero:'
+            };
+            container.innerHTML = '<p style="color:var(--text-gray);font-size:0.82rem;margin-bottom:0.6rem;">' + (hints[lang2] || hints.en) + '</p>';
+            // 渲染仅商品价格的 PayPal 按钮
+            const amt = getCurrentAmount(productId);
+            const cur = getCurrentCurrency(productId);
+            setTimeout(function() { renderPayPalButtons(amt, cur); }, 100);
+        }
+    }
+}
+
+// 获取商品价格+运费 合计
+function getAmountWithShipping(productId) {
+    const base = getCurrentAmount(productId);
+    if (!selectedShippingRegion || selectedShippingRegion === 'other') return base;
+    const fee = SHIPPING_FEES[selectedShippingRegion];
+    if (!fee) return base;
+    // 检查货币是否一致
+    const productCurrency = getCurrentCurrency(productId);
+    if (productCurrency.code === fee.currency) {
+        return base + fee.amount;
+    }
+    // 货币不同：只加商品金额（运费会用不同货币，当前简化：转换运费到商品货币，汇率近似）
+    const conversionRates = { 'EUR_to_USD': 1.08, 'USD_to_EUR': 0.93, 'GBP_to_EUR': 1.18, 'EUR_to_GBP': 0.85 };
+    const key = fee.currency + '_to_' + productCurrency.code;
+    const rate = conversionRates[key] || 1;
+    return base + fee.amount * rate;
+}
+
+// 获取含运费的有效货币（欧洲用EUR，美国用USD，其他沿用商品货币）
+function getEffectiveCurrency(productId, region) {
+    if (region === 'europe') return { symbol: '€', code: 'EUR' };
+    if (region === 'us') return { symbol: '$', code: 'USD' };
+    return getCurrentCurrency(productId);
 }
 
 // 检测价格字符串中的货币，返回 { symbol, code } 如 { symbol: '€', code: 'EUR' }
@@ -3545,6 +3743,16 @@ function renderPayPalButtons(amount, currency) {
 }
 
 function openPayModal(productId) {
+    // 重置运费选择
+    selectedShippingRegion = null;
+    document.querySelectorAll('.shipping-option').forEach(btn => btn.classList.remove('selected'));
+    const noteEl = document.getElementById('shippingFeeNote');
+    if (noteEl) noteEl.textContent = '';
+    const emailRow = document.getElementById('shippingEmailRow');
+    if (emailRow) emailRow.classList.remove('visible');
+    const emailInput = document.getElementById('shippingEmail');
+    if (emailInput) emailInput.value = '';
+
     if (!productId) {
         // 购物车结算模式
         const total = getCurrentAmount(null);
@@ -3564,7 +3772,7 @@ function openPayModal(productId) {
         payModal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
-    // 渲染 PayPal 按钮
+    // 渲染 PayPal 按钮（先用商品价格，选运费后会重新渲染）
     const amount = getCurrentAmount(productId);
     const currency = getCurrentCurrency(productId);
     renderPayPalButtons(amount, currency);
@@ -3672,6 +3880,15 @@ closePayModal = function() {
         paySuccessTimer = null;
     }
     originalClosePayModal();
+    // 重置运费选择
+    selectedShippingRegion = null;
+    document.querySelectorAll('.shipping-option').forEach(btn => btn.classList.remove('selected'));
+    const shippingNote = document.getElementById('shippingFeeNote');
+    if (shippingNote) shippingNote.textContent = '';
+    const shippingEmailRow = document.getElementById('shippingEmailRow');
+    if (shippingEmailRow) shippingEmailRow.classList.remove('visible');
+    const shippingEmailInput = document.getElementById('shippingEmail');
+    if (shippingEmailInput) shippingEmailInput.value = '';
     // 重置显示状态
     const paySuccessPage = document.getElementById('paySuccessPage');
     const payProductName = document.getElementById('payProductName');
