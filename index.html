@@ -3451,6 +3451,11 @@ detailModal.addEventListener("click", (e) => {
     // 如果支付弹窗开着，重新加载 PayPal 按钮（切换语言）
     var payModalEl = document.getElementById('payModal');
     if (payModalEl && payModalEl.classList.contains('active')) {
+      // 关闭旧按钮实例，避免 zoid 冲突
+      if (paypalButtonInstance && typeof paypalButtonInstance.close === 'function') {
+        try { paypalButtonInstance.close(); } catch (e) {}
+        paypalButtonInstance = null;
+      }
       // 清除旧的 PayPal 容器内容
       var container = document.getElementById('paypal-button-container');
       if (container) container.innerHTML = '';
@@ -3458,7 +3463,8 @@ detailModal.addEventListener("click", (e) => {
       setTimeout(function() {
         var pid = currentBuyProduct;
         var amt = getCurrentAmount(pid);
-        renderPayPalButtons(amt);
+        var cur = getCurrentCurrency(pid);
+        renderPayPalButtons(amt, cur);
       }, 200);
     }
   }
@@ -3482,6 +3488,7 @@ const PAYPAL_LOCALE_MAP = {
 };
 let paypalLoadPromise = null;
 let paypalButtonInstance = null;  // 保存当前 PayPal 按钮实例，用于关闭
+let paypalLoadedCurrency = null;  // 记录当前已加载的 SDK currency
 
 function loadPayPalSDK(locale, currency) {
   const clientId = PAYPAL_MODE === 'live' ? PAYPAL_LIVE_ID : PAYPAL_SANDBOX_ID;
@@ -3500,6 +3507,7 @@ function loadPayPalSDK(locale, currency) {
   // 移除旧的 script 标签和全局 paypal 对象
   if (existingScript) existingScript.remove();
   if (window.paypal) delete window.paypal;
+  paypalLoadedCurrency = currencyCode;
   paypalLoadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.setAttribute('data-paypal-sdk', '');
@@ -3660,7 +3668,11 @@ function renderPayPalButtons(amount, currency) {
     container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载中，请稍候...</p>';
 
     // 先动态加载 SDK（带正确 locale 和 currency），再渲染按钮
-    loadPayPalSDK(locale, currencyCode).then(() => {
+    // 策略：如果 currency 没变，只重新渲染按钮（不重新加载 SDK，避免 zoid 冲突）
+    const needReloadSDK = !window.paypal || !paypalLoadedCurrency || paypalLoadedCurrency !== currencyCode;
+    const sdkPromise = needReloadSDK ? loadPayPalSDK(locale, currencyCode) : Promise.resolve();
+
+    sdkPromise.then(() => {
         if (typeof paypal === 'undefined' || typeof paypal.Buttons === 'undefined') {
             container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载失败，请刷新页面重试</p>';
             return;
@@ -3792,6 +3804,11 @@ function openPayModal(productId) {
 function closePayModal() {
     payModal.classList.remove('active');
     document.body.style.overflow = '';
+    // 关闭 PayPal 按钮实例，避免下次打开时 zoid 冲突
+    if (paypalButtonInstance && typeof paypalButtonInstance.close === 'function') {
+        try { paypalButtonInstance.close(); } catch (e) {}
+        paypalButtonInstance = null;
+    }
 }
 
 payClose.addEventListener('click', closePayModal);
