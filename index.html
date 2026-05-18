@@ -3485,23 +3485,25 @@ let paypalLoadPromise = null;
 let paypalButtonInstance = null;  // 保存当前 PayPal 按钮实例
 let paypalSdkReady = false;      // 标记 SDK 是否已加载就绪
 
-// ⚠️ SDK 只加载一次！固定 EUR + zh_CN
-// 切换地区/货币时不重新加载 SDK（避免 zoid 冲突）
-// PayPal 按钮支持 createOrder 动态指定金额和货币
-function loadPayPalSDKOnce(locale) {
+// ⚠️ SDK 只加载一次！不指定 currency 和 locale（在 render 时动态指定）
+// 切换地区/货币/语言时不重新加载 SDK（避免 zoid 冲突）
+// - currency：在 createOrder 的 purchase_units[0].amount.currency_code 里动态指定
+// - locale：在 paypal.Buttons({ style: { locale } }) 里动态指定
+function loadPayPalSDKOnce() {
   if (paypalSdkReady && typeof paypal !== 'undefined') {
     return Promise.resolve();
   }
   const clientId = PAYPAL_MODE === 'live' ? PAYPAL_LIVE_ID : PAYPAL_SANDBOX_ID;
   const baseUrl = PAYPAL_MODE === 'live' ? 'https://www.paypal.com' : 'https://www.sandbox.paypal.com';
-  const localeCode = locale || 'zh_CN';
   // 如果已有 script 在加载中，等待它
   if (paypalLoadPromise) return paypalLoadPromise;
 
   paypalLoadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.setAttribute('data-paypal-sdk', '');
-    script.src = baseUrl + '/sdk/js?client-id=' + clientId + '&currency=EUR&locale=' + localeCode + '&intent=capture';
+    // 不传 currency（允许 createOrder 动态指定）
+    // 不传 locale（允许 Buttons({ style: { locale } }) 动态指定）
+    script.src = baseUrl + '/sdk/js?client-id=' + clientId + '&intent=capture';
     script.onload = function() {
       paypalSdkReady = true;
       resolve();
@@ -3656,7 +3658,7 @@ function renderPayPalButtons(amount, currency) {
     container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载中，请稍候...</p>';
 
     // 先加载 SDK（只加载一次），再渲染按钮
-    loadPayPalSDKOnce(locale).then(() => {
+    loadPayPalSDKOnce().then(() => {
         if (typeof paypal === 'undefined' || typeof paypal.Buttons === 'undefined') {
             container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载失败，请刷新页面重试</p>';
             return;
@@ -3667,7 +3669,7 @@ function renderPayPalButtons(amount, currency) {
             try { paypalButtonInstance.close(); } catch (e) {}
         }
         paypalButtonInstance = paypal.Buttons({
-            style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
+            style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal', locale: locale },
             createOrder: function(data, actions) {
                 return actions.order.create({
                     purchase_units: [{
