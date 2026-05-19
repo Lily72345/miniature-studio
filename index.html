@@ -3716,7 +3716,7 @@ function renderPayPalButtons(amount, currency) {
                                 paypal_details: details
                             };
                             if (supabase) {
-                                const { error: insertErr } = await supabase.from('orders').insert(orderData);
+                                const { error: insertErr } = await supabase.from('miniaturebois').insert(orderData);
                                 if (insertErr) console.error('Supabase 写入订单失败:', insertErr);
                                 else console.log('订单已写入 Supabase:', orderData);
                             } else {
