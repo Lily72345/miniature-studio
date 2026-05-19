@@ -3484,42 +3484,27 @@ const PAYPAL_LOCALE_MAP = {
 let paypalLoadPromise = null;
 let paypalButtonInstance = null;  // 保存当前 PayPal 按钮实例
 let paypalSdkReady = false;      // 标记 SDK 是否已加载就绪
-let paypalLoadedCurrency = null; // 记录当前 SDK 加载时使用的货币
 
 // ⚠️ PayPal SDK 必须在 URL 中指定 currency，否则默认 USD，传入其他货币会报错
-// 每次货币变化时重新加载 SDK（移除旧 script，重新注入）
-function loadPayPalSDKOnce(currencyCode) {
-  currencyCode = currencyCode || 'USD';
-
-  // 如果已加载且货币相同，直接返回
-  if (paypalSdkReady && typeof paypal !== 'undefined' && paypalLoadedCurrency === currencyCode) {
+// 解决方案：SDK 只加载一次，URL 里声明所有支持的货币（逗号分隔）
+// createOrder 里仍按实际货币动态传入
+function loadPayPalSDKOnce() {
+  if (paypalSdkReady && typeof paypal !== 'undefined') {
     return Promise.resolve();
   }
 
   const clientId = PAYPAL_MODE === 'live' ? PAYPAL_LIVE_ID : PAYPAL_SANDBOX_ID;
   const baseUrl = PAYPAL_MODE === 'live' ? 'https://www.paypal.com' : 'https://www.sandbox.paypal.com';
 
-  // 货币变了：移除旧 script，重置状态
-  if (paypalLoadedCurrency && paypalLoadedCurrency !== currencyCode) {
-    const oldScript = document.querySelector('script[data-paypal-sdk]');
-    if (oldScript) oldScript.parentNode.removeChild(oldScript);
-    paypalSdkReady = false;
-    paypalLoadPromise = null;
-    paypalLoadedCurrency = null;
-    // 清除 paypal 全局对象（避免 zoid 残留）
-    try { if (window.paypal) delete window.paypal; } catch(e) {}
-  }
-
   if (paypalLoadPromise) return paypalLoadPromise;
 
   paypalLoadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.setAttribute('data-paypal-sdk', '');
-    // currency 必须与 createOrder 中的 currency_code 一致
-    script.src = baseUrl + '/sdk/js?client-id=' + clientId + '&intent=capture&currency=' + currencyCode + '&enable-funding=card,credit';
+    // 声明支持 EUR 和 USD（逗号分隔），避免 zoid 重载冲突
+    script.src = baseUrl + '/sdk/js?client-id=' + clientId + '&intent=capture&currency=EUR,USD&enable-funding=card,credit';
     script.onload = function() {
       paypalSdkReady = true;
-      paypalLoadedCurrency = currencyCode;
       resolve();
     };
     script.onerror = reject;
@@ -3671,8 +3656,8 @@ function renderPayPalButtons(amount, currency) {
     // 显示加载提示
     container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载中，请稍候...</p>';
 
-    // 先加载 SDK（按货币加载），再渲染按钮
-    loadPayPalSDKOnce(currencyCode).then(() => {
+    // 先加载 SDK（只加载一次，支持 EUR/USD），再渲染按钮
+    loadPayPalSDKOnce().then(() => {
         if (typeof paypal === 'undefined' || typeof paypal.Buttons === 'undefined') {
             container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载失败，请刷新页面重试</p>';
             return;
