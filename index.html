@@ -3686,6 +3686,19 @@ function renderPayPalButtons(amount, currency) {
                 });
             },
             onApprove: function(data, actions) {
+                // 其他地区必须填写邮箱才能支付
+                if (selectedShippingRegion === 'other') {
+                    const emailInput = document.getElementById('shippingEmail');
+                    const emailVal = emailInput ? emailInput.value.trim() : '';
+                    if (!emailVal) {
+                        alert('请先填写邮箱（We will contact you by email with the shipping cost）');
+                        return;
+                    }
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+                        alert('请填写有效的邮箱地址');
+                        return;
+                    }
+                }
                 // 不要在这里替换容器内容，否则会中断 PayPal SDK 的 post-robot 通信
                 return actions.order.capture().then(async function(details) {
                     if (details.status === 'COMPLETED') {
