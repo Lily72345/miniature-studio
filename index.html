@@ -2749,7 +2749,7 @@ h1, h2, h3 {
         }
     });
 
-    // 初始化 Supabase
+    // 初始化 Supabase（同步初始化，SDK 支持）
     initSupabase();
 
     document.getElementById('cartCheckoutBtn').addEventListener('click', () => {
@@ -3726,26 +3726,33 @@ function renderPayPalButtons(amount, currency) {
                                 paypal_details: details
                             };
                             if (supabase) {
-                                // paypal_details 可能是复杂对象，单独处理避免 JSONB 类型问题
-                                const { error: insertErr, data: insertedData } = await supabase.from('miniaturebois').insert({
-                                    paypal_order_id: orderData.paypal_order_id,
-                                    buyer_email: orderData.buyer_email,
-                                    product_id: orderData.product_id,
-                                    product_name: orderData.product_name,
-                                    amount: orderData.amount,
-                                    currency: orderData.currency,
-                                    region: orderData.region,
-                                    status: orderData.status
-                                }).select();
-                                if (insertErr) {
-                                    console.error('Supabase 写入订单失败:', insertErr);
-                                    alert('订单支付成功，但保存到数据库失败（错误: ' + insertErr.message + '）。请联系客服提供 PayPal 订单号: ' + (orderData.paypal_order_id || data.orderID));
-                                } else {
-                                    console.log('订单已写入 Supabase:', insertedData);
-                                    alert('✅ 订单已成功保存！（订单号: ' + (orderData.paypal_order_id || data.orderID) + ')');
+                                try {
+                                    // paypal_details 可能是复杂对象，单独处理避免 JSONB 类型问题
+                                    const result = await supabase.from('miniaturebois').insert({
+                                        paypal_order_id: orderData.paypal_order_id,
+                                        buyer_email: orderData.buyer_email,
+                                        product_id: orderData.product_id,
+                                        product_name: orderData.product_name,
+                                        amount: orderData.amount,
+                                        currency: orderData.currency,
+                                        region: orderData.region,
+                                        status: orderData.status
+                                    });
+                                    console.log('Supabase 插入结果:', result);
+                                    if (result.error) {
+                                        console.error('Supabase 写入订单失败:', result.error);
+                                        alert('订单支付成功，但保存到数据库失败。请联系客服提供 PayPal 订单号: ' + (orderData.paypal_order_id || data.orderID));
+                                    } else {
+                                        console.log('订单已写入 Supabase:', result.data);
+                                        alert('✅ 订单已成功保存！（订单号: ' + (orderData.paypal_order_id || data.orderID) + ')');
+                                    }
+                                } catch (dbErr) {
+                                    console.error('Supabase 操作异常:', dbErr);
+                                    alert('订单支付成功，但保存到数据库时出错: ' + dbErr.message);
                                 }
                             } else {
-                                alert('⚠️ Supabase 未初始化，订单未保存到数据库');
+                                console.error('Supabase 未初始化');
+                                alert('⚠️ Supabase 未初始化，订单未保存到数据库。请联系客服提供 PayPal 订单号: ' + (orderData.paypal_order_id || data.orderID));
                             }
                         } catch (dbErr) {
                             console.error('保存订单到 Supabase 出错:', dbErr);
