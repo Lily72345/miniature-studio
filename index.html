@@ -3698,6 +3698,11 @@ function renderPayPalButtons(amount, currency) {
                 }
                 // 不要在这里替换容器内容，否则会中断 PayPal SDK 的 post-robot 通信
                 return actions.order.capture().then(async function(details) {
+                    // 确保 Supabase 已初始化（PayPal 支付可能在新窗口完成，返回后需要重新初始化）
+                    if (!supabase) {
+                        console.log('Supabase 未初始化，尝试重新初始化...');
+                        await initSupabase();
+                    }
                     if (details.status === 'COMPLETED') {
                         // 清空购物车
                         cart = [];
