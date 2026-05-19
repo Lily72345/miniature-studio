@@ -3212,7 +3212,7 @@ detailModal.addEventListener("click", (e) => {
     shipping_us: "🇺🇸 美国",
     shipping_other: "🌍 其他地区",
     shipping_fee_europe: "欧洲运费：约 €13（¥120）",
-    shipping_fee_us: "美国运费：约 $20（¥150）",
+    shipping_fee_us: "美国运费：约 €18（¥150）",
     shipping_fee_other: "运费将另行通知，请填写您的邮箱",
     shipping_email_placeholder: "您的邮箱地址",
     shipping_email_hint: "收到订单后，我们会发邮件告知具体运费，请按邮件中的 PayPal 账号补付。",
@@ -3321,7 +3321,7 @@ detailModal.addEventListener("click", (e) => {
     shipping_us: "🇺🇸 United States",
     shipping_other: "🌍 Other",
     shipping_fee_europe: "Shipping to Europe: approx. €13",
-    shipping_fee_us: "Shipping to USA: approx. $20",
+    shipping_fee_us: "Shipping to USA: approx. €18",
     shipping_fee_other: "Shipping cost will be notified by email — please enter yours below.",
     shipping_email_placeholder: "your@email.com",
     shipping_email_hint: "After receiving your order, we will email you the exact shipping cost. Please pay via the PayPal link provided.",
@@ -3421,7 +3421,7 @@ detailModal.addEventListener("click", (e) => {
     shipping_us: "🇺🇸 Estados Unidos",
     shipping_other: "🌍 Otro",
     shipping_fee_europe: "Envío a Europa: aprox. €13",
-    shipping_fee_us: "Envío a EE.UU.: aprox. $20",
+    shipping_fee_us: "Envío a EE.UU.: aprox. €18",
     shipping_fee_other: "El costo de envío se notificará por correo — ingrese su email.",
     shipping_email_placeholder: "su@correo.com",
     shipping_email_hint: "Tras recibir su pedido, le enviaremos el costo exacto de envío. Por favor, pague a través del enlace de PayPal que le proporcionemos."
@@ -3486,8 +3486,7 @@ let paypalButtonInstance = null;  // 保存当前 PayPal 按钮实例
 let paypalSdkReady = false;      // 标记 SDK 是否已加载就绪
 
 // ⚠️ PayPal SDK 必须在 URL 中指定 currency，否则默认 USD，传入其他货币会报错
-// 解决方案：SDK 只加载一次，URL 里声明所有支持的货币（逗号分隔）
-// createOrder 里仍按实际货币动态传入
+// 本网站所有商品/运费统一使用 EUR，PayPal 也固定用 EUR
 function loadPayPalSDKOnce() {
   if (paypalSdkReady && typeof paypal !== 'undefined') {
     return Promise.resolve();
@@ -3501,8 +3500,8 @@ function loadPayPalSDKOnce() {
   paypalLoadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.setAttribute('data-paypal-sdk', '');
-    // 声明支持 EUR 和 USD（逗号分隔），避免 zoid 重载冲突
-    script.src = baseUrl + '/sdk/js?client-id=' + clientId + '&intent=capture&currency=EUR,USD&enable-funding=card,credit';
+    // 统一使用 EUR（网站所有商品和运费均为欧元）
+    script.src = baseUrl + '/sdk/js?client-id=' + clientId + '&intent=capture&currency=EUR&enable-funding=card,credit';
     script.onload = function() {
       paypalSdkReady = true;
       resolve();
@@ -3526,10 +3525,10 @@ function parsePrice(priceStr) {
 }
 
 // ===== 运费配置 =====
-// 欧洲运费：¥120 ≈ €13；美国运费：¥150 ≈ $20
+// 运费统一使用 EUR（约 ¥120 ≈ €15；¥150 ≈ €18）
 const SHIPPING_FEES = {
-    europe: { amount: 13, currency: 'EUR', symbol: '€' },
-    us:     { amount: 20, currency: 'USD', symbol: '$' },
+    europe: { amount: 15, currency: 'EUR', symbol: '€' },
+    us:     { amount: 18, currency: 'EUR', symbol: '€' },
     other:  null  // 另行通知
 };
 
@@ -3591,10 +3590,9 @@ function getAmountWithShipping(productId) {
     return base + fee.amount * rate;
 }
 
-// 获取含运费的有效货币（欧洲用EUR，美国用USD，其他沿用商品货币）
+// 获取含运费的有效货币（统一使用 EUR）
 function getEffectiveCurrency(productId, region) {
-    if (region === 'europe') return { symbol: '€', code: 'EUR' };
-    if (region === 'us') return { symbol: '$', code: 'USD' };
+    if (region === 'europe' || region === 'us') return { symbol: '€', code: 'EUR' };
     return getCurrentCurrency(productId);
 }
 
