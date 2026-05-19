@@ -3501,7 +3501,7 @@ function loadPayPalSDKOnce() {
     const script = document.createElement('script');
     script.setAttribute('data-paypal-sdk', '');
     // 统一使用 EUR（网站所有商品和运费均为欧元）
-    script.src = baseUrl + '/sdk/js?client-id=' + clientId + '&intent=capture&currency=EUR&enable-funding=card,credit';
+    script.src = baseUrl + '/sdk/js?client-id=' + clientId + '&intent=capture&currency=EUR';
     script.onload = function() {
       paypalSdkReady = true;
       resolve();
