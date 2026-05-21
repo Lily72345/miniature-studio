@@ -2267,10 +2267,17 @@ h1, h2, h3 {
     let supabase = null;
 
     // 初始化 Supabase，返回 true/false 表示是否成功
+    // 如果 SDK 还没加载完成，最多等待 10 秒
     async function initSupabase() {
+        // 等待 SDK 加载（PayPal 跳转后页面可能还在加载脚本）
+        let waited = 0;
+        while (typeof window.supabase === 'undefined' && waited < 10000) {
+            await new Promise(r => setTimeout(r, 200));
+            waited += 200;
+        }
         try {
             if (typeof window.supabase === 'undefined') {
-                throw new Error('Supabase SDK 未加载');
+                throw new Error('Supabase SDK 未加载（等待超时）');
             }
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             // 检查当前 session
@@ -2297,6 +2304,7 @@ h1, h2, h3 {
         try { pendingList = JSON.parse(pendingJson); } catch(e) { return; }
         if (!Array.isArray(pendingList) || pendingList.length === 0) return;
 
+        console.log('🔍 发现 ' + pendingList.length + ' 条待恢复订单，开始写入 Supabase...');
         const remaining = [];
         for (const order of pendingList) {
             try {
@@ -2311,19 +2319,21 @@ h1, h2, h3 {
                     status: order.status || 'COMPLETED'
                 });
                 if (result.error) {
-                    console.error('恢复订单失败:', order.paypal_order_id, result.error);
+                    console.error('恢复订单失败:', order.paypal_order_id, '错误:', JSON.stringify(result.error));
                     remaining.push(order);
                 } else {
                     console.log('✅ 订单恢复成功:', order.paypal_order_id);
                 }
             } catch(e) {
-                console.error('恢复订单异常:', order.paypal_order_id, e);
+                console.error('恢复订单异常:', order.paypal_order_id, e.message || e);
                 remaining.push(order);
             }
         }
         if (remaining.length > 0) {
+            console.warn('⚠️ 仍有 ' + remaining.length + ' 条订单未恢复，将在下次加载时重试');
             localStorage.setItem('pending_payments', JSON.stringify(remaining));
         } else {
+            console.log('🎉 所有待恢复订单已写入 Supabase');
             localStorage.removeItem('pending_payments');
         }
     }
@@ -3751,7 +3761,7 @@ function renderPayPalButtons(amount, currency) {
                 }
                 // 不要在这里替换容器内容，否则会中断 PayPal SDK 的 post-robot 通信
                 return actions.order.capture().then(async function(details) {
-                    // 确保 Supabase 已初始化（PayPal 支付可能在新窗口完成，返回后需要重新初始化）
+                    // 确保 Supabase 已初始化
                     if (!supabase) {
                         console.log('Supabase 未初始化，尝试重新初始化...');
                         await initSupabase();
@@ -3777,7 +3787,7 @@ function renderPayPalButtons(amount, currency) {
                             status: details.status
                         };
 
-                        // ✅ 先存 localStorage 兜底：即使页面崩溃/重载，数据也不会丢
+                        // ✅ 先存 localStorage 兜底
                         let pendingList = [];
                         try { pendingList = JSON.parse(localStorage.getItem('pending_payments') || '[]'); } catch(e) {}
                         pendingList.push(orderData);
@@ -3788,9 +3798,19 @@ function renderPayPalButtons(amount, currency) {
                         saveCart();
                         updateCart();
 
-                        // 尝试写入 Supabase
-                        let savedToSupabase = false;
-                        if (supabase) {
+                        // 🎉 先展示成功页面（不阻塞）
+                        showPaySuccessPage(details);
+
+                        // 后台写入 Supabase（不阻塞用户，失败自动重试）
+                        async function trySaveToSupabase(attempt) {
+                            if (!supabase) {
+                                // SDK 还没加载完，等一会再试
+                                await initSupabase();
+                            }
+                            if (!supabase) {
+                                console.warn('Supabase 未初始化，将在下次页面加载时自动恢复（本地已保存）');
+                                return false;
+                            }
                             try {
                                 const result = await supabase.from('miniaturebois').insert({
                                     paypal_order_id: orderData.paypal_order_id,
@@ -3802,30 +3822,31 @@ function renderPayPalButtons(amount, currency) {
                                     region: orderData.region,
                                     status: orderData.status
                                 });
-                                console.log('Supabase 插入结果:', result);
+                                console.log('Supabase 插入结果 (尝试 #' + attempt + '):', result);
                                 if (result.error) {
-                                    console.error('Supabase 写入订单失败:', result.error);
+                                    console.error('Supabase 写入失败 (尝试 #' + attempt + '):', JSON.stringify(result.error));
+                                    return false;
                                 } else {
-                                    console.log('订单已写入 Supabase:', result.data);
-                                    savedToSupabase = true;
+                                    console.log('✅ 订单已写入 Supabase (尝试 #' + attempt + '):', result.data);
+                                    removeFromPendingPayments(orderData.paypal_order_id);
+                                    return true;
                                 }
                             } catch (dbErr) {
-                                console.error('Supabase 操作异常:', dbErr);
+                                console.error('Supabase 操作异常 (尝试 #' + attempt + '):', dbErr.message || dbErr);
+                                return false;
                             }
-                        } else {
-                            console.error('Supabase 未初始化');
                         }
 
-                        // 写入成功后从 localStorage 移除，否则保留供页面重载后恢复
-                        if (savedToSupabase) {
-                            removeFromPendingPayments(orderData.paypal_order_id);
-                            alert('✅ 订单已成功保存！（订单号: ' + (orderData.paypal_order_id || data.orderID) + ')');
-                        } else {
-                            alert('订单支付成功。数据已暂存本地，系统将自动补录到数据库（订单号: ' + (orderData.paypal_order_id || data.orderID) + '）');
+                        // 立即尝试 + 延迟重试
+                        let saved = await trySaveToSupabase(1);
+                        if (!saved) {
+                            setTimeout(async () => {
+                                saved = await trySaveToSupabase(2);
+                                if (!saved) {
+                                    console.warn('⚠️ 2次写入尝试均失败，订单保留在 localStorage，页面重载时自动恢复');
+                                }
+                            }, 5000);
                         }
-
-                        // 显示成功页面
-                        showPaySuccessPage(details);
                     } else {
                         console.error('PayPal 支付状态异常:', details);
                         alert('PayPal 支付未完成，状态: ' + details.status + '，请联系客服');
