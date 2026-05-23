@@ -3134,7 +3134,7 @@ const detailMainImage = document.getElementById("detailMainImage");
 const detailThumbs = document.getElementById("detailThumbs");
 
 function openDetail(productId) {
-    const lang = localStorage.getItem("lang") || "zh";
+    const lang = localStorage.getItem("lang") || "en";
 const product = productData[lang][productId];
     if (!product) return;
 
@@ -3149,7 +3149,7 @@ const product = productData[lang][productId];
     `;
     detailDesc.innerHTML = product.desc;
     // 从翻译数据读取商品介绍标题（不受产品数据覆盖）
-    const currentLang = localStorage.getItem("lang") || "zh";
+    const currentLang = localStorage.getItem("lang") || "en";
     detailFeaturesTitle.innerHTML = langData[currentLang].features_title;
 
     detailFeatures.innerHTML = "";
@@ -3571,7 +3571,7 @@ detailModal.addEventListener("click", (e) => {
 
   window.setLanguage = setLanguage;
 
-  const savedLang = localStorage.getItem("lang") || "zh";
+  const savedLang = localStorage.getItem("lang") || "en";
   setLanguage(savedLang);
 
 /* ===== PayPal 模式配置 ===== */
