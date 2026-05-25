@@ -226,16 +226,17 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.3rem;
+            gap: 0.25rem;
             color: var(--text-gray);
-            font-size: 0.8rem;
-            letter-spacing: 0.15em;
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            white-space: nowrap;
             animation: bounce 2s infinite;
         }
 
         .scroll-arrow {
             width: 1px;
-            height: 60px;
+            height: 40px;
             background: linear-gradient(to bottom, var(--accent-color), transparent);
         }
 
@@ -947,9 +948,14 @@
             }
 
             .hero-scroll {
-                bottom: 1.5rem;
-                font-size: 0.7rem;
-                gap: 0.2rem;
+                bottom: 1.2rem;
+                font-size: 0.65rem;
+                gap: 0.15rem;
+                letter-spacing: 0.08em;
+            }
+
+            .scroll-arrow {
+                height: 30px;
             }
             
             .products-grid {
