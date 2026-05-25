@@ -2764,7 +2764,8 @@ h1, h2, h3 {
         cartCount.textContent = totalCount;
 
         if (cart.length === 0) {
-            cartItems.innerHTML = '<p class="empty-cart">购物车是空的</p>';
+            const lang = localStorage.getItem("lang") || "en";
+            cartItems.innerHTML = '<p class="empty-cart">' + ((langData[lang] || langData["en"]).cart_empty || 'Your cart is empty') + '</p>';
             cartTotal.textContent = '€0';
             return;
         }
@@ -2909,7 +2910,8 @@ h1, h2, h3 {
         }
         // 打开支付弹窗
         const total = cart.reduce((sum, item) => sum + item.price, 0);
-        document.getElementById('payProductName').textContent = '购物车结算';
+        const lang = localStorage.getItem("lang") || "en";
+        document.getElementById('payProductName').textContent = (langData[lang] || langData["en"]).pay_cart_checkout;
         document.getElementById('payProductPrice').textContent = '€' + total;
         openPayModal();
     });
@@ -2947,11 +2949,11 @@ h1, h2, h3 {
             </div>
 
         <div class="pay-steps">
-            <p class="pay-steps-title" data-key="pay_steps_title">购买流程</p>
-            <div class="pay-step"><span class="pay-step-num">1</span><span data-key="pay_step1">扫描上方二维码，选择微信或支付宝付款</span></div>
-            <div class="pay-step"><span class="pay-step-num">2</span><span data-key="pay_step2">付款时请备注：商品名称 + 您的联系方式</span></div>
-            <div class="pay-step"><span class="pay-step-num">3</span><span data-key="pay_step3">截图付款凭证，通过微信/邮件发送给我们</span></div>
-            <div class="pay-step"><span class="pay-step-num">4</span><span data-key="pay_step4">确认后我们将尽快为您安排发货</span></div>
+            <p class="pay-steps-title" data-key="pay_steps_title">How to Purchase</p>
+            <div class="pay-step"><span class="pay-step-num">1</span><span data-key="pay_step1">Select your shipping region</span></div>
+            <div class="pay-step"><span class="pay-step-num">2</span><span data-key="pay_step2">Click PayPal to complete secure payment</span></div>
+            <div class="pay-step"><span class="pay-step-num">3</span><span data-key="pay_step3">Your order will be confirmed automatically after payment</span></div>
+            <div class="pay-step"><span class="pay-step-num">4</span><span data-key="pay_step4">We will arrange shipment within 1-3 business days</span></div>
         </div>
 
         <p class="pay-note" data-key="pay_note">如有任何问题，请通过下方联系方式与我们沟通，我们会尽快回复您。</p>
@@ -3314,6 +3316,8 @@ detailModal.addEventListener("click", (e) => {
     cart_empty: "购物车是空的",
     cart_total: "总计:",
     cart_checkout: "结算",
+    pay_cart_total: "购物车总计",
+    pay_cart_checkout: "购物车结算",
     login_title: "登录 / 注册",
     login_desc: "输入邮箱和密码即可登录或注册新账号",
     login_email_placeholder: "请输入邮箱",
@@ -3335,6 +3339,8 @@ detailModal.addEventListener("click", (e) => {
     login_alert_need_login: "请先登录后再加入购物车",
     login_alert_checkout: "请先登录",
     paypal_loading: "PayPal 加载中，请稍候...",
+    paypal_load_fail: "PayPal 加载失败，请刷新页面重试",
+    pay_invalid_amount: "金额无效",
     btn_view_detail: "查询详情",
     badge_limited: "限量 50 体",
     badge_sold_out: "已售罄",
@@ -3345,10 +3351,10 @@ detailModal.addEventListener("click", (e) => {
     pay_alipay: "支付宝",
     pay_qr_placeholder: "请放置<br>收款码",
     pay_steps_title: "购买流程",
-    pay_step1: "扫描上方二维码，选择微信或支付宝付款",
-    pay_step2: "付款时请备注：商品名称 + 您的联系方式",
-    pay_step3: "截图付款凭证，通过微信/邮件发送给我们",
-    pay_step4: "确认后我们将尽快为您安排发货",
+    pay_step1: "选择您的配送区域",
+    pay_step2: "点击 PayPal 按钮完成安全支付",
+    pay_step3: "付款成功后，订单将自动确认",
+    pay_step4: "我们将在 1-3 个工作日内为您安排发货",
     pay_note: "如有任何问题，请通过下方联系方式与我们沟通，我们会尽快回复您。",
     pay_buy_now: "立即购买",
     pay_or: "— 或使用 —",
@@ -3438,6 +3444,8 @@ detailModal.addEventListener("click", (e) => {
     cart_empty: "Your cart is empty",
     cart_total: "Total:",
     cart_checkout: "Checkout",
+    pay_cart_total: "Cart Total",
+    pay_cart_checkout: "Cart Checkout",
     login_title: "Login / Register",
     login_desc: "Enter your email and password to login or register",
     login_email_placeholder: "Enter your email",
@@ -3459,6 +3467,8 @@ detailModal.addEventListener("click", (e) => {
     login_alert_need_login: "Please login before adding to cart",
     login_alert_checkout: "Please login first",
     paypal_loading: "PayPal loading, please wait...",
+    paypal_load_fail: "PayPal failed to load, please refresh",
+    pay_invalid_amount: "Invalid amount",
     btn_view_detail: "View Details",
     badge_limited: "Limited · 50pcs",
     badge_sold_out: "Sold Out",
@@ -3469,10 +3479,10 @@ detailModal.addEventListener("click", (e) => {
     pay_alipay: "Alipay",
     pay_qr_placeholder: "QR Code<br>Placeholder",
     pay_steps_title: "How to Purchase",
-    pay_step1: "Scan the QR code above with WeChat or Alipay",
-    pay_step2: "Add a note with: Product name + Your contact info",
-    pay_step3: "Screenshot your payment receipt and send it to us via WeChat or Email",
-    pay_step4: "Once confirmed, we will arrange shipment as soon as possible",
+    pay_step1: "Select your shipping region",
+    pay_step2: "Click PayPal to complete secure payment",
+    pay_step3: "Your order will be confirmed automatically after payment",
+    pay_step4: "We will arrange shipment within 1-3 business days",
     pay_note: "If you have any questions, please contact us through the information below. We will respond as soon as possible.",
     pay_buy_now: "Buy Now",
     pay_or: "— Or pay with —",
@@ -3553,6 +3563,8 @@ detailModal.addEventListener("click", (e) => {
     cart_empty: "El carrito está vacío",
     cart_total: "Total:",
     cart_checkout: "Finalizar Compra",
+    pay_cart_total: "Total del Carrito",
+    pay_cart_checkout: "Finalizar Carrito",
     login_title: "Iniciar Sesión / Registro",
     login_desc: "Ingrese su correo y contraseña para iniciar sesión o registrarse",
     login_email_placeholder: "Ingrese su correo electrónico",
@@ -3574,6 +3586,8 @@ detailModal.addEventListener("click", (e) => {
     login_alert_need_login: "Por favor inicie sesión antes de agregar al carrito",
     login_alert_checkout: "Por favor inicie sesión primero",
     paypal_loading: "PayPal cargando, espere por favor...",
+    paypal_load_fail: "PayPal no pudo cargar, actualice la página",
+    pay_invalid_amount: "Monto no válido",
     btn_view_detail: "Ver Detalles",
     badge_limited: "Limitado · 50 unidades",
     badge_sold_out: "Agotado",
@@ -3584,10 +3598,10 @@ detailModal.addEventListener("click", (e) => {
     pay_alipay: "Alipay",
     pay_qr_placeholder: "Código QR<br>Placeholder",
     pay_steps_title: "Cómo Comprar",
-    pay_step1: "Escanee el código QR con WeChat o Alipay",
-    pay_step2: "Agregue una nota: Nombre del producto + Su información de contacto",
-    pay_step3: "Capture el comprobante de pago y envíelo por WeChat o correo",
-    pay_step4: "Una vez confirmado, organizaremos el envío lo antes posible",
+    pay_step1: "Seleccione su región de envío",
+    pay_step2: "Haga clic en PayPal para completar el pago seguro",
+    pay_step3: "Su pedido se confirmará automáticamente después del pago",
+    pay_step4: "Organizaremos el envío en 1-3 días hábiles",
     pay_note: "Si tiene alguna pregunta, por favor contáctenos. Responderemos lo antes posible.",
     pay_buy_now: "Comprar Ahora",
     pay_or: "— O paga con —",
@@ -3821,11 +3835,12 @@ function renderPayPalButtons(amount, currency) {
     container.innerHTML = '';
 
     if (amount <= 0) {
-        container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">金额无效</p>';
+        const lang = localStorage.getItem('lang') || 'en';
+        container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">' + ((langData[lang] || langData["en"]).pay_invalid_amount || 'Invalid amount') + '</p>';
         return;
     }
 
-    const lang = localStorage.getItem('lang') || 'zh';
+    const lang = localStorage.getItem('lang') || 'en';
     const locale = PAYPAL_LOCALE_MAP[lang] || 'en_US';
     const currencyCode = currency.code || 'EUR';
 
@@ -3835,7 +3850,7 @@ function renderPayPalButtons(amount, currency) {
     // 先加载 SDK（只加载一次，支持 EUR/USD），再渲染按钮
     loadPayPalSDKOnce().then(() => {
         if (typeof paypal === 'undefined' || typeof paypal.Buttons === 'undefined') {
-            container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载失败，请刷新页面重试</p>';
+            container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">' + ((langData[lang] || langData["en"]).paypal_load_fail || 'PayPal failed to load, please refresh') + '</p>';
             return;
         }
         container.innerHTML = '';
@@ -3850,9 +3865,9 @@ function renderPayPalButtons(amount, currency) {
                 // 所以在创建订单时就先存 localStorage
                 const emailInput = document.getElementById('shippingEmail');
                 const buyerEmail = emailInput ? emailInput.value.trim() : '';
-                const lang = localStorage.getItem('lang') || 'zh';
+                const lang = localStorage.getItem('lang') || 'en';
                 const productId = currentBuyProduct || null;
-                let productName = '购物车总计';
+                let productName = (langData[lang] || langData["en"]).pay_cart_total;
                 if (productId && productData[lang] && productData[lang][productId]) {
                     productName = productData[lang][productId].title;
                 }
@@ -3932,7 +3947,7 @@ function renderPayPalButtons(amount, currency) {
                                 paypal_order_id: paypalOrderId,
                                 buyer_email: buyerEmail || null,
                                 product_id: currentBuyProduct || null,
-                                product_name: '购物车总计',
+                                product_name: (langData[lang] || langData["en"]).pay_cart_total,
                                 amount: amount,
                                 currency: currencyCode,
                                 region: selectedShippingRegion || 'other',
@@ -3966,7 +3981,7 @@ function renderPayPalButtons(amount, currency) {
                                         const lang = localStorage.getItem('lang') || 'zh';
                                         if (currentBuyProduct && productData[lang] && productData[lang][currentBuyProduct])
                                             return productData[lang][currentBuyProduct].title;
-                                        return '购物车总计';
+                                        return (langData[lang] || langData["en"]).pay_cart_total;
                                     })(),
                                     amount: amount,
                                     currency: currencyCode,
@@ -4066,7 +4081,8 @@ function openPayModal(productId) {
         // 购物车结算模式
         const total = getCurrentAmount(null);
         const currency = getCurrentCurrency(null);
-        payProductName.textContent = '购物车总计';
+        const lang2 = localStorage.getItem("lang") || "en";
+        payProductName.textContent = (langData[lang2] || langData["en"]).pay_cart_total;
         payProductPrice.textContent = currency.symbol + total.toFixed(2);
         payModal.classList.add('active');
         document.body.style.overflow = 'hidden';
