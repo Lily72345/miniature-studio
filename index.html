@@ -3812,7 +3812,6 @@ function renderPayPalButtons(amount, currency) {
     const currencyCode = currency.code || 'EUR';
 
     // 显示加载提示
-    const lang = localStorage.getItem("lang") || "en";
     container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">' + ((langData[lang] || langData["en"]).paypal_loading || 'PayPal loading...') + '</p>';
 
     // 先加载 SDK（只加载一次，支持 EUR/USD），再渲染按钮
