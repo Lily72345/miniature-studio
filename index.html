@@ -1018,6 +1018,7 @@
     width: min(1300px, 95vw);
     max-height: 95vh;
     overflow-y: auto;
+    overflow-x: hidden;
     background: #f7f5f0;
     color: #222;
     border-radius: 12px;
@@ -1051,6 +1052,8 @@
     gap: 1rem;
     align-items: stretch;
     height: 100%;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .detail-main-image {
@@ -1150,6 +1153,17 @@
     .detail-modal-content {
         grid-template-columns: 1fr;
         padding: 1.2rem;
+        overflow-x: hidden;
+    }
+
+    .detail-image-section {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .detail-thumbs img {
+        width: 64px;
+        height: 64px;
     }
 }
 /* ===== 新标题样式：Miniature Bois ===== */
