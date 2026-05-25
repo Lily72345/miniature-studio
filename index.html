@@ -2244,7 +2244,7 @@ h1, h2, h3 {
         <input id="loginEmailInput" type="email" data-key="login_email_placeholder" data-placeholder="请输入邮箱"
                style="padding:1rem; background:#1b1b1d; color:#fff; border:1px solid #333; margin:0.5rem 0;" required>
 
-        <input id="loginPasswordInput" type="password" placeholder="请输入密码"
+        <input id="loginPasswordInput" type="password" data-key="login_password_placeholder" data-placeholder="请输入密码"
                style="padding:1rem; background:#1b1b1d; color:#fff; border:1px solid #333; margin:0.5rem 0;" required>
 
         <div id="loginError" style="color:#ff6b6b; font-size:0.9rem; margin:0.5rem 0; display:none;"></div>
@@ -2253,7 +2253,7 @@ h1, h2, h3 {
         <button id="loginSwitchBtn" class="checkout-btn" style="background:#333; margin-top:0.5rem;" data-key="login_switch">没有账号？点此注册</button>
 
         <div id="loginLoading" style="display:none; text-align:center; margin-top:1rem;">
-            <span style="color:#b8b0aa;">加载中...</span>
+            <span style="color:#b8b0aa;" data-key="login_loading">加载中...</span>
         </div>
     </div>
 </div>
@@ -2498,16 +2498,18 @@ h1, h2, h3 {
     // 切换登录/注册模式
     function toggleLoginMode() {
         isLoginMode = !isLoginMode;
+        const lang = localStorage.getItem("lang") || "en";
+        const t = langData[lang] || langData["en"];
         if (isLoginMode) {
-            loginTitle.textContent = '登录';
-            loginDesc.textContent = '输入邮箱和密码登录您的账号';
-            loginSubmitBtn.textContent = '登录';
-            loginSwitchBtn.textContent = '没有账号？点此注册';
+            loginTitle.textContent = t.login_title_login;
+            loginDesc.textContent = t.login_desc_login;
+            loginSubmitBtn.textContent = t.login_submit;
+            loginSwitchBtn.textContent = t.login_switch;
         } else {
-            loginTitle.textContent = '注册';
-            loginDesc.textContent = '创建一个新账号';
-            loginSubmitBtn.textContent = '注册';
-            loginSwitchBtn.textContent = '已有账号？点此登录';
+            loginTitle.textContent = t.login_title_register;
+            loginDesc.textContent = t.login_desc_register;
+            loginSubmitBtn.textContent = t.login_submit_register;
+            loginSwitchBtn.textContent = t.login_switch_register;
         }
         loginError.style.display = 'none';
     }
@@ -2524,7 +2526,8 @@ h1, h2, h3 {
         loginSubmitBtn.disabled = true;
 
         if (!email || !password) {
-            loginError.textContent = '请输入邮箱和密码';
+            const lang = localStorage.getItem("lang") || "en";
+            loginError.textContent = (langData[lang] || langData["en"]).login_error_empty;
             loginError.style.display = 'block';
             loginLoading.style.display = 'none';
             loginSubmitBtn.disabled = false;
@@ -2532,7 +2535,8 @@ h1, h2, h3 {
         }
 
         if (!supabase) {
-            loginError.textContent = '服务暂不可用，请刷新页面重试';
+            const lang = localStorage.getItem("lang") || "en";
+            loginError.textContent = (langData[lang] || langData["en"]).login_error_service;
             loginError.style.display = 'block';
             loginLoading.style.display = 'none';
             loginSubmitBtn.disabled = false;
@@ -2574,7 +2578,9 @@ h1, h2, h3 {
                     localStorage.setItem('currentUser', currentUser);
                     updateUserUI();
                     loadCart();
-                    alert('注册成功！欢迎 ' + email);
+                    const lang = localStorage.getItem("lang") || "en";
+                    const t = langData[lang] || langData["en"];
+                    alert(t.login_success_welcome + email);
                     closeLoginModal();
                     loginEmailInput.value = '';
                     loginPasswordInput.value = '';
@@ -2582,14 +2588,16 @@ h1, h2, h3 {
                     toggleLoginMode();
                 } else {
                     // 需要邮箱验证
-                    alert('注册成功！请前往邮箱 ' + email + ' 验证您的账号，然后登录。');
+                    const lang = localStorage.getItem("lang") || "en";
+                    const t = langData[lang] || langData["en"];
+                    alert(t.login_success_verify);
                     isLoginMode = true;
                     toggleLoginMode();
                 }
             }
         } catch (error) {
             console.error('Auth error:', error);
-            loginError.textContent = error.message || '操作失败，请重试';
+            loginError.textContent = error.message || (langData[localStorage.getItem("lang") || "en"] || langData["en"]).login_error_fail;
             loginError.style.display = 'block';
         }
 
@@ -2666,7 +2674,8 @@ h1, h2, h3 {
             if (this.disabled) return;
 
             if (!currentUser) {
-                alert('请先登录邮箱后再加入购物车');
+                const lang = localStorage.getItem("lang") || "en";
+                alert((langData[lang] || langData["en"]).login_alert_need_login);
                 openLoginModal();
                 return;
             }
@@ -2854,7 +2863,8 @@ h1, h2, h3 {
     document.getElementById('cartCheckoutBtn').addEventListener('click', () => {
         if (cart.length === 0) return;
         if (!currentUser) {
-            alert('请先登录');
+            const lang = localStorage.getItem("lang") || "en";
+            alert((langData[lang] || langData["en"]).login_alert_checkout);
             openLoginModal();
             return;
         }
@@ -3292,6 +3302,21 @@ detailModal.addEventListener("click", (e) => {
     login_password_placeholder: "请输入密码",
     login_submit: "登录",
     login_switch: "没有账号？点此注册",
+    login_title_register: "注册",
+    login_desc_register: "创建一个新账号",
+    login_submit_register: "注册",
+    login_switch_register: "已有账号？点此登录",
+    login_title_login: "登录",
+    login_desc_login: "输入邮箱和密码登录您的账号",
+    login_loading: "加载中...",
+    login_error_empty: "请输入邮箱和密码",
+    login_error_service: "服务暂不可用，请刷新页面重试",
+    login_error_fail: "操作失败，请重试",
+    login_success_welcome: "注册成功！欢迎 ",
+    login_success_verify: "注册成功！请前往邮箱验证您的账号，然后登录。",
+    login_alert_need_login: "请先登录后再加入购物车",
+    login_alert_checkout: "请先登录",
+    paypal_loading: "PayPal 加载中，请稍候...",
     btn_view_detail: "查询详情",
     badge_limited: "限量 50 体",
     badge_sold_out: "已售罄",
@@ -3401,6 +3426,21 @@ detailModal.addEventListener("click", (e) => {
     login_password_placeholder: "Enter your password",
     login_submit: "Login",
     login_switch: "No account? Register here",
+    login_title_register: "Register",
+    login_desc_register: "Create a new account",
+    login_submit_register: "Register",
+    login_switch_register: "Already have an account? Login here",
+    login_title_login: "Login",
+    login_desc_login: "Enter your email and password to login",
+    login_loading: "Loading...",
+    login_error_empty: "Please enter your email and password",
+    login_error_service: "Service unavailable, please refresh and try again",
+    login_error_fail: "Operation failed, please try again",
+    login_success_welcome: "Welcome! Registered successfully: ",
+    login_success_verify: "Registered! Please check your email to verify your account, then login.",
+    login_alert_need_login: "Please login before adding to cart",
+    login_alert_checkout: "Please login first",
+    paypal_loading: "PayPal loading, please wait...",
     btn_view_detail: "View Details",
     badge_limited: "Limited · 50pcs",
     badge_sold_out: "Sold Out",
@@ -3501,6 +3541,21 @@ detailModal.addEventListener("click", (e) => {
     login_password_placeholder: "Ingrese su contraseña",
     login_submit: "Iniciar Sesión",
     login_switch: "¿Sin cuenta? Regístrese aquí",
+    login_title_register: "Registro",
+    login_desc_register: "Crear una nueva cuenta",
+    login_submit_register: "Registrarse",
+    login_switch_register: "¿Ya tiene cuenta? Inicie sesión aquí",
+    login_title_login: "Iniciar Sesión",
+    login_desc_login: "Ingrese su correo y contraseña para iniciar sesión",
+    login_loading: "Cargando...",
+    login_error_empty: "Por favor ingrese su correo y contraseña",
+    login_error_service: "Servicio no disponible, actualice la página e intente de nuevo",
+    login_error_fail: "Operación fallida, inténtelo de nuevo",
+    login_success_welcome: "¡Bienvenido! Registro exitoso: ",
+    login_success_verify: "¡Registrado! Por favor verifique su correo electrónico para activar su cuenta, luego inicie sesión.",
+    login_alert_need_login: "Por favor inicie sesión antes de agregar al carrito",
+    login_alert_checkout: "Por favor inicie sesión primero",
+    paypal_loading: "PayPal cargando, espere por favor...",
     btn_view_detail: "Ver Detalles",
     badge_limited: "Limitado · 50 unidades",
     badge_sold_out: "Agotado",
@@ -3757,7 +3812,8 @@ function renderPayPalButtons(amount, currency) {
     const currencyCode = currency.code || 'EUR';
 
     // 显示加载提示
-    container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载中，请稍候...</p>';
+    const lang = localStorage.getItem("lang") || "en";
+    container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">' + ((langData[lang] || langData["en"]).paypal_loading || 'PayPal loading...') + '</p>';
 
     // 先加载 SDK（只加载一次，支持 EUR/USD），再渲染按钮
     loadPayPalSDKOnce().then(() => {
