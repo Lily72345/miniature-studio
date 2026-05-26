@@ -2357,7 +2357,8 @@ h1, h2, h3 {
                     amount: order.amount,
                     currency: order.currency || null,
                     region: order.region || 'other',
-                    status: order.status || 'COMPLETED'
+                    status: order.status || 'COMPLETED',
+                    created_at: order.created_at || (order._created_at ? new Date(order._created_at).toISOString() : new Date().toISOString())
                 });
                 if (result.error) {
                     console.error('恢复订单失败:', order.paypal_order_id, '错误:', JSON.stringify(result.error));
@@ -3983,11 +3984,12 @@ function renderPayPalButtons(amount, currency) {
                                             return productData[lang][currentBuyProduct].title;
                                         return (langData[lang] || langData["en"]).pay_cart_total;
                                     })(),
-                                    amount: amount,
-                                    currency: currencyCode,
-                                    region: selectedShippingRegion || 'other',
-                                    status: 'COMPLETED'
-                                });
+                    amount: amount,
+                    currency: currencyCode,
+                    region: selectedShippingRegion || 'other',
+                    status: 'COMPLETED',
+                    created_at: new Date().toISOString()
+                });
                                 console.log('Supabase 插入结果 (尝试 #' + attempt + '):', result);
                                 if (result.error) {
                                     console.error('Supabase 写入失败 (尝试 #' + attempt + '):', JSON.stringify(result.error));
