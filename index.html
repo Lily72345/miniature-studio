@@ -2359,7 +2359,8 @@ h1, h2, h3 {
                     region: order.region || 'other',
                     status: order.status || 'COMPLETED',
                     created_at: order.created_at || (order._created_at ? new Date(order._created_at).toISOString() : new Date().toISOString()),
-                    paypal_details: order.paypal_details || null
+                    paypal_details: order.paypal_details || null,
+                    cart_summary: order.cart_summary || null
                 });
                 if (result.error) {
                     console.error('恢复订单失败:', order.paypal_order_id, '错误:', JSON.stringify(result.error));
@@ -3854,6 +3855,22 @@ function renderPayPalButtons(amount, currency) {
         return (langData[lang] || langData["en"]).pay_cart_total;
     })();
 
+    // 购物车商品详情（多件商品时记录所有商品信息）
+    function getCartSummary() {
+        if (cart.length === 0) return null;
+        return cart.map(item => {
+            const pLang = localStorage.getItem('lang') || 'en';
+            const pInfo = (productData[pLang] && productData[pLang][item.id]) || {};
+            return {
+                id: item.id,
+                name: pInfo.title || item.id,
+                qty: item.qty,
+                price: pInfo.price || ''
+            };
+        });
+    }
+    const cartSummary = (!lockedProductId) ? getCartSummary() : null;
+
     // 显示加载提示
     container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">' + ((langData[lang] || langData["en"]).paypal_loading || 'PayPal loading...') + '</p>';
 
@@ -3886,7 +3903,8 @@ function renderPayPalButtons(amount, currency) {
                     amount: amount,
                     currency: currencyCode,
                     region: selectedShippingRegion || 'other',
-                    _created_at: Date.now()
+                    _created_at: Date.now(),
+                    cart_summary: cartSummary
                 };
                 // 存入 localStorage，标记为待支付
                 let pendingList = [];
@@ -3959,7 +3977,8 @@ function renderPayPalButtons(amount, currency) {
                                 currency: currencyCode,
                                 region: selectedShippingRegion || 'other',
                                 status: 'COMPLETED',
-                                _created_at: Date.now()
+                                _created_at: Date.now(),
+                                cart_summary: cartSummary
                             });
                         }
                         localStorage.setItem('payment_orders', JSON.stringify(paymentOrders));
@@ -3990,7 +4009,8 @@ function renderPayPalButtons(amount, currency) {
                     region: selectedShippingRegion || 'other',
                     status: 'COMPLETED',
                     created_at: new Date().toISOString(),
-                    paypal_details: details || null
+                    paypal_details: details || null,
+                    cart_summary: cartSummary
                 });
                                 console.log('Supabase 插入结果 (尝试 #' + attempt + '):', result);
                                 if (result.error) {
