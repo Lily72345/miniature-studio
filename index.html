@@ -3858,16 +3858,11 @@ function renderPayPalButtons(amount, currency) {
     // 购物车商品详情（多件商品时记录所有商品信息）
     function getCartSummary() {
         if (cart.length === 0) return null;
-        return cart.map(item => {
-            const pLang = localStorage.getItem('lang') || 'en';
-            const pInfo = (productData[pLang] && productData[pLang][item.id]) || {};
-            return {
-                id: item.id,
-                name: pInfo.title || item.id,
-                qty: item.qty,
-                price: pInfo.price || ''
-            };
-        });
+        return cart.map(item => ({
+            name: item.name || '',
+            price: item.price || '',
+            qty: item.quantity || 1
+        }));
     }
     const cartSummary = (!lockedProductId) ? getCartSummary() : null;
 
