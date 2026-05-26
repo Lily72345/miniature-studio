@@ -1830,6 +1830,13 @@ h1, h2, h3 {
     min-height: 40px;
 }
 
+.pay-paypal-hint {
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: var(--text-gray);
+    opacity: 0.8;
+}
+
 /* ===== 支付成功页面 ===== */
 .pay-success-page {
     text-align: center;
@@ -2052,7 +2059,7 @@ h1, h2, h3 {
                     <div class="product-info">
                         <h3 class="product-name" data-key="p1_name">四神行刑官</h3>
                         <p class="product-scale"data-key="p1_hname">四神行刑官</p>
-                        <p class="product-price">€1</p>
+                        <p class="product-price">€55</p>
                         <button class="add-to-cart"data-key="p1_addbutton" onclick="event.stopPropagation();">加入购物车</button>
                     </div>
                 </div>
@@ -2068,7 +2075,7 @@ h1, h2, h3 {
                     <div class="product-info">
                         <h3 class="product-name" data-key="p2_name">四神行刑官--胸像版</h3>
                         <p class="product-scale" data-key="p2_scale">1/12 比例人偶</p>
-                        <p class="product-price">€1</p>
+                        <p class="product-price">€42</p>
                         <button class="add-to-cart" data-key="p2_addbutton" onclick="event.stopPropagation();">加入购物车</button>
                     </div>
                 </div>
@@ -2949,6 +2956,7 @@ h1, h2, h3 {
                 </div>
 
                 <div id="paypal-button-container"></div>
+                <p class="pay-paypal-hint" data-key="pay_paypal_hint">⚠️ If PayPal cannot be opened, please use a network tool (VPN)</p>
             </div>
 
         <div class="pay-steps">
@@ -3013,7 +3021,7 @@ const productData = {
   zh: {
     p1: {
       title: "四神行刑官｜GIPETTO",
-      price: "Price: €1",
+      price: "Price: €55",
       scale: "1/10",
       pieces: "19",
       more: "Original design",
@@ -3035,7 +3043,7 @@ const productData = {
     },
     p2: {
       title: "四神行刑官·胸像版｜GIPETTO",
-      price: "Price: €1",
+      price: "Price: €55",
       scale: "1/12",
       pieces: "12",
       more: "Original design",
@@ -3061,7 +3069,7 @@ const productData = {
   en: {
     p1: {
       title: "Anatoly | GIPETTO",
-      price: "Price: €1",
+      price: "Price: €55",
       scale: "1/10",
       pieces: "19",
       more: "Original design",
@@ -3083,7 +3091,7 @@ const productData = {
     },
     p2: {
       title: "Anatoly · Bust | GIPETTO",
-      price: "Price: €1",
+      price: "Price: €55",
       scale: "1/12",
       pieces: "12",
       more: "Original design",
@@ -3108,7 +3116,7 @@ const productData = {
   es: {
     p1: {
       title: "Anatoly | GIPETTO",
-      price: "Precio: €1",
+      price: "Precio: €55",
       scale: "1/10",
       pieces: "19",
       more: "Diseño original",
@@ -3130,7 +3138,7 @@ const productData = {
     },
     p2: {
       title: "Anatoly · Versión Busto | GIPETTO",
-      price: "Precio: €1",
+      price: "Precio: €42",
       scale: "1/12",
       pieces: "12",
       more: "Diseño original",
@@ -3364,6 +3372,7 @@ detailModal.addEventListener("click", (e) => {
     pay_success_title: "支付成功！",
     pay_success_note: "我们已收到您的付款，会尽快安排发货。如有疑问，请联系我们。",
     pay_success_close: "返回网站",
+    pay_paypal_hint: "⚠️ 如无法打开 PayPal，请使用网络工具（VPN）",
     shipping_label: "🚚 运费地区",
     shipping_europe: "🇪🇺 欧洲",
     shipping_us: "🇺🇸 美国",
@@ -3492,6 +3501,7 @@ detailModal.addEventListener("click", (e) => {
     pay_success_title: "Payment Successful!",
     pay_success_note: "We have received your payment and will arrange shipping soon. If you have any questions, please contact us.",
     pay_success_close: "Return to Website",
+    pay_paypal_hint: "⚠️ If PayPal cannot be opened, please use a network tool (VPN)",
     shipping_label: "🚚 Shipping Region",
     shipping_europe: "🇪🇺 Europe",
     shipping_us: "🇺🇸 United States",
@@ -3611,6 +3621,7 @@ detailModal.addEventListener("click", (e) => {
     pay_success_title: "¡Pago Exitoso!",
     pay_success_note: "Hemos recibido su pago y organizaremos el envío lo antes posible. Si tiene alguna pregunta, contáctenos.",
     pay_success_close: "Volver al Sitio",
+    pay_paypal_hint: "⚠️ Si no puedes abrir PayPal, por favor usa una herramienta de red (VPN)",
     shipping_label: "🚚 Región de Envío",
     shipping_europe: "🇪🇺 Europa",
     shipping_us: "🇺🇸 Estados Unidos",
