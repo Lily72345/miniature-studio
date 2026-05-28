@@ -2566,31 +2566,43 @@ h1, h2, h3 {
                 console.warn('Supabase 未初始化，无法扣减库存');
                 return false;
             }
-            // 使用 RPC 或 upsert 更新已售数量
-            const { data, error } = await supabase
+            // 1. 先查询当前已售数量
+            var qResult = await supabase
                 .from('inventory')
-                .upsert({ 
-                    product_id: productId, 
-                    sold: 1 
-                }, { 
-                    onConflict: 'product_id',
-                    ignoreDuplicates: false 
-                })
-                .select();
+                .select('sold')
+                .eq('product_id', productId)
+                .maybeSingle();
             
-            if (error) {
-                // 如果 upsert 不支持 increment，用 RPC
-                console.warn('库存 upsert 尝试:', error.message);
-                const { data: rpcData, error: rpcError } = await supabase
-                    .rpc('increment_stock', { pid: productId });
-                if (rpcError) {
-                    console.error('库存扣减失败:', rpcError.message);
+            if (qResult.error) {
+                console.error('库存查询失败:', qResult.error.message);
+                // 查询失败也尝试直接插入（可能是表为空）
+                var initResult = await supabase
+                    .from('inventory')
+                    .insert({ product_id: productId, sold: 1 });
+                if (initResult.error) {
+                    console.error('库存初始化插入失败:', initResult.error.message);
                     return false;
                 }
+                console.log('✅ 库存初始化成功 (sold=1):', productId);
+                delete stockCache[productId];
+                return true;
+            }
+            
+            var currentSold = (qResult.data && qResult.data.sold) ? Number(qResult.data.sold) : 0;
+            var newSold = currentSold + 1;
+            
+            // 2. Upsert 为递增后的值
+            var upsertResult = await supabase
+                .from('inventory')
+                .upsert({ product_id: productId, sold: newSold }, { onConflict: 'product_id' });
+            
+            if (upsertResult.error) {
+                console.error('库存扣减更新失败:', upsertResult.error.message);
+                return false;
             }
             // 清除缓存，下次查询时重新获取
             delete stockCache[productId];
-            console.log('✅ 库存扣减成功:', productId);
+            console.log('✅ 库存已扣减:', productId, '→ sold:', newSold);
             return true;
         } catch(e) {
             console.error('库存扣减异常:', e.message || e);
