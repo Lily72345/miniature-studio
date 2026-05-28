@@ -347,8 +347,45 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.5s;
+            transition: transform 0.5s, opacity 0.4s ease;
+            opacity: 0;
         }
+
+        .product-image img.loaded {
+            opacity: 1;
+        }
+
+        /* 图片加载中占位动画 */
+        .product-image::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 32px;
+            height: 32px;
+            margin: -16px 0 0 -16px;
+            border: 3px solid rgba(255,255,255,0.15);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .product-image.has-loaded::before {
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Artwork 图片同样加 loading */
+        .artwork-preview-item {
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .artwork-preview-item.loaded { opacity: 1; }
 
         .product-card:hover .product-image img {
             transform: scale(1.05);
@@ -1065,6 +1102,10 @@
     display: block;
     border-radius: 8px;
     flex: 1;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.detail-main-image:hover {
+    box-shadow: 0 0 20px rgba(200,30,30,0.3);
 }
 
 /* 缩略图横向一行 */
@@ -2087,8 +2128,8 @@ h1, h2, h3 {
         <div class="container">
             <h2 class="section-title" data-key="artwork_title">ARTWORK</h2>
             <div class="artwork-preview">
-                <img src="weisuo.image/art.p1.png" alt="Artwork 1" class="artwork-preview-item" onclick="openArtworkModal(0)">
-                <img src="weisuo.image/art.p2.png" alt="Artwork 2" class="artwork-preview-item" onclick="openArtworkModal(1)">
+                <img src="weisuo.image/art.p1.jpg" alt="Artwork 1" class="artwork-preview-item" onclick="openArtworkModal(0)">
+                <img src="weisuo.image/art.p2.jpg" alt="Artwork 2" class="artwork-preview-item" onclick="openArtworkModal(1)">
                 <img src="weisuo.image/art.p3.jpg" alt="Artwork 3" class="artwork-preview-item" onclick="openArtworkModal(2)">
                 <img src="weisuo.image/art.p4.jpg" alt="Artwork 4" class="artwork-preview-item" onclick="openArtworkModal(3)">
             </div>
@@ -2104,6 +2145,15 @@ h1, h2, h3 {
         <div class="artwork-modal-nav">
             <button onclick="prevArtwork()">◀ PREV</button>
             <button onclick="nextArtwork()">NEXT ▶</button>
+        </div>
+    </div>
+
+    <!-- 产品详情 Lightbox（点击主图放大查看） -->
+    <div class="artwork-modal" id="detailLightbox">
+        <button class="artwork-modal-close" onclick="closeDetailLightbox()">&times;</button>
+        <img src="" alt="Product" class="artwork-modal-content" id="detailLightboxImg">
+        <div class="artwork-modal-nav">
+            <span style="color:rgba(255,255,255,0.5);font-size:0.85rem;">Click anywhere to close</span>
         </div>
     </div>
 
@@ -2406,8 +2456,8 @@ h1, h2, h3 {
 
     // Artwork Modal 功能
     const artworkImages = [
-        "weisuo.image/art.p1.png",
-        "weisuo.image/art.p2.png",
+        "weisuo.image/art.p1.jpg",
+        "weisuo.image/art.p2.jpg",
         "weisuo.image/art.p3.jpg",
         "weisuo.image/art.p4.jpg"
     ];
@@ -2997,7 +3047,7 @@ h1, h2, h3 {
         <button class="detail-close" id="detailClose">×</button>
 
         <div class="detail-image-section">
-            <img id="detailMainImage" class="detail-main-image" src="" alt="">
+            <img id="detailMainImage" class="detail-main-image" src="" alt="" onclick="openDetailLightbox(this.src)" style="cursor:zoom-in;" title="Click to enlarge">
             <div class="detail-thumbs" id="detailThumbs"></div>
         </div>
 
@@ -4264,6 +4314,46 @@ closePayModal = function() {
     if (noteSection) noteSection.style.display = '';
     if (titleSection) titleSection.style.display = '';
 };
+
+// ===== 图片加载动画：加载完成前显示 spinner，完成后淡入 =====
+document.addEventListener('DOMContentLoaded', function() {
+    // 所有产品图片和 artwork 图片加 loading 效果
+    const images = document.querySelectorAll('.product-image img, .artwork-preview-item');
+    images.forEach(function(img) {
+        if (img.complete && img.naturalWidth > 0) {
+            // 已缓存，直接显示
+            img.classList.add('loaded');
+            const wrapper = img.closest('.product-image');
+            if (wrapper) wrapper.classList.add('has-loaded');
+        } else {
+            img.addEventListener('load', function() {
+                img.classList.add('loaded');
+                const wrapper = img.closest('.product-image');
+                if (wrapper) wrapper.classList.add('has-loaded');
+            });
+            // 加载失败时隐藏 spinner
+            img.addEventListener('error', function() {
+                const wrapper = img.closest('.product-image');
+                if (wrapper) wrapper.classList.add('has-loaded');
+            });
+        }
+    });
+});
+
+// ===== 产品详情 Lightbox（点击主图放大） =====
+function openDetailLightbox(src) {
+    if (!src) return;
+    const box = document.getElementById('detailLightbox');
+    const img = document.getElementById('detailLightboxImg');
+    img.src = src;
+    box.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function closeDetailLightbox() {
+    const box = document.getElementById('detailLightbox');
+    box.classList.remove('active');
+    document.body.style.overflow = '';
+}
 
 </script>
 
