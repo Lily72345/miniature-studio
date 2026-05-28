@@ -3895,7 +3895,7 @@ function parsePrice(priceStr) {
 // ===== 运费配置 =====
 // 运费统一使用 EUR（约 ¥120 ≈ €15；¥150 ≈ €18）
 const SHIPPING_FEES = {
-    europe: { amount: 15, currency: 'EUR', symbol: '€' },
+    europe: { amount: 13, currency: 'EUR', symbol: '€' },
     us:     { amount: 18, currency: 'EUR', symbol: '€' },
     other:  null  // 另行通知
 };
@@ -3926,6 +3926,10 @@ function selectShippingRegion(region) {
         const amount = getAmountWithShipping(productId);
         const currency = getEffectiveCurrency(productId, region);
         renderPayPalButtons(amount, currency);
+        // 同步更新价格显示为总价
+        if (payProductPrice) {
+            payProductPrice.textContent = currency.symbol + amount.toFixed(2);
+        }
     } else {
         // 其他地区：显示提示+邮箱输入，PayPal 按钮渲染商品价格
         const container = document.getElementById('paypal-button-container');
