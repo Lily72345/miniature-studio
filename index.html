@@ -2086,6 +2086,7 @@ h1, h2, h3 {
             <button class="filter-btn" data-filter="figure" data-key="filter_figure">名画系列</button>
             <button class="filter-btn" data-filter="creature" data-key="filter_creature">中华志怪系列</button>
             <button class="filter-btn" data-filter="painted" data-key="filter_painted">兽人部落系列</button>
+            <button class="filter-btn" data-filter="orc tribe" data-key="filter_orc_tribe">Orc Tribe</button>
         </div>
 
             <div class="products-grid">
@@ -2118,6 +2119,22 @@ h1, h2, h3 {
                         <p class="product-scale" data-key="p2_scale">1/12 比例人偶</p>
                         <p class="product-price">€42</p>
                         <button class="add-to-cart" data-key="p2_addbutton" onclick="event.stopPropagation();">加入购物车</button>
+                    </div>
+                </div>
+
+                <!-- 产品卡片 3 -->
+                <div class="product-card" data-category="orc tribe" onclick="openDetail('p3')">
+                    <div class="product-image">
+                        <img src="weisuo.image/c1.jpg" alt="Orc Family">
+                       <div class="product-overlay">
+    <button class="view-details" data-product="p3" data-key="btn_view_detail" onclick="event.stopPropagation(); openDetail('p3')">查询详情</button>
+</div>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name" data-key="p3_name">兽人奶爸</h3>
+                        <p class="product-scale" data-key="p3_scale">20cm × 9cm</p>
+                        <p class="product-price">€120</p>
+                        <button class="add-to-cart" data-key="p3_addbutton" onclick="event.stopPropagation();">加入购物车</button>
                     </div>
                 </div>
 
@@ -3115,6 +3132,32 @@ const productData = {
             "weisuo.image/b3.jpg",
             "weisuo.image/b4.jpg",
           ]
+    },
+    p3: {
+      title: "兽人奶爸｜Orc Family",
+      price: "Price: €120",
+      scale: "20cm高 × 9cm宽",
+      pieces: "32",
+      more: "Sculpt: Allan Carrasco · Concept: Allan Carrasco · XLF",
+      featuresTitle: "商品介绍",
+      desc: "战场变得愈发混乱，兽人和他的宠物与小子们加入战场，大杀四方。",
+      features: [
+        "原创角色设计 by Allan Carrasco",
+        "32个精密零件",
+        "未涂装灰模版本",
+        "适合微缩爱好者收藏与涂装"
+      ],
+      images: [
+            "weisuo.image/c1.jpg",
+            "weisuo.image/c2.jpg",
+            "weisuo.image/c3.jpg",
+            "weisuo.image/c4.jpg",
+            "weisuo.image/c5.jpg",
+            "weisuo.image/c6.jpg",
+            "weisuo.image/c7.jpg",
+            "weisuo.image/c8.jpg",
+            "weisuo.image/c9.jpg",
+          ]
     }
   },
 
@@ -3163,6 +3206,32 @@ const productData = {
             "weisuo.image/b3.jpg",
             "weisuo.image/b4.jpg",
            ]
+    },
+    p3: {
+      title: "Orc Family | Allan Carrasco",
+      price: "Price: €120",
+      scale: "20cm(H) × 9cm(W)",
+      pieces: "32",
+      more: "Sculpt: Allan Carrasco · Concept: Allan Carrasco · XLF",
+      featuresTitle: "Product Details",
+      desc: "The battlefield grows ever more chaotic — the orc and his pets and young ones join the fray, wreaking havoc across the field.",
+      features: [
+        "Original character design by Allan Carrasco",
+        "32 intricate pieces",
+        "Unpainted grey resin version",
+        "Perfect for collectors and painters"
+      ],
+      images: [
+            "weisuo.image/c1.jpg",
+            "weisuo.image/c2.jpg",
+            "weisuo.image/c3.jpg",
+            "weisuo.image/c4.jpg",
+            "weisuo.image/c5.jpg",
+            "weisuo.image/c6.jpg",
+            "weisuo.image/c7.jpg",
+            "weisuo.image/c8.jpg",
+            "weisuo.image/c9.jpg",
+           ]
     }
   },
   es: {
@@ -3209,6 +3278,32 @@ const productData = {
             "weisuo.image/b2.jpg",
             "weisuo.image/b3.jpg",
             "weisuo.image/b4.jpg",
+          ]
+    },
+    p3: {
+      title: "Familia Orco | Allan Carrasco",
+      price: "Precio: €120",
+      scale: "20cm(Al) × 9cm(An)",
+      pieces: "32",
+      more: "Escultura: Allan Carrasco · Concepto: Allan Carrasco · XLF",
+      featuresTitle: "Detalles del Producto",
+      desc: "El campo de batilla se vuelve cada vez más caótico — el orco y sus mascotas y crías se unen a la lucha, causando estragos.",
+      features: [
+        "Diseño original de personaje por Allan Carrasco",
+        "32 piezas intrincadas",
+        "Versión resina gris sin pintar",
+        "Perfecto para coleccionistas y pintores"
+      ],
+      images: [
+            "weisuo.image/c1.jpg",
+            "weisuo.image/c2.jpg",
+            "weisuo.image/c3.jpg",
+            "weisuo.image/c4.jpg",
+            "weisuo.image/c5.jpg",
+            "weisuo.image/c6.jpg",
+            "weisuo.image/c7.jpg",
+            "weisuo.image/c8.jpg",
+            "weisuo.image/c9.jpg"
           ]
     }
   }
@@ -3326,6 +3421,7 @@ detailModal.addEventListener("click", (e) => {
     filter_figure: "名画系列",
     filter_creature: "中华志怪系列",
     filter_painted: "兽人部落系列",
+    filter_orc_tribe: "Orc Tribe 系列",
 
     home: "首页",
     shop: "商店",
@@ -3339,7 +3435,10 @@ detailModal.addEventListener("click", (e) => {
     p2_name: "四神行刑官--胸像版",
     p2_scale: "1/12 比例人偶",
     p2_addbutton:"加入购物车",
-    p3_name:"幼年河童",
+    p3_name:"兽人奶爸",
+    p3_hname:"Orc Family",
+    p3_scale:"20cm高 × 9cm宽",
+    p3_addbutton:"加入购物车",
 
     artwork_title: "涂装作品",
     artwork_view: "查看全部",
@@ -3446,7 +3545,6 @@ detailModal.addEventListener("click", (e) => {
     hero_desc: "Each piece is a unique artwork, handcrafted by professional sculptors, limited and numbered",
     hero_button: "Explore",
     scroll_tip: "Scroll Down",
-    p3_name:"aaaa",
 
     shop_title: "Shop",
     shop_subtitle: "Collection",
@@ -3456,6 +3554,7 @@ detailModal.addEventListener("click", (e) => {
     filter_figure: "Masterpiece Series",
     filter_creature: "Myth Series",
     filter_painted: "Orc Tribe",
+    filter_orc_tribe: "Orc Tribe (XLF)",
 
     home: "Home",
     shop: "Shop",
@@ -3469,6 +3568,10 @@ detailModal.addEventListener("click", (e) => {
     p2_name: "Anatoly · Bust",
     p2_addbutton:"Add to Cart",
     p2_scale: "1/12 Scale Figure",
+    p3_name: "Orc Family",
+    p3_hname: "Orc Family",
+    p3_addbutton: "Add to Cart",
+    p3_scale: "20cm × 9cm",
 
     artwork_title: "ARTWORK",
     artwork_view: "VIEW ALL",
@@ -3581,6 +3684,7 @@ detailModal.addEventListener("click", (e) => {
     filter_figure: "Serie Obras Maestras",
     filter_creature: "Serie Mitología China",
     filter_painted: "Tribu Orco",
+    filter_orc_tribe: "Tribu Orco (XLF)",
     home: "Inicio",
     shop: "Tienda",
     about: "Sobre Nosotros",
@@ -3592,6 +3696,10 @@ detailModal.addEventListener("click", (e) => {
     p2_name: "Anatoly--Versión Busto",
     p2_scale: "Figura 1/12",
     p2_addbutton:"Añadir al Carrito",
+    p3_name: "Familia Orco",
+    p3_hname: "Orc Family",
+    p3_scale: "20cm × 9cm",
+    p3_addbutton:"Añadir al Carrito",
     artwork_title: "OBRAS DE ARTE",
     artwork_view: "VER TODO",
     about_title: "Sobre Nosotros",
