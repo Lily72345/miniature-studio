@@ -3139,6 +3139,7 @@ const productData = {
       scale: "20cm高 × 9cm宽",
       pieces: "32",
       more: "Sculpt: Allan Carrasco · Concept: Allan Carrasco · XLF",
+      badge: "限量 120 体",
       featuresTitle: "商品介绍",
       desc: "战场变得愈发混乱，兽人和他的宠物与小子们加入战场，大杀四方。",
       features: [
@@ -3149,6 +3150,7 @@ const productData = {
       ],
       images: [
             "weisuo.image/c1.jpg",
+            "weisuo.image/c1.1.jpg",
             "weisuo.image/c2.jpg",
             "weisuo.image/c3.jpg",
             "weisuo.image/c4.jpg",
@@ -3157,6 +3159,8 @@ const productData = {
             "weisuo.image/c7.jpg",
             "weisuo.image/c8.jpg",
             "weisuo.image/c9.jpg",
+            "weisuo.image/c10.jpg",
+            "weisuo.image/c11.png",
           ]
     }
   },
@@ -3213,6 +3217,7 @@ const productData = {
       scale: "20cm(H) × 9cm(W)",
       pieces: "32",
       more: "Sculpt: Allan Carrasco · Concept: Allan Carrasco · XLF",
+      badge: "Limited · 120pcs",
       featuresTitle: "Product Details",
       desc: "The battlefield grows ever more chaotic — the orc and his pets and young ones join the fray, wreaking havoc across the field.",
       features: [
@@ -3223,6 +3228,7 @@ const productData = {
       ],
       images: [
             "weisuo.image/c1.jpg",
+            "weisuo.image/c1.1.jpg",
             "weisuo.image/c2.jpg",
             "weisuo.image/c3.jpg",
             "weisuo.image/c4.jpg",
@@ -3231,6 +3237,8 @@ const productData = {
             "weisuo.image/c7.jpg",
             "weisuo.image/c8.jpg",
             "weisuo.image/c9.jpg",
+            "weisuo.image/c10.jpg",
+            "weisuo.image/c11.png",
            ]
     }
   },
@@ -3286,6 +3294,7 @@ const productData = {
       scale: "20cm(Al) × 9cm(An)",
       pieces: "32",
       more: "Escultura: Allan Carrasco · Concepto: Allan Carrasco · XLF",
+      badge: "Limitado · 120 unidades",
       featuresTitle: "Detalles del Producto",
       desc: "El campo de batilla se vuelve cada vez más caótico — el orco y sus mascotas y crías se unen a la lucha, causando estragos.",
       features: [
@@ -3296,6 +3305,7 @@ const productData = {
       ],
       images: [
             "weisuo.image/c1.jpg",
+            "weisuo.image/c1.1.jpg",
             "weisuo.image/c2.jpg",
             "weisuo.image/c3.jpg",
             "weisuo.image/c4.jpg",
@@ -3303,7 +3313,9 @@ const productData = {
             "weisuo.image/c6.jpg",
             "weisuo.image/c7.jpg",
             "weisuo.image/c8.jpg",
-            "weisuo.image/c9.jpg"
+            "weisuo.image/c9.jpg",
+            "weisuo.image/c10.jpg",
+            "weisuo.image/c11.png"
           ]
     }
   }
@@ -3350,6 +3362,17 @@ const product = productData[lang][productId];
     detailMainImage.src = product.images[0];
     detailThumbs.innerHTML = "";
 
+    // 限量标签（仅在有 badge 字段时显示）
+    const imageSection = detailModal.querySelector('.detail-image-section');
+    let existingBadge = imageSection.querySelector('.stock-badge');
+    if (existingBadge) existingBadge.remove();
+    if (product.badge) {
+        const badgeEl = document.createElement('span');
+        badgeEl.className = 'stock-badge';
+        badgeEl.textContent = product.badge;
+        imageSection.appendChild(badgeEl);
+    }
+
     product.images.forEach((imgSrc, index) => {
         const thumb = document.createElement("img");
         thumb.src = imgSrc;
@@ -3368,7 +3391,6 @@ const product = productData[lang][productId];
     });
 
     // 确保大主图始终在缩略图上方（DOM 结构顺序保证）
-    const imageSection = detailModal.querySelector('.detail-image-section');
     if (imageSection) {
         const mainImg = imageSection.querySelector('#detailMainImage');
         const thumbsDiv = imageSection.querySelector('#detailThumbs');
@@ -3554,7 +3576,7 @@ detailModal.addEventListener("click", (e) => {
     filter_figure: "Masterpiece Series",
     filter_creature: "Myth Series",
     filter_painted: "Orc Tribe",
-    filter_orc_tribe: "Orc Tribe (XLF)",
+    filter_orc_tribe: "Orc Tribe",
 
     home: "Home",
     shop: "Shop",
@@ -3684,7 +3706,7 @@ detailModal.addEventListener("click", (e) => {
     filter_figure: "Serie Obras Maestras",
     filter_creature: "Serie Mitología China",
     filter_painted: "Tribu Orco",
-    filter_orc_tribe: "Tribu Orco (XLF)",
+    filter_orc_tribe: "Tribu Orco",
     home: "Inicio",
     shop: "Tienda",
     about: "Sobre Nosotros",
