@@ -2123,7 +2123,8 @@ h1, h2, h3 {
 
                 <!-- 产品卡片 3 -->
                 <div class="product-card" data-category="painted" onclick="openDetail('p3')">
-                    <div class="product-image">
+                    <div class="product-image" style="position:relative;">
+                        <span class="stock-badge" data-key="badge_limited" data-i18n>限量 50 体</span>
                         <img src="weisuo.image/c1.jpg" alt="Orc Family">
                        <div class="product-overlay">
     <button class="view-details" data-product="p3" data-key="btn_view_detail" onclick="event.stopPropagation(); openDetail('p3')">查询详情</button>
@@ -2407,6 +2408,8 @@ h1, h2, h3 {
                 loadCart();
             }
             console.log('Supabase 初始化成功');
+            // 预热库存数据（后台静默查询，不阻塞用户）
+            preloadAllStock();
             return true;
         } catch (error) {
             console.error('Supabase 初始化失败:', error);
@@ -2463,6 +2466,144 @@ h1, h2, h3 {
             console.log('🎉 所有待恢复订单已写入 Supabase');
             localStorage.removeItem('payment_orders');
         }
+    }
+
+    /* ===== 库存管理系统 ===== */
+    // 库存缓存：避免重复查询 { productId: { sold: number, total: number } }
+    const stockCache = {};
+    // 正在查询中的 Promise（防止并发重复请求）
+    const stockPromises = {};
+
+    // 查询产品剩余库存
+    // 返回: { remaining: number, sold: number, total: number, soldOut: boolean }
+    async function checkStock(productId) {
+        if (stockCache[productId]) {
+            const c = stockCache[productId];
+            const remaining = Math.max(0, c.total - c.sold);
+            return { remaining, sold: c.sold, total: c.total, soldOut: remaining <= 0 };
+        }
+        if (stockPromises[productId]) return stockPromises[productId];
+
+        stockPromises[productId] = (async function() {
+            try {
+                if (!supabase) await initSupabase();
+                if (!supabase) {
+                    // Supabase 不可用时返回默认值（假设全部有货）
+                    var lang = localStorage.getItem('lang') || 'en';
+                    var pd = (productData[lang] || productData['en'])[productId];
+                    var total = pd ? (pd.stock || 999) : 999;
+                    return { remaining: total, sold: 0, total, soldOut: false };
+                }
+                // 查询 inventory 表
+                const { data, error } = await supabase
+                    .from('inventory')
+                    .select('sold')
+                    .eq('product_id', productId)
+                    .maybeSingle();
+                
+                var lang2 = localStorage.getItem('lang') || 'en';
+                var product = (productData[lang2] || productData['en'])[productId];
+                var totalStock = product ? (product.stock || 999) : 999;
+                var sold = (data && data.sold) ? data.sold : 0;
+                var remaining = Math.max(0, totalStock - sold);
+                var result = { remaining, sold, total: totalStock, soldOut: remaining <= 0 };
+                stockCache[productId] = { sold, total: totalStock };
+                delete stockPromises[productId];
+                return result;
+            } catch(e) {
+                console.warn('库存查询异常:', e.message || e);
+                delete stockPromises[productId];
+                var lang3 = localStorage.getItem('lang') || 'en';
+                var pd2 = (productData[lang3] || productData['en'])[productId];
+                var t = pd2 ? (pd2.stock || 999) : 999;
+                return { remaining: t, sold: 0, total: t, soldOut: false };
+            }
+        })();
+        return stockPromises[productId];
+    }
+
+    // 扣减库存（支付成功后调用）
+    async function decrementStock(productId) {
+        try {
+            if (!supabase) await initSupabase();
+            if (!supabase) {
+                console.warn('Supabase 未初始化，无法扣减库存');
+                return false;
+            }
+            // 使用 RPC 或 upsert 更新已售数量
+            const { data, error } = await supabase
+                .from('inventory')
+                .upsert({ 
+                    product_id: productId, 
+                    sold: 1 
+                }, { 
+                    onConflict: 'product_id',
+                    ignoreDuplicates: false 
+                })
+                .select();
+            
+            if (error) {
+                // 如果 upsert 不支持 increment，用 RPC
+                console.warn('库存 upsert 尝试:', error.message);
+                const { data: rpcData, error: rpcError } = await supabase
+                    .rpc('increment_stock', { pid: productId });
+                if (rpcError) {
+                    console.error('库存扣减失败:', rpcError.message);
+                    return false;
+                }
+            }
+            // 清除缓存，下次查询时重新获取
+            delete stockCache[productId];
+            console.log('✅ 库存扣减成功:', productId);
+            return true;
+        } catch(e) {
+            console.error('库存扣减异常:', e.message || e);
+            return false;
+        }
+    }
+
+    // 预热所有产品库存（页面加载时后台静默查询）
+    async function preloadAllStock() {
+        try {
+            var lang = localStorage.getItem('lang') || 'en';
+            var pd = productData[lang] || productData['en'];
+            var ids = Object.keys(pd);
+            for (var i = 0; i < ids.length; i++) {
+                checkStock(ids[i]); // fire-and-forget，不 await
+            }
+        } catch(e) {
+            // 静默失败不影响正常使用
+        }
+    }
+
+    // 批量检查购物车中所有产品的库存
+    async function checkCartStock() {
+        if (cart.length === 0) return { allAvailable: true };
+        var stockChecks = {};
+        for (var i = 0; i < cart.length; i++) {
+            // 从商品名反推 productId
+            var itemId = findProductIdByName(cart[i].name);
+            if (itemId && !stockChecks[itemId]) {
+                stockChecks[itemId] = await checkStock(itemId);
+            }
+        }
+        // 检查是否有售罄
+        for (var id in stockChecks) {
+            if (stockChecks[id].soldOut) {
+                return { allAvailable: false, outOfStockItem: id };
+            }
+        }
+        return { allAvailable: true };
+    }
+
+    // 根据商品名查找 productId（简单匹配）
+    function findProductIdByName(name) {
+        var lang = localStorage.getItem('lang') || 'en';
+        var pd = productData[lang] || productData['en'];
+        for (var key in pd) {
+            if (pd[key] && pd[key].title === name) return key;
+        }
+        return null;
     }
 
     // 从 localStorage 里移除已写入 Supabase 的订单
@@ -2809,6 +2950,35 @@ h1, h2, h3 {
                 return;
             }
 
+            // 检查库存
+            const cardForStock = this.closest('.product-card');
+            const productIdForStock = cardForStock ? cardForStock.dataset.product : null;
+            if (productIdForStock) {
+                var productForLang = localStorage.getItem('lang') || 'en';
+                var pdForCheck = (productData[productForLang] || productData['en'])[productIdForStock];
+                if (pdForCheck && pdForCheck.stock > 0) {
+                    // 使用缓存快速检查
+                    var cached = stockCache[productIdForStock];
+                    if (cached && (cached.total - cached.sold <= 0)) {
+                        var sl = localStorage.getItem('lang') || 'en';
+                        alert((langData[sl] || langData['en']).badge_sold_out || 'Sold Out');
+                        return;
+                    }
+                    // 异步精确检查（不阻塞，但防止超卖）
+                    checkStock(productIdForStock).then(function(si) {
+                        if (si.soldOut) {
+                            var sl2 = localStorage.getItem('lang') || 'en';
+                            // 从购物车中移除刚加的（如果有）
+                            const nameToRemove = cardForStock.querySelector('.product-name').textContent;
+                            cart = cart.filter(item => item.name !== nameToRemove);
+                            saveCart();
+                            updateCart();
+                            alert((langData[sl2] || langData['en']).badge_sold_out || 'Sorry, this item is sold out.');
+                        }
+                    });
+                }
+            }
+
             const card = this.closest('.product-card');
             const name = card.querySelector('.product-name').textContent;
             const price = card.querySelector('.product-price').textContent;
@@ -3104,6 +3274,7 @@ const productData = {
       price: "Price: €55",
       scale: "90mm",
       pieces: "19",
+      stock: 50,
       more: "Original design",
       featuresTitle: "商品介绍",
       desc: "战神正在席卷地狱，大杀四方。",
@@ -3127,6 +3298,7 @@ const productData = {
       price: "Price: €42",
       scale: "1/12",
       pieces: "12",
+      stock: 50,
       more: "Original design",
       featuresTitle: "商品介绍",
       desc: "取自四神行刑官全身版的精华胸像，保留了战神的肌肉纹理与铠甲细节，缩小比例更考验涂装功力。",
@@ -3150,7 +3322,8 @@ const productData = {
       scale: "20cm高 × 9cm宽",
       pieces: "32",
       more: "Sculpt: Allan Carrasco · Concept: Allan Carrasco · XLF",
-      badge: "限量 120 体",
+      badge: "限量 50 体",
+      stock: 50,
       featuresTitle: "商品介绍",
       desc: "战场变得愈发混乱，兽人和他的宠物与小子们加入战场，大杀四方。",
       features: [
@@ -3182,6 +3355,7 @@ const productData = {
       price: "Price: €55",
       scale: "90mm",
       pieces: "19",
+      stock: 50,
       more: "Original design",
       featuresTitle: "Product Details",
       desc: "The war god is sweeping through hell.",
@@ -3205,6 +3379,7 @@ const productData = {
       price: "Price: €42",
       scale: "1/12",
       pieces: "12",
+      stock: 50,
       more: "Original design",
       featuresTitle: "Product Details",
       desc: "A refined bust scaled down from the full-figure Anatoly, preserving the muscle textures and armor details. The smaller scale puts painting skills to the test.",
@@ -3228,7 +3403,8 @@ const productData = {
       scale: "20cm(H) × 9cm(W)",
       pieces: "32",
       more: "Sculpt: Allan Carrasco · Concept: Allan Carrasco · XLF",
-      badge: "Limited · 120pcs",
+      badge: "Limited · 50pcs",
+      stock: 50,
       featuresTitle: "Product Details",
       desc: "The battlefield grows ever more chaotic — the orc and his pets and young ones join the fray, wreaking havoc across the field.",
       features: [
@@ -3259,6 +3435,7 @@ const productData = {
       price: "Precio: €55",
       scale: "90mm",
       pieces: "19",
+      stock: 50,
       more: "Diseño original",
       featuresTitle: "Detalles del Producto",
       desc: "El dios de la guerra está arrasando por el infierno.",
@@ -3282,6 +3459,7 @@ const productData = {
       price: "Precio: €42",
       scale: "1/12",
       pieces: "12",
+      stock: 50,
       more: "Diseño original",
       featuresTitle: "Detalles del Producto",
       desc: "Un busto refinado a escala reducida, conservando las texturas musculares y los detalles de la armadura.",
@@ -3305,7 +3483,8 @@ const productData = {
       scale: "20cm(Al) × 9cm(An)",
       pieces: "32",
       more: "Escultura: Allan Carrasco · Concepto: Allan Carrasco · XLF",
-      badge: "Limitado · 120 unidades",
+      badge: "Limitado · 50 unidades",
+      stock: 50,
       featuresTitle: "Detalles del Producto",
       desc: "El campo de batilla se vuelve cada vez más caótico — el orco y sus mascotas y crías se unen a la lucha, causando estragos.",
       features: [
@@ -3373,16 +3552,54 @@ const product = productData[lang][productId];
     detailMainImage.src = product.images[0];
     detailThumbs.innerHTML = "";
 
-    // 限量标签（仅在有 badge 字段时显示）
+    // 限量标签（根据实时库存动态显示）
     const imageSection = detailModal.querySelector('.detail-image-section');
     let existingBadge = imageSection.querySelector('.stock-badge');
     if (existingBadge) existingBadge.remove();
-    if (product.badge) {
-        const badgeEl = document.createElement('span');
-        badgeEl.className = 'stock-badge';
-        badgeEl.textContent = product.badge;
-        imageSection.appendChild(badgeEl);
+    
+    var totalStock = product.stock || 0;
+    var buyBtn = document.getElementById('buyNowBtn');
+    
+    if (totalStock > 0) {
+        // 异步查询真实库存
+        checkStock(productId).then(function(stockInfo) {
+            var badgeEl = document.createElement('span');
+            badgeEl.className = 'stock-badge';
+            
+            if (stockInfo.soldOut) {
+                // 售罄状态
+                var lang4 = localStorage.getItem('lang') || 'en';
+                var soldText = (langData[lang4] || langData['en']).badge_sold_out || 'Sold Out';
+                badgeEl.textContent = soldText;
+                badgeEl.classList.add('sold-out');
+                imageSection.appendChild(badgeEl);
+                // 禁用购买按钮
+                if (buyBtn) { buyBtn.disabled = true; buyBtn.style.opacity = '0.5'; buyBtn.style.cursor = 'not-allowed'; }
+            } else {
+                // 有库存：显示 "Limited · 剩余 X/Y"
+                var remainingText;
+                if (product.badge) {
+                    remainingText = product.badge.replace(/50|120|\d+/, stockInfo.remaining) + ' (↓' + stockInfo.sold + ')';
+                } else {
+                    remainingText = 'Left: ' + stockInfo.remaining + '/' + stockInfo.total;
+                }
+                badgeEl.textContent = remainingText;
+                imageSection.appendChild(badgeEl);
+                // 确保购买按钮可用
+                if (buyBtn) { buyBtn.disabled = false; buyBtn.style.opacity = ''; buyBtn.style.cursor = ''; }
+            }
+        }).catch(function() {
+            // 查询失败时显示默认 badge
+            if (product.badge) {
+                var fallbackBadge = document.createElement('span');
+                fallbackBadge.className = 'stock-badge';
+                fallbackBadge.textContent = product.badge;
+                imageSection.appendChild(fallbackBadge);
+            }
+        });
     }
+
+
 
     product.images.forEach((imgSrc, index) => {
         const thumb = document.createElement("img");
@@ -3536,6 +3753,7 @@ detailModal.addEventListener("click", (e) => {
     login_alert_checkout: "请先登录",
     paypal_loading: "PayPal 加载中，请稍候...",
     paypal_load_fail: "PayPal 加载失败，请刷新页面重试",
+    paypal_retry_hint: "⏳ PayPal 加载中（自动重试中...），请稍候或刷新页面",
     pay_invalid_amount: "金额无效",
     btn_view_detail: "查询详情",
     badge_limited: "限量 50 体",
@@ -3668,6 +3886,7 @@ detailModal.addEventListener("click", (e) => {
     login_alert_checkout: "Please login first",
     paypal_loading: "PayPal loading, please wait...",
     paypal_load_fail: "PayPal failed to load, please refresh",
+    paypal_retry_hint: "⏳ PayPal loading (auto-retrying)... please wait or refresh",
     pay_invalid_amount: "Invalid amount",
     btn_view_detail: "View Details",
     badge_limited: "Limited · 50pcs",
@@ -3792,6 +4011,7 @@ detailModal.addEventListener("click", (e) => {
     login_alert_checkout: "Por favor inicie sesión primero",
     paypal_loading: "PayPal cargando, espere por favor...",
     paypal_load_fail: "PayPal no pudo cargar, actualice la página",
+    paypal_retry_hint: "⏳ PayPal cargando (reintentando automáticamente)... espere o actualice",
     pay_invalid_amount: "Monto no válido",
     btn_view_detail: "Ver Detalles",
     badge_limited: "Limitado · 50 unidades",
@@ -3885,6 +4105,8 @@ let paypalSdkReady = false;      // 标记 SDK 是否已加载就绪
 
 // ⚠️ PayPal SDK 必须在 URL 中指定 currency，否则默认 USD，传入其他货币会报错
 // 本网站所有商品/运费统一使用 EUR，PayPal 也固定用 EUR
+let paypalRetryCount = 0;
+const PAYPAL_MAX_RETRIES = 3;
 function loadPayPalSDKOnce() {
   if (paypalSdkReady && typeof paypal !== 'undefined') {
     return Promise.resolve();
@@ -3895,18 +4117,39 @@ function loadPayPalSDKOnce() {
 
   if (paypalLoadPromise) return paypalLoadPromise;
 
-  paypalLoadPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.setAttribute('data-paypal-sdk', '');
-    // 统一使用 EUR（网站所有商品和运费均为欧元）
-    script.src = baseUrl + '/sdk/js?client-id=' + clientId + '&intent=capture&currency=EUR';
-    script.onload = function() {
-      paypalSdkReady = true;
-      resolve();
-    };
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
+  function loadScript(retryNum) {
+    return new Promise((resolve, reject) => {
+      // 清除旧的失败脚本（如果有）
+      var oldScript = document.querySelector('script[data-paypal-sdk]');
+      if (oldScript) oldScript.remove();
+
+      const script = document.createElement('script');
+      script.setAttribute('data-paypal-sdk', '');
+      // 统一使用 EUR（网站所有商品和运费均为欧元）
+      script.src = baseUrl + '/sdk/js?client-id=' + clientId + '&intent=capture&currency=EUR';
+      script.onload = function() {
+        paypalSdkReady = true;
+        paypalRetryCount = 0;
+        resolve();
+      };
+      script.onerror = function() {
+        if (retryNum < PAYPAL_MAX_RETRIES) {
+          // 递增延迟：2s → 4s → 6s
+          var delay = (retryNum + 1) * 2000;
+          console.warn('⚠️ PayPal SDK 加载失败 (' + (retryNum + 1) + '/' + PAYPAL_MAX_RETRIES + ')，' + delay + 'ms 后重试...');
+          setTimeout(function() {
+            loadScript(retryNum + 1).then(resolve).catch(reject);
+          }, delay);
+        } else {
+          paypalRetryCount = 0;
+          reject(new Error('PayPal SDK 加载失败，已达最大重试次数'));
+        }
+      };
+      document.head.appendChild(script);
+    });
+  }
+
+  paypalLoadPromise = loadScript(0);
   return paypalLoadPromise;
 }
 
@@ -4222,6 +4465,20 @@ function renderPayPalButtons(amount, currency) {
                                 console.log('✅ 订单已写入 Supabase:', paypalOrderId);
                                 // 从 localStorage 移除已写入的订单
                                 removeFromPaymentOrders(paypalOrderId);
+                                // 扣减库存（单件商品）
+                                if (lockedProductId) {
+                                    decrementStock(lockedProductId).then(function(ok) {
+                                        if (ok) console.log('📦 库存已扣减:', lockedProductId);
+                                    });
+                                } else if (cartSummary && cartSummary.length > 0) {
+                                    // 购物车多件商品，逐个扣减
+                                    for (var ci = 0; ci < cartSummary.length; ci++) {
+                                        var cartItemId = findProductIdByName(cartSummary[ci].name);
+                                        if (cartItemId) {
+                                            decrementStock(cartItemId);
+                                        }
+                                    }
+                                }
                                 return true;
                             } catch (dbErr) {
                                 console.error('Supabase 操作异常 (尝试 #' + attempt + '):', dbErr.message || dbErr);
@@ -4288,11 +4545,40 @@ function renderPayPalButtons(amount, currency) {
         paypalButtonInstance.render('#paypal-button-container');
     }).catch(function(err) {
         console.error('PayPal SDK 加载失败:', err);
-        container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">PayPal 加载失败，请刷新页面重试</p>';
+        var lang3 = localStorage.getItem('lang') || 'en';
+        var retryHint = (langData[lang3] || langData['en']).paypal_retry_hint || 'PayPal loading failed, retrying automatically...';
+        container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">' + retryHint + '</p>';
+        // 8秒后尝试重新加载（利用 loadPayPalSDKOnce 内部的重试机制）
+        setTimeout(function() {
+            // 重置 promise 让 SDK 重新加载
+            paypalLoadPromise = null;
+            paypalSdkReady = false;
+            var amt = getCurrentAmount(currentBuyProduct);
+            var cur = getCurrentCurrency(currentBuyProduct);
+            if (amt > 0) renderPayPalButtons(amt, cur);
+        }, 8000);
     });
 }
 
 function openPayModal(productId) {
+    // 库存检查：售罄时阻止进入支付
+    if (productId) {
+        var cachedStock = stockCache[productId];
+        if (cachedStock && (cachedStock.total - cachedStock.sold <= 0)) {
+            var sl3 = localStorage.getItem('lang') || 'en';
+            alert((langData[sl3] || langData['en']).badge_sold_out || 'Sold Out');
+            return;
+        }
+        // 异步精确检查
+        checkStock(productId).then(function(si) {
+            if (si.soldOut) {
+                var sl4 = localStorage.getItem('lang') || 'en';
+                alert((langData[sl4] || langData['en']).badge_sold_out || 'Sold Out');
+                closePayModal();
+            }
+        });
+    }
+
     // 重置运费选择
     selectedShippingRegion = null;
     document.querySelectorAll('.shipping-option').forEach(btn => btn.classList.remove('selected'));
