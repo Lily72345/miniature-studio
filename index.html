@@ -1152,6 +1152,42 @@
     transform: scale(1.05);
 }
 
+/* ===== 图片加载优化：骨架屏 + 淡入 ===== */
+@keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.detail-main-image {
+    opacity: 0;
+    background: linear-gradient(90deg, #1e1e20 25%, #2a2a2d 50%, #1e1e20 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    transition: opacity 0.4s ease;
+}
+.detail-main-image.loaded {
+    opacity: 1;
+    background: #1a1a1c;
+    animation: none;
+}
+
+.detail-thumbs img {
+    opacity: 0;
+}
+.detail-thumbs img.loaded {
+    opacity: 1;
+}
+
+.detail-thumb-skeleton {
+    width: 90px;
+    height: 90px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    background: linear-gradient(90deg, #1e1e20 25%, #2a2a2d 50%, #1e1e20 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
 .detail-title {
     font-family: var(--font-heading);
     font-size: 2rem;
@@ -1203,6 +1239,10 @@
     }
 
     .detail-thumbs img {
+        width: 64px;
+        height: 64px;
+    }
+    .detail-thumb-skeleton {
         width: 64px;
         height: 64px;
     }
@@ -1331,10 +1371,6 @@ h1, h2, h3 {
 .detail-close {
     background: #2a2a2e;
     color: #fff;
-}
-
-.detail-main-image {
-    background: #1a1a1c;
 }
 
 .detail-thumbs img {
@@ -3274,7 +3310,7 @@ const productData = {
       price: "Price: €55",
       scale: "90mm",
       pieces: "19",
-      stock: 50,
+      stock: 0,
       more: "Original design",
       featuresTitle: "商品介绍",
       desc: "战神正在席卷地狱，大杀四方。",
@@ -3298,7 +3334,7 @@ const productData = {
       price: "Price: €42",
       scale: "1/12",
       pieces: "12",
-      stock: 50,
+      stock: 0,
       more: "Original design",
       featuresTitle: "商品介绍",
       desc: "取自四神行刑官全身版的精华胸像，保留了战神的肌肉纹理与铠甲细节，缩小比例更考验涂装功力。",
@@ -3355,7 +3391,7 @@ const productData = {
       price: "Price: €55",
       scale: "90mm",
       pieces: "19",
-      stock: 50,
+      stock: 0,
       more: "Original design",
       featuresTitle: "Product Details",
       desc: "The war god is sweeping through hell.",
@@ -3379,7 +3415,7 @@ const productData = {
       price: "Price: €42",
       scale: "1/12",
       pieces: "12",
-      stock: 50,
+      stock: 0,
       more: "Original design",
       featuresTitle: "Product Details",
       desc: "A refined bust scaled down from the full-figure Anatoly, preserving the muscle textures and armor details. The smaller scale puts painting skills to the test.",
@@ -3435,7 +3471,7 @@ const productData = {
       price: "Precio: €55",
       scale: "90mm",
       pieces: "19",
-      stock: 50,
+      stock: 0,
       more: "Diseño original",
       featuresTitle: "Detalles del Producto",
       desc: "El dios de la guerra está arrasando por el infierno.",
@@ -3459,7 +3495,7 @@ const productData = {
       price: "Precio: €42",
       scale: "1/12",
       pieces: "12",
-      stock: 50,
+      stock: 0,
       more: "Diseño original",
       featuresTitle: "Detalles del Producto",
       desc: "Un busto refinado a escala reducida, conservando las texturas musculares y los detalles de la armadura.",
@@ -3549,10 +3585,59 @@ const product = productData[lang][productId];
         detailFeatures.appendChild(li);
     });
 
+    // 图片加载优化：主图优先 + 缩略图分批延迟加载
+    detailMainImage.classList.remove('loaded');
+    detailMainImage.fetchPriority = 'high';
+    detailMainImage.onload = function() { this.classList.add('loaded'); };
     detailMainImage.src = product.images[0];
     detailThumbs.innerHTML = "";
 
-    // 限量标签（根据实时库存动态显示）
+    // 先填充骨架占位（视觉反馈，防止布局抖动）
+    for (var thumbIdx = 0; thumbIdx < product.images.length; thumbIdx++) {
+        var skel = document.createElement('div');
+        skel.className = 'detail-thumb-skeleton';
+        skel.setAttribute('data-skidx', thumbIdx);
+        detailThumbs.appendChild(skel);
+    }
+
+    // 分批加载实际缩略图（每批 3 张，间隔 120ms）
+    var IMG_BATCH = 3, IMG_DELAY = 120;
+    var imgList = product.images;
+    
+    function loadThumbBatch(startIdx) {
+        var end = Math.min(startIdx + IMG_BATCH, imgList.length);
+        for (var i = startIdx; i < end; i++) {
+            (function(idx) {
+                var src = imgList[idx];
+                var thumb = document.createElement('img');
+                thumb.loading = 'lazy';
+                thumb.src = src;
+                thumb.setAttribute('data-src', src);
+                thumb.alt = product.title + ' thumb ' + (idx + 1);
+                thumb.className = 'detail-thumb';
+                if (idx === 0) thumb.classList.add('active');
+                thumb.onload = function() { this.classList.add('loaded'); };
+                // 如果图片已缓存立即显示
+                if (thumb.complete) thumb.classList.add('loaded');
+                
+                thumb.addEventListener('click', function() {
+                    detailMainImage.classList.remove('loaded');
+                    detailMainImage.src = src;
+                    detailMainImage.onload = function() { this.classList.add('loaded'); };
+                    detailThumbs.querySelectorAll('img').forEach(function(t) { t.classList.remove('active'); });
+                    thumb.classList.add('active');
+                });
+                
+                // 替换骨架占位
+                var oldSkel = detailThumbs.querySelector('[data-skidx="' + idx + '"]');
+                if (oldSkel) detailThumbs.replaceChild(thumb, oldSkel);
+            })(i);
+        }
+        if (end < imgList.length) {
+            setTimeout(function() { loadThumbBatch(end); }, IMG_DELAY);
+        }
+    }
+    loadThumbBatch(0);
     const imageSection = detailModal.querySelector('.detail-image-section');
     let existingBadge = imageSection.querySelector('.stock-badge');
     if (existingBadge) existingBadge.remove();
@@ -3598,36 +3683,6 @@ const product = productData[lang][productId];
             }
         });
     }
-
-
-
-    product.images.forEach((imgSrc, index) => {
-        const thumb = document.createElement("img");
-        thumb.src = imgSrc;
-        thumb.setAttribute('data-src', imgSrc);
-        thumb.alt = product.title + "缩略图" + (index + 1);
-        thumb.classList.add("detail-thumb");
-        if (index === 0) thumb.classList.add("active");
-
-        thumb.addEventListener("click", () => {
-            detailMainImage.src = imgSrc;
-            detailThumbs.querySelectorAll("img").forEach(i => i.classList.remove("active"));
-            thumb.classList.add("active");
-        });
-
-        detailThumbs.appendChild(thumb);
-    });
-
-    // 确保大主图始终在缩略图上方（DOM 结构顺序保证）
-    if (imageSection) {
-        const mainImg = imageSection.querySelector('#detailMainImage');
-        const thumbsDiv = imageSection.querySelector('#detailThumbs');
-        if (mainImg && thumbsDiv) {
-            // 恢复正确的 DOM 顺序：主图在前，缩略图在后
-            imageSection.insertBefore(mainImg, thumbsDiv);
-        }
-    }
-
     detailModal.classList.add("active");
 }
 
