@@ -427,6 +427,12 @@
             letter-spacing: 0.1em;
             background: var(--accent-color);
             color: var(--primary-color);
+            z-index: 5;
+        }
+
+        /* 详情弹窗内 badge 下移，避免与右上角 × 关闭按钮重叠 */
+        .detail-image-section .stock-badge {
+            top: 3.8rem;
         }
 
         .stock-badge.sold-out {
@@ -1781,6 +1787,7 @@ h1, h2, h3 {
 
 /* ===== 支付成功页面样式 ===== */
 .pay-success-page {
+    position: relative;
     text-align: center;
     padding: 1rem 0;
 }
@@ -1878,17 +1885,22 @@ h1, h2, h3 {
     background: var(--hover-color);
 }
 
-.pay-success-countdown {
+.pay-success-close-x {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.8rem;
+    background: none;
+    border: none;
     color: var(--text-gray);
-    font-size: 0.85rem;
-    margin: 1.2rem 0 0.8rem 0;
-    text-align: center;
+    font-size: 1.6rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    z-index: 10;
+    transition: color 0.2s;
 }
-
-.pay-success-countdown span {
+.pay-success-close-x:hover {
     color: var(--accent-color);
-    font-weight: bold;
-    font-size: 1.1rem;
 }
 
 /* ===== PayPal 支付区域 ===== */
@@ -3269,6 +3281,7 @@ h1, h2, h3 {
 
         <!-- 支付成功确认页面 -->
         <div id="paySuccessPage" class="pay-success-page" style="display:none;">
+            <button class="pay-success-close-x" onclick="closePayModal()" title="Close">×</button>
             <div class="pay-success-icon">✓</div>
             <h2 class="pay-success-title" data-key="pay_success_title">Payment Successful!</h2>
             <p class="pay-success-name">Thank you, <span id="paySuccessName"></span>!</p>
@@ -3284,7 +3297,6 @@ h1, h2, h3 {
             </div>
             
             <p class="pay-success-note" data-key="pay_success_note">We have received your payment and will arrange shipping soon. If you have any questions, please contact us.</p>
-            <p class="pay-success-countdown" id="paySuccessCountdown">This window will close in <span id="countdownSeconds">10</span> seconds</p>
             <button class="pay-success-close-btn" onclick="closePayModal()" data-key="pay_success_close">Return to Website</button>
         </div>
     </div>
@@ -3370,7 +3382,6 @@ const productData = {
       scale: "20cm高 × 9cm宽",
       pieces: "32",
       more: "Sculpt: Allan Carrasco · Concept: Allan Carrasco · XLF",
-      badge: "限量 50 体",
       stock: 50,
       featuresTitle: "商品介绍",
       desc: "战场变得愈发混乱，兽人和他的宠物与小子们加入战场，大杀四方。",
@@ -3451,7 +3462,6 @@ const productData = {
       scale: "20cm(H) × 9cm(W)",
       pieces: "32",
       more: "Sculpt: Allan Carrasco · Concept: Allan Carrasco · XLF",
-      badge: "Limited · 50pcs",
       stock: 50,
       featuresTitle: "Product Details",
       desc: "The battlefield grows ever more chaotic — the orc and his pets and young ones join the fray, wreaking havoc across the field.",
@@ -3531,7 +3541,6 @@ const productData = {
       scale: "20cm(Al) × 9cm(An)",
       pieces: "32",
       more: "Escultura: Allan Carrasco · Concepto: Allan Carrasco · XLF",
-      badge: "Limitado · 50 unidades",
       stock: 50,
       featuresTitle: "Detalles del Producto",
       desc: "El campo de batilla se vuelve cada vez más caótico — el orco y sus mascotas y crías se unen a la lucha, causando estragos.",
@@ -4753,27 +4762,6 @@ function showPaySuccessPage(details) {
     document.querySelector('.pay-note').style.display = 'none';
     document.querySelector('.pay-title').style.display = 'none';
     paySuccessPage.style.display = 'block';
-    
-    // 添加倒计时功能
-    let secondsLeft = 10;
-    const countdownSpan = document.getElementById('countdownSeconds');
-    const countdownText = document.getElementById('paySuccessCountdown');
-    if (countdownSpan) countdownSpan.textContent = secondsLeft;
-    
-    // 清除之前的定时器
-    if (paySuccessTimer) {
-        clearInterval(paySuccessTimer);
-    }
-    
-    // 启动倒计时
-    paySuccessTimer = setInterval(function() {
-        secondsLeft--;
-        if (countdownSpan) countdownSpan.textContent = secondsLeft;
-        if (secondsLeft <= 0) {
-            clearInterval(paySuccessTimer);
-            closePayModal();
-        }
-    }, 1000);
 }
 
 // 关闭支付弹窗时重置页面状态
