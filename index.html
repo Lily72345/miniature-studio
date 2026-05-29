@@ -2434,6 +2434,11 @@ h1, h2, h3 {
     const SUPABASE_KEY = 'sb_publishable_uQlcj1EPlijP1lNmLV-EpA_EzRJJeIz';
     let supabase = null;
 
+    // ===== Resend 邮件服务配置 =====
+    const RESEND_API_KEY = 're_U1ngw5m5_H2oHam9iw4SnHqG64BRCU9AH';
+    const RESEND_FROM = 'Miniature Studio <order@miniaturebois.com>';
+    const RESEND_TO_OWNER = '13381578385@163.com'; // 你自己的邮箱，收订单通知
+
     // 初始化 Supabase，返回 true/false 表示是否成功
     // 如果 SDK 还没加载完成，最多等待 10 秒
     async function initSupabase() {
@@ -4163,6 +4168,102 @@ detailModal.addEventListener("click", (e) => {
   const savedLang = localStorage.getItem("lang") || "en";
   setLanguage(savedLang);
 
+/* ===== 订单确认邮件（Resend） ===== */
+async function sendOrderConfirmation(details, productName, amount, currency) {
+    try {
+        var buyerEmail = '';
+        // 优先从 PayPal 获取买家邮箱
+        if (details.payer && details.payer.email_address) {
+            buyerEmail = details.payer.email_address;
+        } else {
+            // 回退：从运费区域填写的邮箱
+            var ei = document.getElementById('shippingEmail');
+            if (ei) buyerEmail = ei.value.trim();
+        }
+        if (!buyerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail)) {
+            console.warn('📧 无法获取有效的买家邮箱，跳过邮件发送');
+            return false;
+        }
+
+        var amountStr = currency + ' ' + (typeof amount === 'number' ? amount.toFixed(2) : amount);
+        var orderId = details.id || '';
+        var payerName = details.payer && details.payer.name;
+        var fullName = payerName ? [payerName.given_name, payerName.surname].filter(Boolean).join(' ') : '';
+
+        // 收货地址
+        var addressHtml = '';
+        var shipping = details.purchase_units && details.purchase_units[0] && details.purchase_units[0].shipping;
+        if (shipping && shipping.address) {
+            var addr = shipping.address;
+            var lines = [addr.address_line_1, addr.address_line_2, addr.admin_area_2, addr.admin_area_1, addr.postal_code, addr.country_code].filter(Boolean).join(', ');
+            addressHtml = '<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Shipping</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">' + fullName + '<br>' + lines + '</td></tr>';
+        }
+
+        // 发送给买家
+        var buyerResp = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + RESEND_API_KEY,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                from: RESEND_FROM,
+                to: buyerEmail,
+                subject: 'Order Confirmed - Miniature Studio',
+                html: '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:2rem;">' +
+                    '<h2 style="color:#a8181f;margin-bottom:1rem;">🎉 Thank You for Your Order!</h2>' +
+                    '<p>Hi ' + (fullName || 'there') + ',</p>' +
+                    '<p>Your payment has been received. We will arrange shipment within <strong>1-3 business days</strong>.</p>' +
+                    '<table style="width:100%;border-collapse:collapse;margin:1.5rem 0;">' +
+                    '<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Product</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">' + productName + '</td></tr>' +
+                    '<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Amount</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">' + amountStr + '</td></tr>' +
+                    '<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Order ID</strong></td><td style="padding:8px;border-bottom:1px solid #eee;font-size:12px;color:#999;">' + orderId + '</td></tr>' +
+                    addressHtml +
+                    '</table>' +
+                    '<p>If you have any questions, please reply to this email or contact us via WeChat.</p>' +
+                    '<hr style="border:none;border-top:1px solid #eee;margin:2rem 0;">' +
+                    '<p style="color:#999;font-size:12px;">Miniature Studio · miniaturebois.com</p>' +
+                    '</div>'
+            })
+        });
+
+        if (buyerResp.ok) {
+            console.log('📧 订单确认邮件已发送至:', buyerEmail);
+        } else {
+            var berr = await buyerResp.json().catch(function() { return {}; });
+            console.error('📧 买家邮件发送失败:', berr.message || buyerResp.status);
+        }
+
+        // 同时发一封通知到店主邮箱
+        await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + RESEND_API_KEY,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                from: RESEND_FROM,
+                to: RESEND_TO_OWNER,
+                subject: '🛎 New Order: ' + productName,
+                html: '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:2rem;">' +
+                    '<h2 style="color:#a8181f;">New Order Received!</h2>' +
+                    '<table style="width:100%;border-collapse:collapse;margin:1.5rem 0;">' +
+                    '<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Buyer</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">' + (fullName || 'N/A') + '<br>' + buyerEmail + '</td></tr>' +
+                    '<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Product</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">' + productName + '</td></tr>' +
+                    '<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Amount</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">' + amountStr + '</td></tr>' +
+                    '<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Order ID</strong></td><td style="padding:8px;border-bottom:1px solid #eee;font-size:12px;color:#999;">' + orderId + '</td></tr>' +
+                    addressHtml +
+                    '</table></div>'
+            })
+        });
+
+        return true;
+    } catch(e) {
+        console.error('📧 邮件发送异常:', e.message || e);
+        return false;
+    }
+}
+
 /* ===== PayPal 模式配置 ===== */
 // ⚠️ 切换模式：'sandbox' 或 'live'
 const PAYPAL_MODE = 'live';
@@ -4569,6 +4670,10 @@ function renderPayPalButtons(amount, currency) {
                                 saved = await trySaveToSupabase(2);
                                 if (!saved) console.warn('⚠️ 订单保留在 localStorage，页面重载时自动恢复');
                             }, 5000);
+                        }
+                        // 发送订单确认邮件（后台执行，不阻塞页面）
+                        if (saved) {
+                            sendOrderConfirmation(details, lockedProductName || 'Order', amount, currencyCode);
                         }
                     } else {
                         console.error('PayPal 支付状态异常:', details);
