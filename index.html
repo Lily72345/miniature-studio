@@ -4649,11 +4649,14 @@ function renderPayPalButtons(amount, currency) {
                                         if (ok) console.log('📦 库存已扣减:', lockedProductId);
                                     });
                                 } else if (cartSummary && cartSummary.length > 0) {
-                                    // 购物车多件商品，逐个扣减
+                                    // 购物车多件商品，按 qty 逐个扣减（必须 await 防并发）
                                     for (var ci = 0; ci < cartSummary.length; ci++) {
                                         var cartItemId = findProductIdByName(cartSummary[ci].name);
-                                        if (cartItemId) {
-                                            decrementStock(cartItemId);
+                                        var qty = cartSummary[ci].qty || 1;
+                                        if (cartItemId && qty > 0) {
+                                            for (var q = 0; q < qty; q++) {
+                                                await decrementStock(cartItemId);
+                                            }
                                         }
                                     }
                                 }
