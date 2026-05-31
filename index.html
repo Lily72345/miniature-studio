@@ -4645,9 +4645,8 @@ function renderPayPalButtons(amount, currency) {
                                 removeFromPaymentOrders(paypalOrderId);
                                 // 扣减库存（单件商品）
                                 if (lockedProductId) {
-                                    decrementStock(lockedProductId).then(function(ok) {
-                                        if (ok) console.log('📦 库存已扣减:', lockedProductId);
-                                    });
+                                    var dOk = await decrementStock(lockedProductId);
+                                    if (dOk) console.log('📦 库存已扣减:', lockedProductId);
                                 } else if (cartSummary && cartSummary.length > 0) {
                                     // 购物车多件商品，按 qty 逐个扣减（必须 await 防并发）
                                     for (var ci = 0; ci < cartSummary.length; ci++) {
