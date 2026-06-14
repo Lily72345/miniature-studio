@@ -2041,35 +2041,7 @@ h1, h2, h3 {
     color: var(--accent-color);
     min-height: 1.2em;
 }
-.shipping-email-row {
-    display: none;
-    margin-top: 0.6rem;
-    flex-direction: column;
-    gap: 0.3rem;
-}
-.shipping-email-row.visible {
-    display: flex;
-}
-.shipping-email-input {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    background: #1e1e20;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    color: var(--text-light);
-    font-size: 0.85rem;
-    font-family: var(--font-body);
-    outline: none;
-    transition: border-color 0.2s;
-}
-.shipping-email-input:focus {
-    border-color: var(--accent-color);
-}
-.shipping-email-hint {
-    font-size: 0.78rem;
-    color: var(--text-gray);
-    line-height: 1.4;
-}
+
 
     </style>
 </head>
@@ -3266,11 +3238,6 @@ h1, h2, h3 {
                         <button class="shipping-option" data-region="other" onclick="selectShippingRegion('other')" data-key="shipping_other">Other</button>
                     </div>
                     <p class="shipping-fee-note" id="shippingFeeNote"></p>
-                    <!-- 其他地区邮箱输入 -->
-                    <div class="shipping-email-row" id="shippingEmailRow">
-                        <input type="email" class="shipping-email-input" id="shippingEmail" placeholder="your@email.com" data-placeholder="shipping_email_placeholder" />
-                        <span class="shipping-email-hint" data-key="shipping_email_hint">We will contact you by email with the shipping cost after receiving your order.</span>
-                    </div>
                 </div>
 
                 <div id="paypal-button-container"></div>
@@ -4175,13 +4142,9 @@ detailModal.addEventListener("click", (e) => {
 async function sendOrderConfirmation(details, productName, amount, currency) {
     try {
         var buyerEmail = '';
-        // 优先从 PayPal 获取买家邮箱
+        // 从 PayPal 获取买家邮箱
         if (details.payer && details.payer.email_address) {
             buyerEmail = details.payer.email_address;
-        } else {
-            // 回退：从运费区域填写的邮箱
-            var ei = document.getElementById('shippingEmail');
-            if (ei) buyerEmail = ei.value.trim();
         }
         if (!buyerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail)) {
             console.warn('📧 无法获取有效的买家邮箱，跳过邮件发送');
@@ -4365,14 +4328,9 @@ function selectShippingRegion(region) {
     // 更新运费说明
     const lang = localStorage.getItem('lang') || 'zh';
     const noteEl = document.getElementById('shippingFeeNote');
-    const emailRow = document.getElementById('shippingEmailRow');
     if (noteEl) {
         const key = 'shipping_fee_' + region;
         noteEl.textContent = (langData[lang] && langData[lang][key]) ? langData[lang][key] : '';
-    }
-    // 是否显示邮箱输入
-    if (emailRow) {
-        emailRow.classList.toggle('visible', region === 'other');
     }
     // 重新渲染 PayPal 按钮（加上运费金额）
     const productId = typeof currentBuyProduct !== 'undefined' ? currentBuyProduct : null;
@@ -4517,14 +4475,12 @@ function renderPayPalButtons(amount, currency) {
             createOrder: function(data, actions) {
                 // ⚠️ 移动端 PayPal 会跳转新窗口，onApprove 可能不触发
                 // 所以在创建订单时就先存 localStorage
-                const emailInput = document.getElementById('shippingEmail');
-                const buyerEmail = emailInput ? emailInput.value.trim() : '';
                 // 使用锁定的商品ID，不依赖全局变量 currentBuyProduct（异步回调时可能已重置）
                 const productId = lockedProductId;
                 const productName = lockedProductName;
                 // 创建订单时先保存 PayPal 订单号（稍后更新）
                 const preOrderData = {
-                    buyer_email: buyerEmail || currentUser || null,
+                    buyer_email: currentUser || null,
                     customer_email: currentUser || null,
                     product_id: productId,
                     product_name: productName,
@@ -4557,19 +4513,6 @@ function renderPayPalButtons(amount, currency) {
                 });
             },
             onApprove: function(data, actions) {
-                // 其他地区必须填写邮箱才能支付
-                if (selectedShippingRegion === 'other') {
-                    const emailInput = document.getElementById('shippingEmail');
-                    const emailVal = emailInput ? emailInput.value.trim() : '';
-                    if (!emailVal) {
-                        alert('请先填写邮箱（We will contact you by email with the shipping cost）');
-                        return;
-                    }
-                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
-                        alert('请填写有效的邮箱地址');
-                        return;
-                    }
-                }
                 // 不要在这里替换容器内容，否则会中断 PayPal SDK 的 post-robot 通信
                 return actions.order.capture().then(async function(details) {
                     // 确保 Supabase 已初始化
@@ -4599,11 +4542,9 @@ function renderPayPalButtons(amount, currency) {
                             }
                         }
                         if (!updated) {
-                            const emailInput = document.getElementById('shippingEmail');
-                            const buyerEmail = emailInput ? emailInput.value.trim() : '';
                             paymentOrders.push({
                                 paypal_order_id: paypalOrderId,
-                                buyer_email: buyerEmail || currentUser,
+                                buyer_email: currentUser || null,
                                 product_id: lockedProductId,
                                 product_name: lockedProductName,
                                 amount: amount,
@@ -4629,21 +4570,17 @@ function renderPayPalButtons(amount, currency) {
                             if (!supabase) await initSupabase();
                             if (!supabase) { console.warn('Supabase 未初始化，将在页面重载时自动恢复'); return false; }
                             try {
-                                const buyerEmail = (() => {
-                                    const ei = document.getElementById('shippingEmail');
-                                    return ei ? ei.value.trim() : null;
-                                })();
-                                const payerName = details.payer && details.payer.name
-                                    ? [details.payer.name.given_name, details.payer.name.surname].filter(Boolean).join(' ').trim()
-                                    : '';
                                 const payerEmail = details.payer && details.payer.email_address
                                     ? details.payer.email_address
+                                    : '';
+                                const payerName = details.payer && details.payer.name
+                                    ? [details.payer.name.given_name, details.payer.name.surname].filter(Boolean).join(' ').trim()
                                     : '';
 
                                 // ---- 写入 miniaturebois 表（网站订单）----
                                 const result = await supabase.from('miniaturebois').insert({
                                     paypal_order_id: paypalOrderId,
-                                    buyer_email: buyerEmail || currentUser,
+                                    buyer_email: payerEmail || currentUser || null,
                                     product_id: lockedProductId,
                                     product_name: lockedProductName,
                                     amount: amount,
@@ -4661,7 +4598,7 @@ function renderPayPalButtons(amount, currency) {
                                     console.log('✅ 订单已写入 miniaturebois:', paypalOrderId);
                                     console.log('   PayPal Order ID:', paypalOrderId);
                                     console.log('   PayPal Capture ID:', paypalCaptureId);
-                                    console.log('   用户邮箱:', currentUser || buyerEmail);
+                                    console.log('   用户邮箱:', payerEmail || currentUser);
                                 }
 
                                 // 从 localStorage 移除已写入的订单
@@ -4791,10 +4728,6 @@ function openPayModal(productId) {
     document.querySelectorAll('.shipping-option').forEach(btn => btn.classList.remove('selected'));
     const noteEl = document.getElementById('shippingFeeNote');
     if (noteEl) noteEl.textContent = '';
-    const emailRow = document.getElementById('shippingEmailRow');
-    if (emailRow) emailRow.classList.remove('visible');
-    const emailInput = document.getElementById('shippingEmail');
-    if (emailInput) emailInput.value = '';
 
     if (!productId) {
         // 购物车结算模式
@@ -4910,10 +4843,6 @@ closePayModal = function() {
     document.querySelectorAll('.shipping-option').forEach(btn => btn.classList.remove('selected'));
     const shippingNote = document.getElementById('shippingFeeNote');
     if (shippingNote) shippingNote.textContent = '';
-    const shippingEmailRow = document.getElementById('shippingEmailRow');
-    if (shippingEmailRow) shippingEmailRow.classList.remove('visible');
-    const shippingEmailInput = document.getElementById('shippingEmail');
-    if (shippingEmailInput) shippingEmailInput.value = '';
     // 重置显示状态
     const paySuccessPage = document.getElementById('paySuccessPage');
     const payProductName = document.getElementById('payProductName');
