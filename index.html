@@ -3029,7 +3029,7 @@ h1, h2, h3 {
     });
 
     addToCartBtns.forEach(btn => {
-        btn.addEventListener('click', function(e) {
+        btn.addEventListener('click', async function(e) {
             e.stopPropagation(); // 阻止事件冒泡，防止触发卡片点击
             if (this.disabled) return;
 
@@ -3040,40 +3040,23 @@ h1, h2, h3 {
                 return;
             }
 
-            // 检查库存
-            const cardForStock = this.closest('.product-card');
-            const productIdForStock = cardForStock ? cardForStock.dataset.product : null;
-            if (productIdForStock) {
-                var productForLang = localStorage.getItem('lang') || 'en';
-                var pdForCheck = (productData[productForLang] || productData['en'])[productIdForStock];
-                if (pdForCheck && pdForCheck.stock > 0) {
-                    // 使用缓存快速检查
-                    var cached = stockCache[productIdForStock];
-                    if (cached && (cached.total - cached.sold <= 0)) {
-                        var sl = localStorage.getItem('lang') || 'en';
-                        alert((langData[sl] || langData['en']).badge_sold_out || 'Sold Out');
-                        return;
-                    }
-                    // 异步精确检查（不阻塞，但防止超卖）
-                    checkStock(productIdForStock).then(function(si) {
-                        if (si.soldOut) {
-                            var sl2 = localStorage.getItem('lang') || 'en';
-                            // 从购物车中移除刚加的（如果有）
-                            const nameToRemove = cardForStock.querySelector('.product-name').textContent;
-                            cart = cart.filter(item => item.name !== nameToRemove);
-                            saveCart();
-                            updateCart();
-                            alert((langData[sl2] || langData['en']).badge_sold_out || 'Sorry, this item is sold out.');
-                        }
-                    });
-                }
-            }
-
             const card = this.closest('.product-card');
+            const productId = card.getAttribute('data-product-id') || '';
             const name = card.querySelector('.product-name').textContent;
             const price = card.querySelector('.product-price').textContent;
             const image = card.querySelector('img').src;
-            const productId = card.getAttribute('data-product-id') || '';
+            const cardS = this.closest('.product-card');
+            const pidStock = cardS ? cardS.dataset.productId : null;
+
+            // 库存检查：始终实时查询，不依赖缓存
+            if (pidStock) {
+                var stockInfo = await checkStock(pidStock);
+                if (stockInfo.soldOut) {
+                    var sl2 = localStorage.getItem('lang') || 'en';
+                    alert((langData[sl2] || langData['en']).badge_sold_out || 'Sorry, this item is sold out.');
+                    return;
+                }
+            }
 
             const existingItem = cart.find(item => item.productId === productId);
 
