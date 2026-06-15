@@ -2063,9 +2063,16 @@ h1, h2, h3 {
 .shipping-phone-input:focus {
     border-color: var(--accent-color);
 }
-.shipping-phone-hint {
+.shipping-phone-input.error {
+    border-color: var(--accent-color, #a8181f);
+}
+.shipping-phone-error {
     font-size: 0.75rem;
-    color: var(--text-gray);
+    color: var(--accent-color, #a8181f);
+    display: none;
+}
+.shipping-phone-error.show {
+    display: block;
 }
 
 
@@ -3268,6 +3275,7 @@ h1, h2, h3 {
                     <div class="shipping-phone-row">
                         <input type="tel" class="shipping-phone-input" id="shippingPhone" data-key="shipping_phone_placeholder" data-placeholder="shipping_phone_placeholder" placeholder="Phone Number" />
                         <span class="shipping-phone-hint" data-key="shipping_phone_hint">For shipping & delivery contact</span>
+                        <span class="shipping-phone-error" id="shippingPhoneError"></span>
                     </div>
                 </div>
 
@@ -3867,6 +3875,7 @@ detailModal.addEventListener("click", (e) => {
     shipping_fee_other: "运费将另行通知，我们会通过邮件联系您",
     shipping_phone_placeholder: "手机号码（用于发货）",
     shipping_phone_hint: "用于物流配送联系",
+    shipping_phone_required: "请填写电话号码",
     
   },
 
@@ -4000,6 +4009,7 @@ detailModal.addEventListener("click", (e) => {
     shipping_fee_other: "Shipping cost to be notified by email.",
     shipping_phone_placeholder: "Phone Number",
     shipping_phone_hint: "For shipping & delivery contact",
+    shipping_phone_required: "Please enter your phone number",
 
 
   },
@@ -4126,6 +4136,7 @@ detailModal.addEventListener("click", (e) => {
     shipping_fee_other: "El costo de envío se notificará por correo.",
     shipping_phone_placeholder: "Número de teléfono",
     shipping_phone_hint: "Para el envío y la entrega",
+    shipping_phone_required: "Por favor ingrese su número de teléfono"
   }
 };
 
@@ -4388,6 +4399,18 @@ function selectShippingRegion(region) {
     }
 }
 
+// 电话输入时清除错误提示
+(function() {
+    var phoneInput = document.getElementById('shippingPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            this.classList.remove('error');
+            var errEl = document.getElementById('shippingPhoneError');
+            if (errEl) { errEl.textContent = ''; errEl.classList.remove('show'); }
+        });
+    }
+})();
+
 // 获取商品价格+运费 合计
 function getAmountWithShipping(productId) {
     const base = getCurrentAmount(productId);
@@ -4513,6 +4536,19 @@ function renderPayPalButtons(amount, currency) {
                 // 创建订单时先保存 PayPal 订单号（稍后更新）
                 const phoneInput = document.getElementById('shippingPhone');
                 const customerPhone = phoneInput ? phoneInput.value.trim() : '';
+                const phoneErrorEl = document.getElementById('shippingPhoneError');
+                // 电话号码必填验证
+                if (!customerPhone) {
+                    if (phoneErrorEl) {
+                        phoneErrorEl.textContent = langData[lang].shipping_phone_required || 'Please enter your phone number';
+                        phoneErrorEl.classList.add('show');
+                    }
+                    if (phoneInput) phoneInput.classList.add('error');
+                    return;
+                }
+                // 清除错误状态
+                if (phoneErrorEl) { phoneErrorEl.textContent = ''; phoneErrorEl.classList.remove('show'); }
+                if (phoneInput) phoneInput.classList.remove('error');
                 const preOrderData = {
                     buyer_email: currentUser || null,
                     customer_email: currentUser || null,
