@@ -2590,43 +2590,15 @@ h1, h2, h3 {
                 console.warn('Supabase 未初始化，无法扣减库存');
                 return false;
             }
-            // 1. 先查询当前已售数量
-            var qResult = await supabase
-                .from('inventory')
-                .select('sold')
-                .eq('product_id', productId)
-                .maybeSingle();
-            
-            if (qResult.error) {
-                console.error('库存查询失败:', qResult.error.message);
-                // 查询失败也尝试直接插入（可能是表为空）
-                var initResult = await supabase
-                    .from('inventory')
-                    .insert({ product_id: productId, sold: 1 });
-                if (initResult.error) {
-                    console.error('库存初始化插入失败:', initResult.error.message);
-                    return false;
-                }
-                console.log('✅ 库存初始化成功 (sold=1):', productId);
-                delete stockCache[productId];
-                return true;
-            }
-            
-            var currentSold = (qResult.data && qResult.data.sold) ? Number(qResult.data.sold) : 0;
-            var newSold = currentSold + 1;
-            
-            // 2. Upsert 为递增后的值
-            var upsertResult = await supabase
-                .from('inventory')
-                .upsert({ product_id: productId, sold: newSold }, { onConflict: 'product_id' });
-            
-            if (upsertResult.error) {
-                console.error('库存扣减更新失败:', upsertResult.error.message);
+            // 原子操作：使用 Supabase RPC，避免并发竞态条件
+            var result = await supabase.rpc('increment_inventory_sold', { p_product_id: productId });
+            if (result.error) {
+                console.error('库存扣减 RPC 失败:', result.error.message);
                 return false;
             }
             // 清除缓存，下次查询时重新获取
             delete stockCache[productId];
-            console.log('✅ 库存已扣减:', productId, '→ sold:', newSold);
+            console.log('✅ 库存已扣减 (原子):', productId, '→ sold:', result.data);
             return true;
         } catch(e) {
             console.error('库存扣减异常:', e.message || e);
@@ -3234,7 +3206,7 @@ h1, h2, h3 {
     // 初始化 Supabase + 恢复未写入的支付订单
     initSupabase().then(ok => { if (ok) recoverPendingPayments(); });
 
-    document.getElementById('cartCheckoutBtn').addEventListener('click', () => {
+    document.getElementById('cartCheckoutBtn').addEventListener('click', async () => {
         if (cart.length === 0) return;
         if (!currentUser) {
             const lang = localStorage.getItem("lang") || "en";
@@ -3242,11 +3214,18 @@ h1, h2, h3 {
             openLoginModal();
             return;
         }
+        // 结算前检查购物车中所有商品库存
+        const stockCheck = await checkCartStock();
+        if (!stockCheck.allAvailable) {
+            const lang = localStorage.getItem("lang") || "en";
+            alert((langData[lang] || langData["en"]).badge_sold_out || 'Some items are sold out, please remove them from cart.');
+            return;
+        }
         // 打开支付弹窗
-        const total = cart.reduce((sum, item) => sum + item.price, 0);
+        const total = cart.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
         const lang = localStorage.getItem("lang") || "en";
         document.getElementById('payProductName').textContent = (langData[lang] || langData["en"]).pay_cart_checkout;
-        document.getElementById('payProductPrice').textContent = '€' + total;
+        document.getElementById('payProductPrice').textContent = '€' + total.toFixed(2);
         openPayModal();
     });
 
@@ -4544,7 +4523,7 @@ function renderPayPalButtons(amount, currency) {
                         phoneErrorEl.classList.add('show');
                     }
                     if (phoneInput) phoneInput.classList.add('error');
-                    return;
+                    return actions.reject();
                 }
                 // 清除错误状态
                 if (phoneErrorEl) { phoneErrorEl.textContent = ''; phoneErrorEl.classList.remove('show'); }
@@ -4630,12 +4609,7 @@ function renderPayPalButtons(amount, currency) {
                         }
                         localStorage.setItem('payment_orders', JSON.stringify(paymentOrders));
 
-                        // 清空购物车
-                        cart = [];
-                        saveCart();
-                        updateCart();
-
-                        // 🎉 展示成功页面
+                        // 🎉 展示成功页面（尽早让用户看到）
                         showPaySuccessPage(details);
 
                         // ===== 后台写入 Supabase =====
@@ -4704,15 +4678,24 @@ function renderPayPalButtons(amount, currency) {
 
                         // 立即尝试 + 5秒后重试
                         let saved = await trySaveToSupabase(1);
-                        if (!saved) {
+                        // 只要 PayPal 扣款成功就发送确认邮件，不依赖 Supabase 写入结果
+                        sendOrderConfirmation(details, lockedProductName || 'Order', amount, currencyCode);
+                        if (saved) {
+                            // Supabase 写入成功后才清空购物车
+                            cart = [];
+                            saveCart();
+                            updateCart();
+                        } else {
                             setTimeout(async () => {
                                 saved = await trySaveToSupabase(2);
-                                if (!saved) console.warn('⚠️ 订单保留在 localStorage，页面重载时自动恢复');
+                                if (saved) {
+                                    cart = [];
+                                    saveCart();
+                                    updateCart();
+                                } else {
+                                    console.warn('⚠️ 订单保留在 localStorage，页面重载时自动恢复');
+                                }
                             }, 5000);
-                        }
-                        // 发送订单确认邮件（后台执行，不阻塞页面）
-                        if (saved) {
-                            sendOrderConfirmation(details, lockedProductName || 'Order', amount, currencyCode);
                         }
                     } else {
                         console.error('PayPal 支付状态异常:', details);
@@ -4781,6 +4764,8 @@ function renderPayPalButtons(amount, currency) {
 }
 
 function openPayModal(productId) {
+    // 每次打开支付弹窗都清除库存缓存，确保拿到最新库存
+    if (productId) delete stockCache[productId];
     // 库存检查：售罄时阻止进入支付
     if (productId) {
         var cachedStock = stockCache[productId];
