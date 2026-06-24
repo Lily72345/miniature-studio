@@ -4,8 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>微缩工坊 | Miniature Studio - 原创微缩模型与涂装</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
+    <!-- Google Fonts 异步加载：不会阻塞页面渲染，超时不影响显示 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Noto+Serif+SC:wght@400;600;700&display=swap" media="print" onload="this.media='all'; this.onload=null;">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Noto+Serif+SC:wght@400;600;700&display=swap"></noscript>
+    <!-- Supabase SDK 异步加载，不阻塞页面渲染 -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js" async></script>
+    <!-- Fallback：如果外部资源加载失败，5秒后强制显示页面 -->
+    <script>
+        (function(){
+            var timeout = setTimeout(function(){
+                var links = document.querySelectorAll('link[media="print"]');
+                for (var i = 0; i < links.length; i++) { links[i].media = 'all'; }
+            }, 5000);
+            document.addEventListener('DOMContentLoaded', function(){ clearTimeout(timeout); });
+        })();
+    </script>
     <!-- PayPal SDK 改为动态加载（根据语言选择 locale） -->
     <style>
         /* 基础样式重置 */
@@ -2495,7 +2509,7 @@ h1, h2, h3 {
     async function initSupabase() {
         // 等待 SDK 加载（PayPal 跳转后页面可能还在加载脚本）
         let waited = 0;
-        while (typeof window.supabase === 'undefined' && waited < 10000) {
+        while (typeof window.supabase === 'undefined' && waited < 5000) {
             await new Promise(r => setTimeout(r, 200));
             waited += 200;
         }
