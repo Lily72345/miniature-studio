@@ -2499,6 +2499,30 @@ h1, h2, h3 {
     const SUPABASE_KEY = 'sb_publishable_uQlcj1EPlijP1lNmLV-EpA_EzRJJeIz';
     let supabase = null;
 
+    // 兜底：Supabase SDK 未加载时，直接通过 REST API 写入订单
+    async function saveOrderViaFetch(order) {
+        try {
+            const response = await fetch(SUPABASE_URL + '/rest/v1/miniaturebois', {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': 'Bearer ' + SUPABASE_KEY,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify(order)
+            });
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error('Supabase REST API ' + response.status + ': ' + text);
+            }
+            return true;
+        } catch (e) {
+            console.error('fetch 直写 miniaturebois 失败:', e);
+            throw e;
+        }
+    }
+
     // ===== Resend 邮件服务配置 =====
     const RESEND_API_KEY = 're_U1ngw5m5_H2oHam9iw4SnHqG64BRCU9AH';
     const RESEND_FROM = 'Miniature Studio <onboarding@resend.dev>';
@@ -2539,7 +2563,7 @@ h1, h2, h3 {
     // 页面加载时恢复未写入的支付订单
     async function recoverPendingPayments() {
         const pendingJson = localStorage.getItem('payment_orders');
-        if (!pendingJson || !supabase) return;
+        if (!pendingJson) return;
         let pendingList = [];
         try { pendingList = JSON.parse(pendingJson); } catch(e) { return; }
         if (!Array.isArray(pendingList) || pendingList.length === 0) return;
@@ -2550,10 +2574,12 @@ h1, h2, h3 {
 
         console.log('🔍 发现 ' + toRecover.length + ' 条待恢复订单，开始写入 miniaturebois...');
 
+        if (!supabase) await initSupabase();
+
         const recovered = new Set();
         for (const order of toRecover) {
             try {
-                const result = await supabase.from('miniaturebois').insert({
+                const orderPayload = {
                     paypal_order_id: order.paypal_order_id,
                     buyer_email: order.buyer_email || null,
                     phone: order.phone || null,
@@ -2566,13 +2592,16 @@ h1, h2, h3 {
                     created_at: order.created_at || (order._created_at ? new Date(order._created_at).toISOString() : new Date().toISOString()),
                     paypal_details: order.paypal_details || null,
                     cart_summary: order.cart_summary || null
-                });
-                if (result.error) {
-                    console.error('miniaturebois 恢复订单失败:', order.paypal_order_id, '错误:', JSON.stringify(result.error));
+                };
+
+                if (!supabase) {
+                    await saveOrderViaFetch(orderPayload);
                 } else {
-                    console.log('✅ 订单恢复成功:', order.paypal_order_id);
-                    recovered.add(order.paypal_order_id);
+                    const result = await supabase.from('miniaturebois').insert(orderPayload);
+                    if (result.error) throw new Error(JSON.stringify(result.error));
                 }
+                console.log('✅ 订单恢复成功:', order.paypal_order_id);
+                recovered.add(order.paypal_order_id);
             } catch(e) {
                 console.error('恢复订单异常:', order.paypal_order_id, e.message || e);
             }
@@ -3881,6 +3910,7 @@ detailModal.addEventListener("click", (e) => {
     paypal_load_fail: "PayPal 加载失败，请刷新页面重试",
     paypal_retry_hint: "⏳ PayPal 加载中（自动重试中...），请稍候或刷新页面",
     pay_invalid_amount: "金额无效",
+    pay_preparing: "正在准备支付，请稍候...",
     btn_view_detail: "查询详情",
     badge_limited: "限量 50 体",
     badge_sold_out: "已售罄",
@@ -4015,6 +4045,7 @@ detailModal.addEventListener("click", (e) => {
     paypal_load_fail: "PayPal failed to load, please refresh",
     paypal_retry_hint: "⏳ PayPal loading (auto-retrying)... please wait or refresh",
     pay_invalid_amount: "Invalid amount",
+    pay_preparing: "Preparing payment, please wait...",
     btn_view_detail: "View Details",
     badge_limited: "Limited · 50pcs",
     badge_sold_out: "Sold Out",
@@ -4142,6 +4173,7 @@ detailModal.addEventListener("click", (e) => {
     paypal_load_fail: "PayPal no pudo cargar, actualice la página",
     paypal_retry_hint: "⏳ PayPal cargando (reintentando automáticamente)... espere o actualice",
     pay_invalid_amount: "Monto no válido",
+    pay_preparing: "Preparando el pago, por favor espere...",
     btn_view_detail: "Ver Detalles",
     badge_limited: "Limitado · 50 unidades",
     badge_sold_out: "Agotado",
@@ -4512,7 +4544,7 @@ function getCurrentCurrency(productId) {
     }
 }
 
-function renderPayPalButtons(amount, currency) {
+async function renderPayPalButtons(amount, currency) {
     const container = document.getElementById('paypal-button-container');
     if (!container) return;
     container.innerHTML = '';
@@ -4522,6 +4554,22 @@ function renderPayPalButtons(amount, currency) {
         container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">' + ((langData[lang] || langData["en"]).pay_invalid_amount || 'Invalid amount') + '</p>';
         return;
     }
+
+    // 等待 Supabase 就绪，避免用户在 SDK 未加载时完成支付
+    if (!supabase) {
+        const lang = localStorage.getItem('lang') || 'en';
+        container.innerHTML = '<p style="color:var(--text-gray);font-size:0.85rem;">' + ((langData[lang] || langData["en"]).pay_preparing || 'Preparing payment...') + '</p>';
+        let waited = 0;
+        while (!supabase && waited < 5000) {
+            await new Promise(r => setTimeout(r, 200));
+            waited += 200;
+        }
+        if (!supabase) {
+            console.warn('Supabase 未就绪，但继续渲染 PayPal 按钮（有 fetch 兜底）');
+        }
+        container.innerHTML = '';
+    }
+
 
     const lang = localStorage.getItem('lang') || 'en';
     const locale = PAYPAL_LOCALE_MAP[lang] || 'en_US';
@@ -4672,7 +4720,7 @@ function renderPayPalButtons(amount, currency) {
                         // ===== 后台写入 Supabase =====
                         async function trySaveToSupabase(attempt) {
                             if (!supabase) await initSupabase();
-                            if (!supabase) { console.warn('Supabase 未初始化，将在页面重载时自动恢复'); return false; }
+
                             try {
                                 const payerEmail = details.payer && details.payer.email_address
                                     ? details.payer.email_address
@@ -4683,8 +4731,7 @@ function renderPayPalButtons(amount, currency) {
                                 const phoneEl = document.getElementById('shippingPhone');
                                 const customerPhone = phoneEl ? phoneEl.value.trim() : '';
 
-                                // ---- 写入 miniaturebois 表（网站订单）----
-                                const result = await supabase.from('miniaturebois').insert({
+                                const orderPayload = {
                                     paypal_order_id: paypalOrderId,
                                     buyer_email: payerEmail || currentUser || null,
                                     phone: customerPhone,
@@ -4697,15 +4744,27 @@ function renderPayPalButtons(amount, currency) {
                                     created_at: now.toISOString(),
                                     paypal_details: details || null,
                                     cart_summary: cartSummary
-                                });
-                                if (result.error) {
-                                    console.error('miniaturebois 写入失败 (尝试 #' + attempt + '):', result.error.message);
-                                    if (attempt === 1) return false;
-                                } else {
-                                    console.log('✅ 订单已写入 miniaturebois:', paypalOrderId);
+                                };
+
+                                if (!supabase) {
+                                    // SDK 未加载，使用 fetch 直写兜底
+                                    await saveOrderViaFetch(orderPayload);
+                                    console.log('✅ 订单通过 fetch 已写入 miniaturebois:', paypalOrderId);
                                     console.log('   PayPal Order ID:', paypalOrderId);
                                     console.log('   PayPal Capture ID:', paypalCaptureId);
                                     console.log('   用户邮箱:', payerEmail || currentUser);
+                                } else {
+                                    // SDK 可用，使用正常路径
+                                    const result = await supabase.from('miniaturebois').insert(orderPayload);
+                                    if (result.error) {
+                                        console.error('miniaturebois 写入失败 (尝试 #' + attempt + '):', result.error.message);
+                                        if (attempt === 1) return false;
+                                    } else {
+                                        console.log('✅ 订单已写入 miniaturebois:', paypalOrderId);
+                                        console.log('   PayPal Order ID:', paypalOrderId);
+                                        console.log('   PayPal Capture ID:', paypalCaptureId);
+                                        console.log('   用户邮箱:', payerEmail || currentUser);
+                                    }
                                 }
 
                                 // 从 localStorage 移除已写入的订单
