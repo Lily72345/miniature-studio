@@ -2523,8 +2523,7 @@ h1, h2, h3 {
         }
     }
 
-    // ===== Resend 邮件服务配置 =====
-    const RESEND_API_KEY = 're_U1ngw5m5_H2oHam9iw4SnHqG64BRCU9AH';
+    // ===== Resend 邮件服务配置（API Key 已移至 Supabase Edge Function 环境变量） =====
     const RESEND_FROM = 'Miniature Studio <onboarding@resend.dev>';
     const RESEND_TO_OWNER = 'm15038079877@163.com'; // 你自己的邮箱，收订单通知
 
@@ -4276,11 +4275,11 @@ async function sendOrderConfirmation(details, productName, amount, currency) {
             addressHtml = '<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Shipping</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">' + fullName + '<br>' + lines + '</td></tr>';
         }
 
-        // 发送给买家
-        var buyerResp = await fetch('https://api.resend.com/emails', {
+        // 发送给买家（通过 Edge Function 代理，避免 API Key 暴露）
+        var buyerResp = await fetch(SUPABASE_URL + '/functions/v1/send-order-email', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer ' + RESEND_API_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -4312,11 +4311,11 @@ async function sendOrderConfirmation(details, productName, amount, currency) {
             console.error('📧 买家邮件发送失败:', berr.message || buyerResp.status);
         }
 
-        // 同时发一封通知到店主邮箱
-        await fetch('https://api.resend.com/emails', {
+        // 同时发一封通知到店主邮箱（通过 Edge Function 代理）
+        await fetch(SUPABASE_URL + '/functions/v1/send-order-email', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer ' + RESEND_API_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
