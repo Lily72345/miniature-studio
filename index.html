@@ -4757,13 +4757,13 @@ async function renderPayPalButtons(amount, currency) {
                                     const result = await supabase.from('miniaturebois').insert(orderPayload);
                                     if (result.error) {
                                         console.error('miniaturebois 写入失败 (尝试 #' + attempt + '):', result.error.message);
-                                        if (attempt === 1) return false;
-                                    } else {
-                                        console.log('✅ 订单已写入 miniaturebois:', paypalOrderId);
-                                        console.log('   PayPal Order ID:', paypalOrderId);
-                                        console.log('   PayPal Capture ID:', paypalCaptureId);
-                                        console.log('   用户邮箱:', payerEmail || currentUser);
+                                        console.error('   错误详情:', result.error);
+                                        return false;
                                     }
+                                    console.log('✅ 订单已写入 miniaturebois:', paypalOrderId);
+                                    console.log('   PayPal Order ID:', paypalOrderId);
+                                    console.log('   PayPal Capture ID:', paypalCaptureId);
+                                    console.log('   用户邮箱:', payerEmail || currentUser);
                                 }
 
                                 // 从 localStorage 移除已写入的订单
