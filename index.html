@@ -2251,7 +2251,24 @@ h1, h2, h3 {
                     </div>
                 </div>
 
-    </section>
+    
+
+                <!-- 产品卡片 TEST -->
+                <div class="product-card" data-category="test" data-product-id="p_test" onclick="openDetail('p_test')">
+                    <div class="product-image">
+                        <img src="weisuo.image/a1.jpg">
+                       <div class="product-overlay">
+    <button class="view-details" data-product="p_test" data-key="btn_view_detail" onclick="event.stopPropagation(); openDetail('p_test')">查询详情</button>
+</div>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name" data-key="p_test_name">PayPal Test</h3>
+                        <p class="product-scale" data-key="p_test_scale">€1 Test Product</p>
+                        <p class="product-price">€1</p>
+                        <button class="add-to-cart" data-key="p_test_addbutton" onclick="event.stopPropagation();">加入购物车</button>
+                    </div>
+                </div>
+</section>
 
     <!-- Artwork 作品展示区块 -->
     <section class="artwork-section">
@@ -3483,10 +3500,26 @@ const productData = {
             "weisuo.image/c10.jpg",
             "weisuo.image/c11.png",
           ]
+    },
+    p_test: {
+      title: "支付测试 | PayPal Test",
+      price: "Price: €1",
+      scale: "测试商品",
+      pieces: "1",
+      stock: 999,
+      more: "仅用于支付功能测试",
+      featuresTitle: "商品介绍",
+      desc: "这是一个1欧元支付测试商品，仅用于测试PayPal支付功能。",
+      features: [
+        "支付测试专用",
+        "仅用于开发调试",
+        "请勿实际购买"
+      ],
+      images: ["weisuo.image/a1.jpg"]
     }
   },
 
-  en: {
+en: {
     p1: {
       title: "Anatoly | GIPETTO",
       price: "Price: €55",
@@ -3563,9 +3596,27 @@ const productData = {
             "weisuo.image/c10.jpg",
             "weisuo.image/c11.png",
            ]
+    },
+
+    p_test: {
+      title: "PayPal Test | Miniature Bois",
+      price: "Price: €1",
+      scale: "Test Product",
+      pieces: "1",
+      stock: 999,
+      more: "For payment testing only",
+      featuresTitle: "Product Details",
+      desc: "This is a €1 test product for PayPal payment testing purposes only.",
+      features: [
+        "Payment testing only",
+        "Development & debugging use",
+        "Please do not actually purchase"
+      ],
+      images: ["weisuo.image/a1.jpg"]
     }
   },
-  es: {
+
+es: {
     p1: {
       title: "Anatoly | GIPETTO",
       price: "Precio: €55",
@@ -3642,6 +3693,22 @@ const productData = {
             "weisuo.image/c10.jpg",
             "weisuo.image/c11.png"
           ]
+    },
+    p_test: {
+      title: "Prueba de Pago | Miniature Bois",
+      price: "Precio: €1",
+      scale: "Producto de Prueba",
+      pieces: "1",
+      stock: 999,
+      more: "Solo para pruebas de pago",
+      featuresTitle: "Detalles del Producto",
+      desc: "Este es un producto de prueba de €1 solo para verificar el pago por PayPal.",
+      features: [
+        "Solo para pruebas de pago",
+        "Uso de desarrollo y depuracion",
+        "No comprar realmente"
+      ],
+      images: ["weisuo.image/a1.jpg"]
     }
   }
 };
