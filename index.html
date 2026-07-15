@@ -2253,7 +2253,7 @@ h1, h2, h3 {
 
     
 
-                <!-- 产品卡片 TEST -->
+                <!-- 产品卡片 运费补差 -->
                 <div class="product-card" data-category="test" data-product-id="p_test" onclick="openDetail('p_test')">
                     <div class="product-image">
                         <img src="weisuo.image/a1.jpg">
@@ -2262,8 +2262,8 @@ h1, h2, h3 {
 </div>
                     </div>
                     <div class="product-info">
-                        <h3 class="product-name" data-key="p_test_name">PayPal Test</h3>
-                        <p class="product-scale" data-key="p_test_scale">€1 Test Product</p>
+                        <h3 class="product-name" data-key="p_test_name">运费补差（其他地区）</h3>
+                        <p class="product-scale" data-key="p_test_scale">€1 / 个 · 按需拍下</p>
                         <p class="product-price">€1</p>
                         <button class="add-to-cart" data-key="p_test_addbutton" onclick="event.stopPropagation();">加入购物车</button>
                     </div>
@@ -3501,19 +3501,19 @@ const productData = {
             "weisuo.image/c11.png",
           ]
     },
-    p_test: {
-      title: "支付测试 | PayPal Test",
+        p_test: {
+      title: "运费补差（其他地区）｜Shipping Fee",
       price: "Price: €1",
-      scale: "测试商品",
+      scale: "€1 / 个 · 按需拍下对应数量",
       pieces: "1",
-      stock: 999,
-      more: "仅用于支付功能测试",
-      featuresTitle: "商品介绍",
-      desc: "这是一个1欧元支付测试商品，仅用于测试PayPal支付功能。",
+      stock: 9999,
+      more: "用于国际运费补差，请先联系客服确认运费金额",
+      featuresTitle: "使用说明",
+      desc: "请先联系客服确认运费金额，确认后按需拍下对应数量。例如：运费 €15 = 拍 15 个此链接。",
       features: [
-        "支付测试专用",
-        "仅用于开发调试",
-        "请勿实际购买"
+        "先联系客服确认运费",
+        "按确认金额拍下对应数量",
+        "仅用于运费补差，不单独发货"
       ],
       images: ["weisuo.image/a1.jpg"]
     }
@@ -3598,19 +3598,19 @@ en: {
            ]
     },
 
-    p_test: {
-      title: "PayPal Test | Miniature Bois",
+        p_test: {
+      title: "Shipping Fee (Other Regions) | Miniature Bois",
       price: "Price: €1",
-      scale: "Test Product",
+      scale: "€1 / unit · Purchase accordingly",
       pieces: "1",
-      stock: 999,
-      more: "For payment testing only",
-      featuresTitle: "Product Details",
-      desc: "This is a €1 test product for PayPal payment testing purposes only.",
+      stock: 9999,
+      more: "Additional shipping fee. Confirm amount with customer service first.",
+      featuresTitle: "Instructions",
+      desc: "Please contact customer service to confirm the shipping fee first, then purchase the corresponding quantity. Example: €15 shipping = buy 15 units.",
       features: [
-        "Payment testing only",
-        "Development & debugging use",
-        "Please do not actually purchase"
+        "Contact customer service to confirm shipping fee",
+        "Purchase corresponding quantity",
+        "For shipping fee top-up only — not shipped separately"
       ],
       images: ["weisuo.image/a1.jpg"]
     }
@@ -3694,19 +3694,19 @@ es: {
             "weisuo.image/c11.png"
           ]
     },
-    p_test: {
-      title: "Prueba de Pago | Miniature Bois",
+        p_test: {
+      title: "Tarifa de Envío (Otras Regiones) | Miniature Bois",
       price: "Precio: €1",
-      scale: "Producto de Prueba",
+      scale: "€1 / unidad · Comprar según corresponda",
       pieces: "1",
-      stock: 999,
-      more: "Solo para pruebas de pago",
-      featuresTitle: "Detalles del Producto",
-      desc: "Este es un producto de prueba de €1 solo para verificar el pago por PayPal.",
+      stock: 9999,
+      more: "Tarifa de envío adicional. Confirme el monto con atención al cliente primero.",
+      featuresTitle: "Instrucciones",
+      desc: "Contacte al servicio de atención al cliente para confirmar la tarifa de envío primero, luego compre la cantidad correspondiente. Ejemplo: €15 de envío = comprar 15 unidades.",
       features: [
-        "Solo para pruebas de pago",
-        "Uso de desarrollo y depuracion",
-        "No comprar realmente"
+        "Contactar al servicio al cliente para confirmar",
+        "Comprar la cantidad correspondiente",
+        "Solo para tarifa de envío — no se envía por separado"
       ],
       images: ["weisuo.image/a1.jpg"]
     }
