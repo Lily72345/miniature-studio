@@ -5019,12 +5019,15 @@ payModal.addEventListener('click', (e) => {
     if (e.target === payModal) closePayModal();
 });
 
-buyNowBtn.addEventListener('click', () => {
+function handleBuyNow() {
     if (currentBuyProduct) {
         closeDetail();
         setTimeout(() => openPayModal(currentBuyProduct), 300);
     }
-});
+}
+buyNowBtn.addEventListener('click', handleBuyNow);
+buyNowBtn.addEventListener('touchend', (e) => { e.preventDefault(); handleBuyNow(); });
+
 
 // 显示支付成功页面
 let paySuccessTimer = null;
