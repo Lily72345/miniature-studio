@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -3136,13 +3136,17 @@ h1, h2, h3 {
             saveCart();
             updateCart();
 
-            this.textContent = '已添加 ✓';
+            const lang = localStorage.getItem("lang") || "en";
+            const t = langData[lang] || langData["en"];
+            const btnKey = this.getAttribute('data-key');
+
+            this.textContent = t.btn_added || 'Added ✓';
             this.style.background = 'var(--accent-color)';
             this.style.color = 'var(--primary-color)';
             this.style.borderColor = 'var(--accent-color)';
 
             setTimeout(() => {
-                this.textContent = '加入购物车';
+                this.textContent = (btnKey && t[btnKey]) ? t[btnKey] : (t.p1_addbutton || 'Add to Cart');
                 this.style.background = '';
                 this.style.color = '';
                 this.style.borderColor = '';
@@ -3912,6 +3916,7 @@ detailModal.addEventListener("click", (e) => {
     p_test_name:"运费补差（其他地区）",
     p_test_scale:"€1 / 个 · 按需拍下",
     p_test_addbutton:"加入购物车",
+    btn_added: "已添加 ✓",
 
     artwork_title: "涂装作品",
     artwork_view: "查看全部",
@@ -4049,6 +4054,7 @@ detailModal.addEventListener("click", (e) => {
     p_test_name: "Shipping Fee (Other Regions)",
     p_test_scale: "€1 / unit · Purchase accordingly",
     p_test_addbutton: "Add to Cart",
+    btn_added: "Added ✓",
     p3_scale: "20cm × 9cm",
 
     artwork_title: "ARTWORK",
@@ -4184,6 +4190,7 @@ detailModal.addEventListener("click", (e) => {
     p_test_name: "Tarifa de Envío (Otras Regiones)",
     p_test_scale: "€1 / unidad · Comprar según corresponda",
     p_test_addbutton: "Añadir al Carrito",
+    btn_added: "Añadido ✓",
     artwork_title: "OBRAS DE ARTE",
     artwork_view: "VER TODO",
     about_title: "Sobre Nosotros",
