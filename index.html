@@ -2268,6 +2268,21 @@ h1, h2, h3 {
                         <button class="add-to-cart" data-key="p_test_addbutton" onclick="event.stopPropagation();">加入购物车</button>
                     </div>
                 </div>
+                <!-- 产品卡片 运费补差 €5 -->
+                <div class="product-card" data-category="test" data-product-id="p_ship5" onclick="openDetail('p_ship5')">
+                    <div class="product-image">
+                        <img src="weisuo.image/a1.jpg">
+                       <div class="product-overlay">
+    <button class="view-details" data-product="p_ship5" data-key="btn_view_detail" onclick="event.stopPropagation(); openDetail('p_ship5')">Shipping Fee €5</button>
+</div>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name" data-key="p_ship5_name">Shipping Fee (Other Regions)</h3>
+                        <p class="product-scale" data-key="p_ship5_scale">€5 / unit · Purchase accordingly</p>
+                        <p class="product-price">€5</p>
+                        <button class="add-to-cart" data-key="p_ship5_addbutton" onclick="event.stopPropagation();">Add to Cart</button>
+                    </div>
+                </div>
 </section>
 
     <!-- Artwork 作品展示区块 -->
@@ -3520,6 +3535,22 @@ const productData = {
         "仅用于运费补差，不单独发货"
       ],
       images: ["weisuo.image/a1.jpg"]
+    },
+        p_ship5: {
+      title: "运费补差（其他地区）｜Shipping Fee",
+      price: "Price: €5",
+      scale: "€5 / 个 · 按需拍下对应数量",
+      pieces: "1",
+      stock: 9999,
+      more: "用于国际运费补差，请先联系客服确认运费金额",
+      featuresTitle: "使用说明",
+      desc: "请先联系客服确认运费金额，确认后按需拍下对应数量。例如：运费 €15 = 拍 3 个此链接。",
+      features: [
+        "先联系客服确认运费",
+        "按确认金额拍下对应数量",
+        "仅用于运费补差，不单独发货"
+      ],
+      images: ["weisuo.image/a1.jpg"]
     }
   },
 
@@ -3617,10 +3648,26 @@ en: {
         "For shipping fee top-up only — not shipped separately"
       ],
       images: ["weisuo.image/a1.jpg"]
+    },
+        p_ship5: {
+      title: "Shipping Fee (Other Regions) | Miniature Bois",
+      price: "Price: €5",
+      scale: "€5 / unit · Purchase accordingly",
+      pieces: "1",
+      stock: 9999,
+      more: "Additional shipping fee. Confirm amount with customer service first.",
+      featuresTitle: "Instructions",
+      desc: "Please contact customer service to confirm the shipping fee first, then purchase the corresponding quantity. Example: €15 shipping = buy 3 units.",
+      features: [
+        "Contact customer service to confirm shipping fee",
+        "Purchase corresponding quantity",
+        "For shipping fee top-up only — not shipped separately"
+      ],
+      images: ["weisuo.image/a1.jpg"]
     }
   },
 
-es: {
+    es: {
     p1: {
       title: "Anatoly | GIPETTO",
       price: "Precio: €55",
@@ -3707,6 +3754,22 @@ es: {
       more: "Tarifa de envío adicional. Confirme el monto con atención al cliente primero.",
       featuresTitle: "Instrucciones",
       desc: "Contacte al servicio de atención al cliente para confirmar la tarifa de envío primero, luego compre la cantidad correspondiente. Ejemplo: €15 de envío = comprar 15 unidades.",
+      features: [
+        "Contactar al servicio al cliente para confirmar",
+        "Comprar la cantidad correspondiente",
+        "Solo para tarifa de envío — no se envía por separado"
+      ],
+      images: ["weisuo.image/a1.jpg"]
+    },
+        p_ship5: {
+      title: "Tarifa de Envío (Otras Regiones) | Miniature Bois",
+      price: "Precio: €5",
+      scale: "€5 / unidad · Comprar según corresponda",
+      pieces: "1",
+      stock: 9999,
+      more: "Tarifa de envío adicional. Confirme el monto con atención al cliente primero.",
+      featuresTitle: "Instrucciones",
+      desc: "Contacte al servicio de atención al cliente para confirmar la tarifa de envío primero, luego compre la cantidad correspondiente. Ejemplo: €15 de envío = comprar 3 unidades.",
       features: [
         "Contactar al servicio al cliente para confirmar",
         "Comprar la cantidad correspondiente",
@@ -3916,6 +3979,9 @@ detailModal.addEventListener("click", (e) => {
     p_test_name:"运费补差（其他地区）",
     p_test_scale:"€1 / 个 · 按需拍下",
     p_test_addbutton:"加入购物车",
+    p_ship5_name:"运费补差（其他地区）",
+    p_ship5_scale:"€5 / 个 · 按需拍下",
+    p_ship5_addbutton:"加入购物车",
     btn_added: "已添加 ✓",
 
     artwork_title: "涂装作品",
@@ -4054,6 +4120,9 @@ detailModal.addEventListener("click", (e) => {
     p_test_name: "Shipping Fee (Other Regions)",
     p_test_scale: "€1 / unit · Purchase accordingly",
     p_test_addbutton: "Add to Cart",
+    p_ship5_name: "Shipping Fee (Other Regions)",
+    p_ship5_scale: "€5 / unit · Purchase accordingly",
+    p_ship5_addbutton: "Add to Cart",
     btn_added: "Added ✓",
     p3_scale: "20cm × 9cm",
 
@@ -4190,6 +4259,9 @@ detailModal.addEventListener("click", (e) => {
     p_test_name: "Tarifa de Envío (Otras Regiones)",
     p_test_scale: "€1 / unidad · Comprar según corresponda",
     p_test_addbutton: "Añadir al Carrito",
+    p_ship5_name: "Tarifa de Envío (Otras Regiones)",
+    p_ship5_scale: "€5 / unidad · Comprar según corresponda",
+    p_ship5_addbutton: "Añadir al Carrito",
     btn_added: "Añadido ✓",
     artwork_title: "OBRAS DE ARTE",
     artwork_view: "VER TODO",
@@ -4828,6 +4900,17 @@ async function renderPayPalButtons(amount, currency) {
                                     cart_summary: cartSummary
                                 };
 
+                                // 🔍 DEBUG: 打印完整订单数据
+                                console.log('========== trySaveToSupabase 尝试 #' + attempt + ' ==========');
+                                console.log('📦 完整 orderPayload:', JSON.stringify(orderPayload, null, 2));
+                                console.log('   lockedProductId:', lockedProductId, '(null=购物车结算)');
+                                console.log('   lockedProductName:', lockedProductName);
+                                console.log('   cartSummary 长度:', cartSummary ? cartSummary.length : 0);
+                                console.log('   cartSummary 内容:', JSON.stringify(cartSummary));
+                                console.log('   supabase 连接状态:', supabase ? 'OK' : 'NULL');
+                                console.log('   amount:', amount, 'currency:', currencyCode);
+                                console.log('==================================================');
+
                                 if (!supabase) {
                                     // SDK 未加载，使用 fetch 直写兜底
                                     await saveOrderViaFetch(orderPayload);
@@ -4992,6 +5075,7 @@ function openPayModal(productId) {
 
     if (!productId) {
         // 购物车结算模式
+        currentBuyProduct = null;
         const total = getCurrentAmount(null);
         const currency = getCurrentCurrency(null);
         const lang2 = localStorage.getItem("lang") || "en";
