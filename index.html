@@ -2101,6 +2101,17 @@ h1, h2, h3 {
     color: var(--accent-color);
     min-height: 1.2em;
 }
+.shipping-fee-disclaimer {
+    margin-top: 0.6rem;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.76rem;
+    line-height: 1.65;
+    color: #b8b0aa;
+    background: rgba(240, 180, 41, 0.06);
+    border-left: 3px solid rgba(240, 180, 41, 0.55);
+    border-radius: 4px;
+    text-align: left;
+}
 .shipping-phone-row {
     margin-top: 0.6rem;
     display: flex;
@@ -4424,6 +4435,7 @@ h1, h2, h3 {
                         <button class="shipping-option" data-region="other" onclick="selectShippingRegion('other')" data-key="shipping_other">Other</button>
                     </div>
                     <p class="shipping-fee-note" id="shippingFeeNote"></p>
+                    <p class="shipping-fee-disclaimer" data-key="shipping_fee_disclaimer">⚠️ The shipping fee above is an estimate only. The exact cost depends on your region. We will notify you by email with the final shipping fee. If the actual fee is higher, you will need to purchase the additional shipping fee difference before we arrange shipment.</p>
                     <div class="shipping-phone-row">
                         <input type="tel" class="shipping-phone-input" id="shippingPhone" data-key="shipping_phone_placeholder" data-placeholder="shipping_phone_placeholder" placeholder="Phone Number" />
                         <span class="shipping-phone-hint" data-key="shipping_phone_hint">For shipping & delivery contact</span>
@@ -5191,6 +5203,7 @@ detailModal.addEventListener("click", (e) => {
     shipping_fee_other: "运费将另行通知，我们会通过邮件联系您",
     shipping_phone_placeholder: "手机号码（用于发货）",
     shipping_phone_hint: "用于物流配送联系",
+    shipping_fee_disclaimer: "⚠️ 以上运费为估算值，实际运费将根据您的地区确定。我们会通过邮件告知您确切的运费；若实际运费高于预估，需要您补拍差额运费，之后我们会尽快为您安排发货。",
     shipping_phone_required: "请填写电话号码",
     
   },
@@ -5384,6 +5397,7 @@ detailModal.addEventListener("click", (e) => {
     shipping_fee_other: "Shipping cost to be notified by email.",
     shipping_phone_placeholder: "Phone Number",
     shipping_phone_hint: "For shipping & delivery contact",
+    shipping_fee_disclaimer: "⚠️ The shipping fee above is an estimate only. The exact cost depends on your region. We will notify you by email with the final shipping fee. If the actual fee is higher, you will need to purchase the additional shipping fee difference before we arrange shipment.",
     shipping_phone_required: "Please enter your phone number",
 
 
@@ -5570,6 +5584,7 @@ detailModal.addEventListener("click", (e) => {
     shipping_fee_other: "El costo de envío se notificará por correo.",
     shipping_phone_placeholder: "Número de teléfono",
     shipping_phone_hint: "Para el envío y la entrega",
+    shipping_fee_disclaimer: "⚠️ La tarifa de envío mostrada es solo una estimación. El costo exacto depende de su región. Le notificaremos por correo electrónico la tarifa final. Si la tarifa real es mayor, deberá comprar la diferencia de envío antes de que organicemos el envío.",
     shipping_phone_required: "Por favor ingrese su número de teléfono"
   }
 };
