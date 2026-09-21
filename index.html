@@ -2135,6 +2135,340 @@ h1, h2, h3 {
     display: block;
 }
 
+/* ===== Artwork 分类标签 + 作品卡片 ===== */
+.artwork-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .9rem;
+    margin: 2.2rem 0 2.8rem;
+}
+.artwork-tab {
+    padding: .75rem 1.7rem;
+    background: transparent;
+    border: 1px solid #3a3a40;
+    color: #c1bab3;
+    font-family: inherit;
+    font-size: .9rem;
+    letter-spacing: .05em;
+    cursor: pointer;
+    transition: border-color .2s, color .2s, background .2s;
+}
+.artwork-tab:hover { border-color: var(--accent-color, #a8181f); color: #fff; }
+.artwork-tab.active {
+    border-color: var(--accent-color, #a8181f);
+    color: var(--accent-color, #a8181f);
+    background: rgba(168,24,31,.08);
+}
+.artwork-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 1.4rem;
+    margin-bottom: 2.5rem;
+}
+.artwork-card {
+    background: #1b1b1f;
+    border: 1px solid #2e2e33;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .2s, border-color .2s;
+}
+.artwork-card:hover { transform: translateY(-4px); border-color: var(--accent-color, #a8181f); }
+.artwork-card img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    display: block;
+    opacity: 0;
+    transition: opacity .4s;
+}
+.artwork-card img.loaded { opacity: 1; }
+.artwork-card-title {
+    padding: .85rem 1rem;
+    color: #f0ece6;
+    font-size: .92rem;
+    letter-spacing: .03em;
+    text-align: left;
+}
+.artwork-empty {
+    text-align: center;
+    color: #9a938c;
+    font-size: .9rem;
+    padding: 2rem 0 3rem;
+}
+@media (max-width: 640px) {
+    .artwork-grid { grid-template-columns: repeat(2, 1fr); gap: .9rem; }
+    .artwork-card-title { font-size: .82rem; padding: .6rem .7rem; }
+    .artwork-tab { padding: .6rem 1.1rem; font-size: .82rem; }
+}
+
+/* ===== 优惠券 ===== */
+.coupon-redeem-row { display: flex; gap: .6rem; margin-bottom: .4rem; }
+.coupon-code-input {
+    flex: 1;
+    padding: .75rem 1rem;
+    background: #1b1b1f;
+    border: 1px solid #2e2e33;
+    border-radius: 8px;
+    color: #f0ece6;
+    font-size: .95rem;
+    font-family: inherit;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.coupon-code-input::placeholder { color: #6f6860; text-transform: none; letter-spacing: normal; }
+.coupon-code-input:focus { outline: none; border-color: var(--accent-color, #a8181f); }
+.coupon-redeem-btn {
+    padding: .75rem 1.4rem;
+    background: var(--accent-color, #a8181f);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: .92rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity .15s;
+    white-space: nowrap;
+}
+.coupon-redeem-btn:hover { opacity: .88; }
+.coupon-redeem-btn:disabled { opacity: .5; cursor: not-allowed; }
+.coupon-redeem-msg { font-size: .82rem; margin: .1rem 0 .5rem; display: none; }
+.coupon-redeem-msg.ok { display: block; color: #7ed99a; }
+.coupon-redeem-msg.err { display: block; color: #ff7a7a; }
+
+.coupon-card {
+    border: 1px solid #2e2e33;
+    border-radius: 10px;
+    padding: .9rem 1.1rem;
+    background: #1b1b1f;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .8rem;
+}
+.coupon-card-main { flex: 1; min-width: 0; }
+.coupon-card-name { color: #f0ece6; font-weight: 600; font-size: .95rem; margin-bottom: .25rem; }
+.coupon-card-meta { color: #9a938c; font-size: .78rem; line-height: 1.6; word-break: break-all; }
+.coupon-card-badge {
+    display: inline-block;
+    padding: .28rem .7rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.coupon-card-badge.available { background: rgba(126,217,154,.13); color: #7ed99a; border: 1px solid rgba(126,217,154,.35); }
+.coupon-card-badge.used { background: rgba(154,147,140,.15); color: #9a938c; border: 1px solid #3a3a40; }
+.coupon-card-badge.expired { background: rgba(255,122,122,.12); color: #ff7a7a; border: 1px solid rgba(255,122,122,.3); }
+.coupon-card.clickable { cursor: pointer; transition: border-color .15s; }
+.coupon-card.clickable:hover { border-color: var(--accent-color, #a8181f); }
+.coupon-card-discount { color: #7ed99a; font-weight: 700; white-space: nowrap; font-size: .92rem; }
+.coupon-none { text-align: center; color: #9a938c; padding: 1.2rem 0; font-size: .88rem; cursor: pointer; transition: color .15s; }
+.coupon-none:hover { color: #fff; }
+
+/* 选券弹窗必须显示在支付弹窗（z-index:4000）之上 */
+#couponPickerModal { z-index: 4500; }
+
+/* 支付弹窗里的券区块 */
+.pay-coupon-block { margin: -0.6rem 0 1.2rem; text-align: left; }
+.pay-coupon-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .8rem;
+    padding: .75rem 1rem;
+    background: #1b1b1f;
+    border: 1px solid #2e2e33;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color .15s;
+}
+.pay-coupon-row:hover { border-color: var(--accent-color, #a8181f); }
+.pay-coupon-label { color: #c1bab3; font-size: .9rem; }
+.pay-coupon-value { color: #f0b429; font-size: .9rem; font-weight: 600; text-align: right; }
+.pay-coupon-target { color: #9a938c; font-size: .78rem; padding: .4rem .2rem 0; line-height: 1.5; }
+.pay-coupon-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .6rem .2rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+}
+.pay-coupon-total span:last-child { color: #7ed99a; }
+
+/* ===== 账户下拉（导航栏右侧） ===== */
+.account-switcher { position: relative; }
+.account-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text-light);
+    font-size: 0.95rem;
+    letter-spacing: 0.1em;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: 0;
+    transition: color 0.3s;
+}
+.account-btn:hover { color: #fff; }
+.account-dropdown {
+    position: absolute;
+    top: calc(100% + 14px);
+    right: 0;
+    min-width: 210px;
+    background: #1b1b1f;
+    border: 1px solid #2e2e33;
+    border-radius: 8px;
+    padding: .35rem 0;
+    display: none;
+    z-index: 1200;
+    box-shadow: 0 8px 24px rgba(0,0,0,.45);
+}
+.account-dropdown.active { display: block; }
+.account-email {
+    padding: .55rem 1rem .6rem;
+    color: #9a938c;
+    font-size: .78rem;
+    border-bottom: 1px solid #2e2e33;
+    margin-bottom: .3rem;
+    word-break: break-all;
+}
+.account-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: .6rem 1rem;
+    background: none;
+    border: none;
+    color: #e6dfd8;
+    font-size: .88rem;
+    font-family: inherit;
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    text-decoration: none;
+}
+.account-item:hover { background: rgba(168,24,31,.2); color: #fff; }
+.account-logout { color: #ff9a9a; }
+.account-logout:hover { background: rgba(168,24,31,.25); color: #fff; }
+@media (max-width: 768px) {
+    .account-dropdown { left: 50%; right: auto; transform: translateX(-50%); top: calc(100% + 8px); }
+}
+
+/* ===== 语言切换下拉 ===== */
+.lang-switcher { position: relative; }
+.lang-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text-light);
+    font-size: 0.95rem;
+    letter-spacing: 0.1em;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: 0;
+}
+.lang-caret { font-size: .65rem; opacity: .75; }
+.lang-dropdown {
+    position: absolute;
+    top: calc(100% + 14px);
+    right: 0;
+    min-width: 132px;
+    background: #1b1b1f;
+    border: 1px solid #2e2e33;
+    border-radius: 8px;
+    padding: .35rem 0;
+    display: none;
+    z-index: 1200;
+    box-shadow: 0 8px 24px rgba(0,0,0,.45);
+}
+.lang-dropdown.active { display: block; }
+.lang-dropdown button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: .6rem 1rem;
+    background: none;
+    border: none;
+    color: #e6dfd8;
+    font-size: .88rem;
+    font-family: inherit;
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+.lang-dropdown button:hover { background: rgba(168,24,31,.2); color: #fff; }
+@media (max-width: 768px) {
+    .lang-dropdown { left: 50%; right: auto; transform: translateX(-50%); top: calc(100% + 8px); }
+}
+
+/* ===== 我的订单弹窗（适配弹窗深色主题） ===== */
+.orders-modal-body { display: flex; flex-direction: column; gap: 0.9rem; }
+
+.order-card {
+    border: 1px solid #2e2e33;
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    background: #1b1b1f;
+    cursor: pointer;
+    transition: box-shadow .2s, border-color .2s;
+}
+.order-card:hover { border-color: var(--accent-color, #a8181f); box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+.order-card-top { display: flex; justify-content: space-between; align-items: center; gap: .8rem; flex-wrap: wrap; }
+.order-card-no { font-weight: 600; color: #f0ece6; font-size: .92rem; letter-spacing: .5px; word-break: break-all; }
+.order-card-date { color: #9a938c; font-size: .78rem; margin-top: .5rem; }
+.order-card-bottom { display: flex; justify-content: space-between; align-items: center; gap: .8rem; margin-top: .6rem; flex-wrap: wrap; }
+.order-card-summary { color: #c1bab3; font-size: .85rem; line-height: 1.5; flex: 1; min-width: 0; }
+.order-card-total { font-weight: 700; color: #fff; white-space: nowrap; }
+
+.order-status-badge {
+    display: inline-block;
+    padding: .28rem .7rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.order-status-badge.processing { background: rgba(240,180,41,.15); color: #f0b429; border: 1px solid rgba(240,180,41,.35); }
+.order-status-badge.shipped { background: rgba(126,217,154,.13); color: #7ed99a; border: 1px solid rgba(126,217,154,.35); }
+
+.order-detail-row { display: flex; justify-content: space-between; gap: 1rem; padding: .6rem 0; border-bottom: 1px dashed #2e2e33; font-size: .9rem; }
+.order-detail-row:last-child { border-bottom: none; }
+.order-detail-label { color: #9a938c; flex-shrink: 0; }
+.order-detail-value { color: #f0ece6; text-align: right; word-break: break-all; }
+
+.order-items-box { background: #1b1b1f; border: 1px solid #2e2e33; border-radius: 8px; padding: .8rem 1rem; margin: .8rem 0; }
+.order-item-line { display: flex; justify-content: space-between; gap: 1rem; padding: .35rem 0; font-size: .88rem; color: #e6dfd8; }
+
+.order-back-btn {
+    background: none; border: 1px solid #4a4a50; color: #e6dfd8;
+    padding: .45rem 1rem; border-radius: 6px; cursor: pointer;
+    font-size: .85rem; margin-bottom: .8rem;
+}
+.order-back-btn:hover { border-color: var(--accent-color, #a8181f); color: #fff; }
+
+.order-shipping-box {
+    background: rgba(126,217,154,.1); border: 1px solid rgba(126,217,154,.35); border-radius: 8px;
+    padding: .9rem 1rem; margin: .5rem 0 .9rem;
+}
+.order-shipping-label { color: #7ed99a; font-size: .78rem; font-weight: 700; letter-spacing: .5px; margin-bottom: .35rem; }
+.order-shipping-code { font-family: ui-monospace, Consolas, monospace; font-size: 1rem; color: #fff; word-break: break-all; }
+.order-copy-btn {
+    margin-left: .6rem; background: #1a7f37; color: #fff; border: none;
+    padding: .3rem .7rem; border-radius: 5px; font-size: .75rem; cursor: pointer;
+}
+.order-copy-btn:hover { background: #14682c; }
+
+.order-empty, .order-loading { text-align: center; color: #9a938c; padding: 2.5rem 0; font-size: .9rem; }
 
     </style>
 </head>
@@ -2147,9 +2481,14 @@ h1, h2, h3 {
                 <span class="logo-text">Miniature Bois</span>
             </a>
             <ul class="nav-menu">
-    <li><button onclick="setLanguage('zh')">中</button></li>
-    <li><button onclick="setLanguage('en')">EN</button></li>
-    <li><button onclick="setLanguage('es')">ES</button></li>
+    <li class="lang-switcher">
+        <button id="langBtn" type="button" class="lang-btn">English <span class="lang-caret">▾</span></button>
+        <div class="lang-dropdown" id="langDropdown">
+            <button type="button" onclick="setLanguage('en')">English</button>
+            <button type="button" onclick="setLanguage('zh')">中文</button>
+            <button type="button" onclick="setLanguage('es')">Español</button>
+        </div>
+    </li>
     <li><a href="#home" class="nav-link" data-key="home">首页</a> </li>
     <li><a href="#shop" class="nav-link" data-key="shop">商店</a> </li>
     <li><a href="#about" class="nav-link" data-key="about">关于</a> </li>
@@ -2157,8 +2496,15 @@ h1, h2, h3 {
     <li>
   <a href="#" id="loginBtn" class="nav-link" data-key="login">登录</a>
    </li>
-    <li><span id="userEmail" class="nav-user"></span></li>
-    <li><button id="logoutBtn" class="nav-link nav-login-btn" style="display:none;">退出</button></li>
+    <li class="account-switcher" id="accountSwitcher" style="display:none;">
+        <button id="accountBtn" type="button" class="account-btn" data-key="account">Account <span class="lang-caret">▾</span></button>
+        <div class="account-dropdown" id="accountDropdown">
+            <div class="account-email" id="userEmail"></div>
+            <a href="#" id="myOrdersBtn" class="account-item" data-key="my_orders">我的订单</a>
+            <a href="#" id="myCouponsBtn" class="account-item" data-key="my_coupons">我的优惠券</a>
+            <button type="button" id="logoutBtn" class="account-item account-logout" data-key="logout_btn">退出登录</button>
+        </div>
+    </li>
 </ul>
             <div class="hamburger">
                 <span class="bar"></span>
@@ -2289,20 +2635,9 @@ h1, h2, h3 {
     <section class="artwork-section">
         <div class="container">
             <h2 class="section-title" data-key="artwork_title">ARTWORK</h2>
-            <div class="artwork-preview">
-                <img src="weisuo.image/art.p1.jpg" alt="Artwork 1" class="artwork-preview-item" onclick="openArtworkModal(0)">
-                <img src="weisuo.image/art.p2.jpg" alt="Artwork 2" class="artwork-preview-item" onclick="openArtworkModal(1)">
-                <img src="weisuo.image/art.p3.jpg" alt="Artwork 3" class="artwork-preview-item" onclick="openArtworkModal(2)">
-                <img src="weisuo.image/art.p4.jpg" alt="Artwork 4" class="artwork-preview-item" onclick="openArtworkModal(3)">
-            </div>
-            <div class="artwork-preview">
-                <img src="weisuo.image/art.p5.jpg" alt="Artwork 5" class="artwork-preview-item" onclick="openArtworkModal(4)">
-                <img src="weisuo.image/art.p6.jpg" alt="Artwork 6" class="artwork-preview-item" onclick="openArtworkModal(5)">
-                <img src="weisuo.image/art.p7.jpg" alt="Artwork 7" class="artwork-preview-item" onclick="openArtworkModal(6)">
-                <img src="weisuo.image/art.p8.jpg" alt="Artwork 8" class="artwork-preview-item" onclick="openArtworkModal(7)">
-                <img src="weisuo.image/art.p9.png" alt="Artwork 9" class="artwork-preview-item" onclick="openArtworkModal(8)">
-            </div>
-            <button class="artwork-btn" onclick="openArtworkModal(0)" data-key="artwork_view">VIEW ALL</button>
+            <div class="artwork-tabs" id="artworkTabs"></div>
+            <div class="artwork-grid" id="artworkGrid"></div>
+            <p class="artwork-empty" id="artworkEmpty" style="display:none;"></p>
         </div>
     </section>
 
@@ -2525,6 +2860,38 @@ h1, h2, h3 {
     </div>
 </div>
 
+<!-- 我的订单弹窗 -->
+<div class="detail-modal" id="ordersModal">
+    <div class="detail-modal-content" style="max-width:760px; grid-template-columns:1fr; max-height:88vh;">
+        <button class="detail-close" id="ordersClose">×</button>
+        <h2 class="detail-title" id="ordersModalTitle" data-key="my_orders">我的订单</h2>
+        <div class="orders-modal-body" id="ordersBody"></div>
+    </div>
+</div>
+
+<!-- 我的优惠券弹窗 -->
+<div class="detail-modal" id="couponsModal">
+    <div class="detail-modal-content" style="max-width:620px; grid-template-columns:1fr; max-height:88vh;">
+        <button class="detail-close" id="couponsClose">×</button>
+        <h2 class="detail-title" data-key="my_coupons">我的优惠券</h2>
+        <div class="coupon-redeem-row">
+            <input type="text" id="couponCodeInput" class="coupon-code-input" data-key="coupon_code_placeholder" data-placeholder="coupon_code_placeholder" placeholder="输入兑换码" autocomplete="off" />
+            <button type="button" id="couponRedeemBtn" class="coupon-redeem-btn" data-key="coupon_redeem">兑换</button>
+        </div>
+        <div id="couponRedeemMsg" class="coupon-redeem-msg"></div>
+        <div class="orders-modal-body" id="couponListBody"></div>
+    </div>
+</div>
+
+<!-- 选择优惠券弹窗（结算用） -->
+<div class="detail-modal" id="couponPickerModal">
+    <div class="detail-modal-content" style="max-width:480px; grid-template-columns:1fr; max-height:80vh;">
+        <button class="detail-close" id="couponPickerClose">×</button>
+        <h2 class="detail-title" data-key="coupon_pick_title">选择优惠券</h2>
+        <div class="orders-modal-body" id="couponPickerList"></div>
+    </div>
+</div>
+
     <script>
     // ===== Supabase 配置 =====
     const SUPABASE_URL = 'https://pbllylagxbyllgwdvtkl.supabase.co';
@@ -2577,6 +2944,9 @@ h1, h2, h3 {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
                 currentUser = session.user.email;
+                currentUserId = session.user.id || '';
+                localStorage.setItem('currentUser', currentUser);
+                localStorage.setItem('currentUserId', currentUserId);
                 updateUserUI();
                 loadCart();
             }
@@ -2622,7 +2992,8 @@ h1, h2, h3 {
                     status: order.status || 'COMPLETED',
                     created_at: order.created_at || (order._created_at ? new Date(order._created_at).toISOString() : new Date().toISOString()),
                     paypal_details: order.paypal_details || null,
-                    cart_summary: order.cart_summary || null
+                    cart_summary: order.cart_summary || null,
+                    user_id: order.user_id || currentUserId || null
                 };
 
                 if (!supabase) {
@@ -2781,43 +3152,117 @@ h1, h2, h3 {
     }
 
     let currentUser = localStorage.getItem('currentUser') || '';
+    let currentUserId = localStorage.getItem('currentUserId') || '';
     let cart = [];
     let isLoginMode = true; // true=登录模式，false=注册模式
 
-    // Artwork Modal 功能
-    const artworkImages = [
-        "weisuo.image/art.p1.jpg",
-        "weisuo.image/art.p2.jpg",
-        "weisuo.image/art.p3.jpg",
-        "weisuo.image/art.p4.jpg",
-        "weisuo.image/art.p5.jpg",
-        "weisuo.image/art.p6.jpg",
-        "weisuo.image/art.p7.jpg",
-        "weisuo.image/art.p8.jpg",
-        "weisuo.image/art.p9.png"
+    // ===== Artwork 数据（图片全部在本地 weisuo.image/，新增作品在 artworkData 里加一条即可）=====
+    // 分类标签（英文固定，不随语言切换）
+    const artworkCategories = [
+        { id: 'all',         label: 'All' },
+        { id: 'chaos',       label: 'Chaos Series' },
+        { id: 'masterpiece', label: 'Masterpiece Series' },
+        { id: 'myth',        label: 'Myth Series' },
+        { id: 'orc',         label: 'Orc Tribe' }
     ];
+    // 作品：一个作品一个卡片，images 里可以放多张图（点开后左右切换）
+    const artworkData = [
+        {
+            id: 'anatoly', category: 'chaos', title: 'Anatoly',
+            images: ['weisuo.image/art.p1.jpg', 'weisuo.image/art.p2.jpg']
+        },
+        {
+            id: 'anatoly-bust', category: 'chaos', title: 'Anatoly Bust',
+            images: ['weisuo.image/art.p3.jpg']
+        },
+        {
+            id: 'bad-lady', category: 'masterpiece', title: 'Bad Lady',
+            images: ['weisuo.image/art.p4.jpg']
+        },
+        {
+            id: 'orc-family', category: 'orc', title: 'Orc Family',
+            images: [
+                'weisuo.image/art.p5.jpg', 'weisuo.image/art.p6.jpg', 'weisuo.image/art.p7.jpg',
+                'weisuo.image/art.p8.jpg', 'weisuo.image/art.p9.png'
+            ]
+        }
+    ];
+
+    let currentArtworkFilter = 'all';
+    let currentArtworkImages = [];
     let currentArtworkIndex = 0;
 
-    function openArtworkModal(index) {
-        currentArtworkIndex = index;
+    function renderArtworkTabs() {
+        const tabsEl = document.getElementById('artworkTabs');
+        if (!tabsEl) return;
+        tabsEl.innerHTML = artworkCategories.map(c =>
+            '<button type="button" class="artwork-tab' + (c.id === currentArtworkFilter ? ' active' : '') +
+            '" onclick="setArtworkFilter(\'' + c.id + '\')">' + c.label + '</button>'
+        ).join('');
+    }
+
+    function setArtworkFilter(catId) {
+        currentArtworkFilter = catId;
+        renderArtworkTabs();
+        renderArtworkGrid();
+    }
+
+    function renderArtworkGrid() {
+        const gridEl = document.getElementById('artworkGrid');
+        const emptyEl = document.getElementById('artworkEmpty');
+        if (!gridEl) return;
+        const list = (currentArtworkFilter === 'all')
+            ? artworkData
+            : artworkData.filter(a => a.category === currentArtworkFilter);
+        if (list.length === 0) {
+            gridEl.innerHTML = '';
+            if (emptyEl) { emptyEl.textContent = 'Coming soon'; emptyEl.style.display = 'block'; }
+            return;
+        }
+        if (emptyEl) emptyEl.style.display = 'none';
+        gridEl.innerHTML = list.map(a =>
+            '<div class="artwork-card" onclick="openArtworkModal(\'' + a.id + '\')">' +
+                '<img src="' + a.images[0] + '" alt="' + a.title + '" loading="lazy">' +
+                '<div class="artwork-card-title">' + a.title + '</div>' +
+            '</div>'
+        ).join('');
+        // 图片淡入：切换分类后重新生成的图片也要绑定（否则 opacity:0 会一直隐形）
+        gridEl.querySelectorAll('img').forEach(function(img) {
+            if (img.complete && img.naturalWidth > 0) {
+                img.classList.add('loaded');
+            } else {
+                img.addEventListener('load', function() { img.classList.add('loaded'); });
+                img.addEventListener('error', function() { img.classList.add('loaded'); });
+            }
+        });
+    }
+
+    function openArtworkModal(artworkId) {
+        if (!requireLogin(() => openArtworkModal(artworkId), 'login_alert_view_artwork')) return;
+        const art = artworkData.find(a => a.id === artworkId);
+        if (!art || !art.images || art.images.length === 0) return;
+        currentArtworkImages = art.images.slice();
+        currentArtworkIndex = 0;
         const modal = document.getElementById('artworkModal');
         const mainImage = document.getElementById('artworkMainImage');
         const thumbsContainer = document.getElementById('artworkThumbs');
 
-        mainImage.src = artworkImages[currentArtworkIndex];
+        mainImage.src = currentArtworkImages[0];
 
-        // 生成缩略图
+        // 生成缩略图（只有多张图时才显示）
         thumbsContainer.innerHTML = '';
-        artworkImages.forEach((src, i) => {
-            const thumb = document.createElement('img');
-            thumb.src = src;
-            thumb.className = i === currentArtworkIndex ? 'active' : '';
-            thumb.onclick = () => {
-                currentArtworkIndex = i;
-                updateArtworkModal();
-            };
-            thumbsContainer.appendChild(thumb);
-        });
+        if (currentArtworkImages.length > 1) {
+            currentArtworkImages.forEach((src, i) => {
+                const thumb = document.createElement('img');
+                thumb.src = src;
+                thumb.className = i === 0 ? 'active' : '';
+                thumb.onclick = () => {
+                    currentArtworkIndex = i;
+                    updateArtworkModal();
+                };
+                thumbsContainer.appendChild(thumb);
+            });
+        }
 
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -2829,7 +3274,8 @@ h1, h2, h3 {
     }
 
     function updateArtworkModal() {
-        document.getElementById('artworkMainImage').src = artworkImages[currentArtworkIndex];
+        const main = document.getElementById('artworkMainImage');
+        if (main) main.src = currentArtworkImages[currentArtworkIndex];
         const thumbs = document.querySelectorAll('.artwork-thumbs img');
         thumbs.forEach((thumb, i) => {
             thumb.className = i === currentArtworkIndex ? 'active' : '';
@@ -2837,14 +3283,20 @@ h1, h2, h3 {
     }
 
     function prevArtwork() {
-        currentArtworkIndex = (currentArtworkIndex - 1 + artworkImages.length) % artworkImages.length;
+        if (currentArtworkImages.length === 0) return;
+        currentArtworkIndex = (currentArtworkIndex - 1 + currentArtworkImages.length) % currentArtworkImages.length;
         updateArtworkModal();
     }
 
     function nextArtwork() {
-        currentArtworkIndex = (currentArtworkIndex + 1) % artworkImages.length;
+        if (currentArtworkImages.length === 0) return;
+        currentArtworkIndex = (currentArtworkIndex + 1) % currentArtworkImages.length;
         updateArtworkModal();
     }
+
+    // 初始化渲染分类和卡片
+    renderArtworkTabs();
+    renderArtworkGrid();
 
     // ESC 键关闭弹窗
     document.addEventListener('keydown', (e) => {
@@ -2881,6 +3333,10 @@ h1, h2, h3 {
     const loginLoading = document.getElementById('loginLoading');
     const loginTitle = document.getElementById('loginTitle');
     const loginDesc = document.getElementById('loginDesc');
+    const ordersModal = document.getElementById('ordersModal');
+    const ordersClose = document.getElementById('ordersClose');
+    const ordersBody = document.getElementById('ordersBody');
+    const myOrdersBtn = document.getElementById('myOrdersBtn');
 
     function getCartKey(email) {
         return 'cart_' + email;
@@ -2903,14 +3359,15 @@ h1, h2, h3 {
     }
 
     function updateUserUI() {
+        const acct = document.getElementById('accountSwitcher');
         if (currentUser) {
             userEmail.textContent = currentUser;
             loginBtn.style.display = 'none';
-            logoutBtn.style.display = 'inline-block';
+            if (acct) acct.style.display = 'block';
         } else {
             userEmail.textContent = '';
             loginBtn.style.display = 'inline-block';
-            logoutBtn.style.display = 'none';
+            if (acct) acct.style.display = 'none';
         }
     }
 
@@ -2920,6 +3377,547 @@ h1, h2, h3 {
 
     function closeLoginModal() {
         loginModal.classList.remove('active');
+    }
+
+    // ===== 强制登录：统一拦截器 =====
+    // 未登录时提示并打开登录框；登录成功后自动继续用户原本想做的操作
+    let pendingLoginAction = null;
+
+    function requireLogin(action, messageKey) {
+        if (currentUser) return true;
+        const lang = localStorage.getItem("lang") || "en";
+        const t = langData[lang] || langData["en"];
+        alert(t[messageKey] || t.login_alert_need_login);
+        pendingLoginAction = (typeof action === 'function') ? action : null;
+        openLoginModal();
+        return false;
+    }
+
+    function runPendingLoginAction() {
+        const action = pendingLoginAction;
+        pendingLoginAction = null;
+        if (typeof action === 'function') {
+            setTimeout(action, 300);
+        }
+    }
+
+    // ===== 我的订单 =====
+    let ordersCache = [];
+
+    myOrdersBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openOrdersModal();
+    });
+    ordersClose.addEventListener('click', closeOrdersModal);
+    ordersModal.addEventListener('click', (e) => {
+        if (e.target === ordersModal) closeOrdersModal();
+    });
+
+    function openOrdersModal() {
+        if (!requireLogin(openOrdersModal, 'orders_login_required')) return;
+        ordersModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        showOrdersList();
+    }
+
+    function closeOrdersModal() {
+        ordersModal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function formatOrderDate(iso) {
+        if (!iso) return '-';
+        try {
+            const d = new Date(iso);
+            const pad = n => (n < 10 ? '0' + n : '' + n);
+            return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        } catch (e) { return iso; }
+    }
+
+    function formatOrderTotal(order) {
+        const symbol = order.currency === 'USD' ? '$' : '€';
+        return symbol + (order.amount != null ? Number(order.amount).toFixed(2) : '0.00');
+    }
+
+    // 解析订单商品清单（购物车结算用 cart_summary，立即购买用 product_name + amount）
+    // 商品名按当前语言本地化：优先用 product_id 反查 productData，实现订单内商品名跟随界面语言
+    function getOrderItems(order) {
+        const lang = localStorage.getItem("lang") || "en";
+        let pd = null;
+        try { pd = productData[lang] || productData["en"] || null; } catch (e) {}
+        const localizeName = function(pid, fallback) {
+            if (pid && pd && pd[pid] && pd[pid].title) return pd[pid].title;
+            return fallback || '-';
+        };
+        if (Array.isArray(order.cart_summary) && order.cart_summary.length > 0) {
+            return order.cart_summary.map(it => ({
+                name: localizeName(it.product_id, it.name),
+                price: it.price || '',
+                qty: it.qty || it.quantity || 1
+            }));
+        }
+        return [{
+            name: localizeName(order.product_id, order.product_name),
+            price: formatOrderTotal(order),
+            qty: 1
+        }];
+    }
+
+    async function fetchMyOrders() {
+        if (!supabase) await initSupabase();
+        if (!supabase) return null;
+        let query = supabase
+            .from('miniaturebois')
+            .select('id,paypal_order_id,buyer_email,product_id,product_name,amount,currency,region,status,created_at,cart_summary,phone,tracking_number');
+        if (currentUserId) {
+            query = query.eq('user_id', currentUserId);
+        } else {
+            query = query.eq('buyer_email', currentUser);
+        }
+        const { data, error } = await query.order('created_at', { ascending: false });
+        if (error) {
+            console.error('订单查询失败:', error.message || error);
+            return null;
+        }
+        return data || [];
+    }
+
+    async function showOrdersList() {
+        const lang = localStorage.getItem("lang") || "en";
+        const t = langData[lang] || langData["en"];
+        ordersBody.innerHTML = '<p class="order-loading">' + t.orders_loading + '</p>';
+        const orders = await fetchMyOrders();
+        if (orders === null) {
+            ordersBody.innerHTML = '<p class="order-empty">' + (t.orders_load_fail || 'Failed to load orders') + '</p>';
+            return;
+        }
+        ordersCache = orders;
+        if (orders.length === 0) {
+            ordersBody.innerHTML = '<p class="order-empty">' + t.orders_empty + '</p>';
+            return;
+        }
+        ordersBody.innerHTML = orders.map(o => {
+            const summary = getOrderItems(o).map(it => it.name + ' ×' + it.qty).join(', ');
+            const shipped = !!(o.tracking_number && String(o.tracking_number).trim());
+            const badge = shipped
+                ? '<span class="order-status-badge shipped">' + t.orders_status_shipped + '</span>'
+                : '<span class="order-status-badge processing">' + t.orders_status_processing + '</span>';
+            return '<div class="order-card" onclick="showOrderDetail(\'' + o.id + '\')">' +
+                '<div class="order-card-top">' +
+                    '<span class="order-card-no">' + (o.paypal_order_id || o.id) + '</span>' +
+                    badge +
+                '</div>' +
+                '<div class="order-card-bottom">' +
+                    '<div class="order-card-summary">' + summary + '</div>' +
+                    '<span class="order-card-total">' + formatOrderTotal(o) + '</span>' +
+                '</div>' +
+                '<div class="order-card-date">' + formatOrderDate(o.created_at) + '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    function showOrderDetail(orderId) {
+        const lang = localStorage.getItem("lang") || "en";
+        const t = langData[lang] || langData["en"];
+        const o = ordersCache.find(x => String(x.id) === String(orderId));
+        if (!o) return;
+
+        const items = getOrderItems(o);
+        const shipped = !!(o.tracking_number && String(o.tracking_number).trim());
+
+        let html = '<button class="order-back-btn" onclick="showOrdersList()">← ' + t.orders_back + '</button>';
+
+        // 发货信息（有发货码时高亮显示）
+        if (shipped) {
+            const code = String(o.tracking_number).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            html += '<div class="order-shipping-box">' +
+                '<div class="order-shipping-label">📦 ' + t.orders_status_shipped + ' · ' + t.orders_tracking + '</div>' +
+                '<div><span class="order-shipping-code">' + o.tracking_number + '</span>' +
+                '<button class="order-copy-btn" onclick="copyTrackingCode(\'' + code + '\', this)">' + t.orders_copy + '</button></div>' +
+            '</div>';
+        }
+
+        // 商品明细
+        html += '<div class="order-items-box">';
+        html += items.map(it => '<div class="order-item-line"><span>' + it.name + ' ×' + it.qty + '</span><span>' + (it.price || '') + '</span></div>').join('');
+        html += '<div class="order-item-line" style="border-top:1px solid #2e2e33;margin-top:.3rem;padding-top:.5rem;font-weight:700;"><span>' + t.orders_total + '</span><span>' + formatOrderTotal(o) + '</span></div>';
+        html += '</div>';
+
+        // 订单信息
+        html += '<div class="order-detail-row"><span class="order-detail-label">' + t.orders_order_no + '</span><span class="order-detail-value">' + (o.paypal_order_id || '-') + '</span></div>';
+        html += '<div class="order-detail-row"><span class="order-detail-label">' + t.orders_date + '</span><span class="order-detail-value">' + formatOrderDate(o.created_at) + '</span></div>';
+        html += '<div class="order-detail-row"><span class="order-detail-label">' + t.orders_status + '</span><span class="order-detail-value">' + (shipped ? t.orders_status_shipped : t.orders_status_processing) + '</span></div>';
+        if (o.region) html += '<div class="order-detail-row"><span class="order-detail-label">' + t.orders_region + '</span><span class="order-detail-value">' + o.region + '</span></div>';
+        if (o.phone) html += '<div class="order-detail-row"><span class="order-detail-label">' + t.orders_phone + '</span><span class="order-detail-value">' + o.phone + '</span></div>';
+        if (o.buyer_email) html += '<div class="order-detail-row"><span class="order-detail-label">' + t.orders_email + '</span><span class="order-detail-value">' + o.buyer_email + '</span></div>';
+
+        ordersBody.innerHTML = html;
+    }
+
+    function copyTrackingCode(code, btn) {
+        const lang = localStorage.getItem("lang") || "en";
+        const t = langData[lang] || langData["en"];
+        const done = () => {
+            if (btn) {
+                btn.textContent = t.orders_copied;
+                setTimeout(() => { btn.textContent = t.orders_copy; }, 1500);
+            }
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(code).then(done).catch(function() { fallbackCopyCode(code, done); });
+        } else {
+            fallbackCopyCode(code, done);
+        }
+    }
+
+    function fallbackCopyCode(text, done) {
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            done();
+        } catch (e) {}
+    }
+
+    // ===== 优惠券 =====
+    const couponsModal = document.getElementById('couponsModal');
+    const couponsClose = document.getElementById('couponsClose');
+    const couponCodeInput = document.getElementById('couponCodeInput');
+    const couponRedeemBtn = document.getElementById('couponRedeemBtn');
+    const couponRedeemMsg = document.getElementById('couponRedeemMsg');
+    const couponListBody = document.getElementById('couponListBody');
+    const myCouponsBtn = document.getElementById('myCouponsBtn');
+    const couponPickerModal = document.getElementById('couponPickerModal');
+    const couponPickerClose = document.getElementById('couponPickerClose');
+    const couponPickerList = document.getElementById('couponPickerList');
+    // 支付弹窗里的券元素位于本 script 之后才会被解析，必须惰性获取（用的时候再取）
+    function getPayCouponEls() {
+        return {
+            block: document.getElementById('payCouponBlock'),
+            row: document.getElementById('payCouponRow'),
+            value: document.getElementById('payCouponValue'),
+            target: document.getElementById('payCouponTarget'),
+            total: document.getElementById('payCouponTotal'),
+            final: document.getElementById('payCouponFinal')
+        };
+    }
+
+    let myCouponsCache = [];
+    let appliedCoupon = null; // 本轮结算选中的券
+
+    // 券是否可用（未使用、未过期）
+    function isCouponUsable(c) {
+        if (!c) return false;
+        if (c.used_at) return false;
+        if (c.expires_at && new Date(c.expires_at).getTime() <= Date.now()) return false;
+        return true;
+    }
+
+    // 券名称（多语言）：percent 类型 → 中文「95折」/ 英文「5% OFF」
+    function couponName(c) {
+        const lang = localStorage.getItem("lang") || "en";
+        const t = langData[lang] || langData["en"];
+        const v = Number(c.value) || 0;
+        if ((c.coupon_type || 'percent') === 'percent') {
+            if (lang === 'zh') return v + (t.coupon_pct_suffix || '折');
+            return (t.coupon_pct_template || '{off}% OFF').replace('{off}', 100 - v);
+        }
+        return '€' + v;
+    }
+
+    function showCouponMsg(msg, ok) {
+        couponRedeemMsg.textContent = msg;
+        couponRedeemMsg.className = 'coupon-redeem-msg ' + (ok ? 'ok' : 'err');
+    }
+
+    // ---- 我的优惠券弹窗 ----
+    myCouponsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openCouponsModal();
+    });
+    couponsClose.addEventListener('click', closeCouponsModal);
+    couponsModal.addEventListener('click', (e) => {
+        if (e.target === couponsModal) closeCouponsModal();
+    });
+
+    function openCouponsModal() {
+        if (!requireLogin(openCouponsModal, 'coupons_login_required')) return;
+        couponsModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        couponRedeemMsg.className = 'coupon-redeem-msg';
+        couponRedeemMsg.textContent = '';
+        showMyCoupons();
+    }
+
+    function closeCouponsModal() {
+        couponsModal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    async function fetchMyCoupons() {
+        if (!supabase) await initSupabase();
+        if (!supabase) return null;
+        if (!currentUserId) return [];
+        // 券表已锁死（REVOKE ALL），必须走 SECURITY DEFINER RPC，
+        // 函数内部用 auth.uid() 过滤，只能读到自己名下的券
+        const { data, error } = await supabase.rpc('web_my_coupons');
+        if (error) {
+            console.error('优惠券查询失败:', error.message || error);
+            return null;
+        }
+        return data || [];
+    }
+
+    async function showMyCoupons() {
+        const lang = localStorage.getItem("lang") || "en";
+        const t = langData[lang] || langData["en"];
+        couponListBody.innerHTML = '<p class="order-loading">' + t.orders_loading + '</p>';
+        const list = await fetchMyCoupons();
+        if (list === null) {
+            couponListBody.innerHTML = '<p class="order-empty">' + (t.coupons_load_fail || 'Failed to load coupons') + '</p>';
+            return;
+        }
+        myCouponsCache = list;
+        if (list.length === 0) {
+            couponListBody.innerHTML = '<p class="order-empty">' + t.coupons_empty + '</p>';
+            return;
+        }
+        couponListBody.innerHTML = list.map(c => {
+            const expired = !!(c.expires_at && new Date(c.expires_at).getTime() <= Date.now());
+            let badge, badgeCls;
+            if (c.used_at) { badge = t.coupon_used; badgeCls = 'used'; }
+            else if (expired) { badge = t.coupon_expired; badgeCls = 'expired'; }
+            else { badge = t.coupon_available; badgeCls = 'available'; }
+            const expiryText = c.expires_at
+                ? (t.coupon_expires + ': ' + formatOrderDate(c.expires_at).slice(0, 10))
+                : (t.coupon_no_expiry || '');
+            return '<div class="coupon-card">' +
+                '<div class="coupon-card-main">' +
+                    '<div class="coupon-card-name">' + couponName(c) + (c.description ? ' · ' + c.description : '') + '</div>' +
+                    '<div class="coupon-card-meta">' +
+                        (t.coupon_code_label || 'Code') + ': ' + (c.code || '-') +
+                        (expiryText ? '<br>' + expiryText : '') +
+                    '</div>' +
+                '</div>' +
+                '<span class="coupon-card-badge ' + badgeCls + '">' + badge + '</span>' +
+            '</div>';
+        }).join('');
+    }
+
+    // ---- 兑换码兑换 ----
+    couponRedeemBtn.addEventListener('click', redeemCoupon);
+    couponCodeInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); redeemCoupon(); }
+    });
+
+    async function redeemCoupon() {
+        const lang = localStorage.getItem("lang") || "en";
+        const t = langData[lang] || langData["en"];
+        const code = (couponCodeInput.value || '').trim().toUpperCase();
+        if (!code) { showCouponMsg(t.coupon_enter_code || 'Please enter the code', false); return; }
+        if (!currentUser) { showCouponMsg(t.coupons_login_required, false); return; }
+        if (!supabase) await initSupabase();
+        if (!supabase) { showCouponMsg(t.coupons_load_fail || 'Service unavailable', false); return; }
+
+        couponRedeemBtn.disabled = true;
+        try {
+            const { data, error } = await supabase.rpc('redeem_coupon', { p_code: code, p_visitor: currentUserId });
+            if (error) throw error;
+            const ok = Array.isArray(data) ? data.length > 0 : !!data;
+            if (ok) {
+                showCouponMsg(t.coupon_redeem_success || 'Redeemed!', true);
+                couponCodeInput.value = '';
+                showMyCoupons();
+            } else {
+                showCouponMsg(t.coupon_redeem_fail || 'Invalid code', false);
+            }
+        } catch (e) {
+            console.error('兑换失败:', e);
+            showCouponMsg(mapRedeemError(e && e.message, t), false);
+        }
+        couponRedeemBtn.disabled = false;
+    }
+
+    // 服务端返回的中文错误 → 当前界面语言的提示
+    function mapRedeemError(msg, t) {
+        if (!msg) return t.coupon_redeem_fail || 'Invalid code';
+        if (msg.indexOf('不存在') >= 0) return t.coupon_err_not_found || msg;
+        if (msg.indexOf('已被你兑换') >= 0) return t.coupon_err_own || msg;
+        if (msg.indexOf('已被使用') >= 0) return t.coupon_err_used || msg;
+        if (msg.indexOf('已过期') >= 0) return t.coupon_err_expired || msg;
+        if (msg.indexOf('请输入兑换码') >= 0) return t.coupon_enter_code || msg;
+        if (msg.indexOf('缺少用户标识') >= 0) return t.coupons_login_required || msg;
+        return msg;
+    }
+
+    // ---- 结算：券的展示与选择 ----
+    // 券作用的商品：单价最高的「一个商品」（跨购物车所有行按"单价"比较，不看数量）
+    function getCouponTargetInfo(productId) {
+        if (productId) {
+            const lang = localStorage.getItem('lang') || 'en';
+            const pd = productData[lang] || productData['en'];
+            const product = pd ? pd[productId] : null;
+            return product ? { unit: parsePrice(product.price), name: product.title } : { unit: 0, name: '' };
+        }
+        let best = null;
+        cart.forEach(item => {
+            const unit = parsePrice(item.price);
+            if (!best || unit > best.unit) best = { unit: unit, name: item.name };
+        });
+        return best || { unit: 0, name: '' };
+    }
+
+    // 券的抵扣金额（一券一件：只抵扣单价最高商品的一件，不乘数量）
+    function getCouponDiscount(productId) {
+        if (!appliedCoupon) return 0;
+        const info = getCouponTargetInfo(productId);
+        if (info.unit <= 0) return 0;
+        const minAmount = Number(appliedCoupon.min_amount) || 0;
+        if (minAmount > 0 && info.unit < minAmount) return 0; // 未达使用门槛
+        const v = Number(appliedCoupon.value) || 0;
+        if ((appliedCoupon.coupon_type || 'percent') === 'percent') {
+            return Math.round(info.unit * (1 - v / 100) * 100) / 100;
+        }
+        return Math.min(v, info.unit);
+    }
+
+    function renderPayCouponRow() {
+        const els = getPayCouponEls();
+        if (!els.block) return;
+        const lang = localStorage.getItem("lang") || "en";
+        const t = langData[lang] || langData["en"];
+        const productId = (typeof currentBuyProduct !== 'undefined') ? currentBuyProduct : null;
+        const currency = getCurrentCurrency(productId);
+        const symbol = currency.symbol || '€';
+        const baseAmount = getCurrentAmount(productId);
+
+        if (appliedCoupon) {
+            const discount = getCouponDiscount(productId);
+            els.value.textContent = couponName(appliedCoupon) + '  -' + symbol + discount.toFixed(2);
+            const targetName = getCouponTargetInfo(productId).name;
+            if (targetName) {
+                els.target.textContent = '↳ ' + (t.coupon_applied_to || 'Applied to') + '「' + targetName + '」';
+                els.target.style.display = 'block';
+            } else {
+                els.target.style.display = 'none';
+            }
+            els.total.style.display = 'flex';
+            els.final.textContent = symbol + Math.max(0, baseAmount - discount).toFixed(2);
+        } else {
+            els.value.textContent = (t.coupon_select || 'Select coupon') + ' ▾';
+            els.target.style.display = 'none';
+            els.total.style.display = 'none';
+        }
+    }
+
+    async function setupPayCouponUI() {
+        const els = getPayCouponEls();
+        if (!els.block) return;
+        // 券已失效（被用掉/过期）则清空
+        if (appliedCoupon && !isCouponUsable(appliedCoupon)) appliedCoupon = null;
+        if (!currentUser) { els.block.style.display = 'none'; return; }
+        const list = await fetchMyCoupons();
+        if (list === null) { els.block.style.display = 'none'; return; }
+        myCouponsCache = list;
+        const usable = myCouponsCache.filter(isCouponUsable);
+        if (usable.length === 0 && !appliedCoupon) {
+            els.block.style.display = 'none';
+            return;
+        }
+        els.block.style.display = 'block';
+        renderPayCouponRow();
+    }
+
+    async function openCouponPicker() {
+        const lang = localStorage.getItem("lang") || "en";
+        const t = langData[lang] || langData["en"];
+        const list = await fetchMyCoupons();
+        myCouponsCache = list || [];
+        const usable = myCouponsCache.filter(isCouponUsable);
+        const productId = (typeof currentBuyProduct !== 'undefined') ? currentBuyProduct : null;
+        const currency = getCurrentCurrency(productId);
+        const symbol = currency.symbol || '€';
+
+        let html = '';
+        if (usable.length === 0) {
+            html += '<p class="order-empty">' + t.coupons_empty + '</p>';
+        } else {
+            html += usable.map(c => {
+                const prev = appliedCoupon;
+                appliedCoupon = c;
+                const discount = getCouponDiscount(productId);
+                appliedCoupon = prev;
+                return '<div class="coupon-card clickable" onclick="applyCoupon(\'' + c.id + '\')">' +
+                    '<div class="coupon-card-main">' +
+                        '<div class="coupon-card-name">' + couponName(c) + '</div>' +
+                        '<div class="coupon-card-meta">' + (c.code || '') + '</div>' +
+                    '</div>' +
+                    '<span class="coupon-card-discount">-' + symbol + discount.toFixed(2) + '</span>' +
+                '</div>';
+            }).join('');
+        }
+        html += '<div class="coupon-none" onclick="applyCoupon(null)">' + (t.coupon_dont_use || 'Do not use coupon') + '</div>';
+        couponPickerList.innerHTML = html;
+        couponPickerModal.classList.add('active');
+    }
+
+    function applyCoupon(id) {
+        appliedCoupon = id ? (myCouponsCache.find(c => String(c.id) === String(id)) || null) : null;
+        couponPickerModal.classList.remove('active');
+        renderPayCouponRow();
+        // 重新渲染 PayPal 按钮（折扣由 renderPayPalButtons 内部统一应用）
+        const productId = (typeof currentBuyProduct !== 'undefined') ? currentBuyProduct : null;
+        const currency = getCurrentCurrency(productId);
+        if (typeof renderPayPalButtons === 'function') {
+            renderPayPalButtons(getCurrentAmount(productId), currency);
+        }
+    }
+
+    couponPickerClose.addEventListener('click', () => couponPickerModal.classList.remove('active'));
+    couponPickerModal.addEventListener('click', (e) => {
+        if (e.target === couponPickerModal) couponPickerModal.classList.remove('active');
+    });
+
+    // ===== 账户下拉菜单（我的订单 / 我的优惠券 / 退出） =====
+    (function initAccountDropdown() {
+        var accountBtnEl = document.getElementById('accountBtn');
+        var accountDropdownEl = document.getElementById('accountDropdown');
+        if (!accountBtnEl || !accountDropdownEl) return;
+        accountBtnEl.addEventListener('click', function(e) {
+            e.stopPropagation();
+            accountDropdownEl.classList.toggle('active');
+        });
+        accountDropdownEl.addEventListener('click', function(e) {
+            e.stopPropagation();
+            accountDropdownEl.classList.remove('active');
+            // 移动端：选择后顺手关闭汉堡菜单
+            var navMenuEl = document.querySelector('.nav-menu');
+            var hamburgerEl = document.querySelector('.hamburger');
+            if (navMenuEl) navMenuEl.classList.remove('active');
+            if (hamburgerEl) hamburgerEl.classList.remove('active');
+        });
+        document.addEventListener('click', function() {
+            accountDropdownEl.classList.remove('active');
+        });
+    })();
+
+    // 支付成功后核销券（走 RPC，只能核销自己名下未使用的券）
+    async function markCouponUsed(code) {
+        if (!code) return;
+        try {
+            if (!supabase) await initSupabase();
+            if (!supabase) return;
+            const { data, error } = await supabase.rpc('web_use_coupon', { p_code: code });
+            if (error) console.warn('券核销失败:', error.message || error);
+            else console.log('🎟 券核销结果:', code, data);
+        } catch (e) {
+            console.warn('券核销异常:', e);
+        }
     }
 
     loginBtn.addEventListener('click', openLoginModal);
@@ -2988,7 +3986,9 @@ h1, h2, h3 {
                 if (error) throw error;
 
                 currentUser = data.user.email;
+                currentUserId = data.user.id || '';
                 localStorage.setItem('currentUser', currentUser);
+                localStorage.setItem('currentUserId', currentUserId);
                 updateUserUI();
                 loadCart();
                 closeLoginModal();
@@ -2996,6 +3996,7 @@ h1, h2, h3 {
                 loginPasswordInput.value = '';
                 isLoginMode = true;
                 toggleLoginMode(); // 重置为登录模式
+                runPendingLoginAction(); // 登录成功后自动继续之前的操作
 
             } else {
                 // 注册
@@ -3009,7 +4010,9 @@ h1, h2, h3 {
                 // 注册成功后自动登录
                 if (data.user) {
                     currentUser = data.user.email;
+                    currentUserId = data.user.id || '';
                     localStorage.setItem('currentUser', currentUser);
+                    localStorage.setItem('currentUserId', currentUserId);
                     updateUserUI();
                     loadCart();
                     const lang = localStorage.getItem("lang") || "en";
@@ -3020,6 +4023,7 @@ h1, h2, h3 {
                     loginPasswordInput.value = '';
                     isLoginMode = true;
                     toggleLoginMode();
+                    runPendingLoginAction(); // 登录成功后自动继续之前的操作
                 } else {
                     // 需要邮箱验证
                     const lang = localStorage.getItem("lang") || "en";
@@ -3044,16 +4048,23 @@ h1, h2, h3 {
             await supabase.auth.signOut();
         }
         currentUser = '';
+        currentUserId = '';
         localStorage.removeItem('currentUser');
+        localStorage.removeItem('currentUserId');
         cart = [];
         updateUserUI();
         updateCart();
     });
 
-    cartIcon.addEventListener('click', () => {
+    function openCartSidebar() {
         cartSidebar.classList.add('open');
         cartOverlay.classList.add('open');
         document.body.style.overflow = 'hidden';
+    }
+
+    cartIcon.addEventListener('click', () => {
+        if (!requireLogin(openCartSidebar, 'login_alert_view_cart')) return;
+        openCartSidebar();
     });
 
     function closeCartSidebar() {
@@ -3107,12 +4118,7 @@ h1, h2, h3 {
             e.stopPropagation(); // 阻止事件冒泡，防止触发卡片点击
             if (this.disabled) return;
 
-            if (!currentUser) {
-                const lang = localStorage.getItem("lang") || "en";
-                alert((langData[lang] || langData["en"]).login_alert_need_login);
-                openLoginModal();
-                return;
-            }
+            if (!requireLogin(() => this.click(), 'login_alert_need_login')) return;
 
             const card = this.closest('.product-card');
             const productId = card.getAttribute('data-product-id') || '';
@@ -3329,12 +4335,7 @@ h1, h2, h3 {
 
     document.getElementById('cartCheckoutBtn').addEventListener('click', async () => {
         if (cart.length === 0) return;
-        if (!currentUser) {
-            const lang = localStorage.getItem("lang") || "en";
-            alert((langData[lang] || langData["en"]).login_alert_checkout);
-            openLoginModal();
-            return;
-        }
+        if (!requireLogin(() => document.getElementById('cartCheckoutBtn').click(), 'login_alert_checkout')) return;
         // 结算前检查购物车中所有商品库存
         const stockCheck = await checkCartStock();
         if (!stockCheck.allAvailable) {
@@ -3359,6 +4360,19 @@ h1, h2, h3 {
         <h2 class="pay-title" data-key="pay_title">立即购买</h2>
         <p class="pay-product-name" id="payProductName"></p>
         <p class="pay-product-price" id="payProductPrice"></p>
+
+        <!-- 优惠券区块（有可用券时显示） -->
+        <div class="pay-coupon-block" id="payCouponBlock" style="display:none;">
+            <div class="pay-coupon-row" id="payCouponRow" onclick="openCouponPicker()">
+                <span class="pay-coupon-label" data-key="coupon_label">优惠券</span>
+                <span class="pay-coupon-value" id="payCouponValue" data-key="coupon_select">选择优惠券</span>
+            </div>
+            <div class="pay-coupon-target" id="payCouponTarget" style="display:none;"></div>
+            <div class="pay-coupon-total" id="payCouponTotal" style="display:none;">
+                <span data-key="coupon_total">合计</span>
+                <span id="payCouponFinal"></span>
+            </div>
+        </div>
 
             <!-- PayPal 支付选项 -->
             <div class="pay-paypal-section">
@@ -3793,6 +4807,7 @@ const detailMainImage = document.getElementById("detailMainImage");
 const detailThumbs = document.getElementById("detailThumbs");
 
 function openDetail(productId) {
+    if (!requireLogin(() => openDetail(productId), 'login_alert_view_detail')) return;
     const lang = localStorage.getItem("lang") || "en";
 const product = productData[lang][productId];
     if (!product) return;
@@ -4046,6 +5061,55 @@ detailModal.addEventListener("click", (e) => {
     login_success_verify: "注册成功！请前往邮箱验证您的账号，然后登录。",
     login_alert_need_login: "请先登录后再加入购物车",
     login_alert_checkout: "请先登录",
+    login_alert_view_detail: "请先登录后再查看商品详情",
+    login_alert_view_artwork: "请先登录后再查看作品墙",
+    login_alert_view_cart: "请先登录后再查看购物车",
+    my_orders: "我的订单",
+    orders_login_required: "请先登录后再查看订单",
+    orders_loading: "订单加载中...",
+    orders_empty: "暂无订单",
+    orders_load_fail: "订单加载失败，请稍后重试",
+    orders_status: "订单状态",
+    orders_status_processing: "处理中",
+    orders_status_shipped: "已发货",
+    orders_tracking: "发货码",
+    orders_order_no: "订单号",
+    orders_date: "下单时间",
+    orders_total: "合计",
+    orders_region: "配送地区",
+    orders_phone: "联系电话",
+    orders_email: "邮箱",
+    orders_back: "返回订单列表",
+    orders_copy: "复制",
+    orders_copied: "已复制",
+    my_coupons: "我的优惠券",
+    coupon_label: "优惠券",
+    coupon_select: "选择优惠券",
+    coupon_total: "合计",
+    coupon_pick_title: "选择优惠券",
+    coupon_code_label: "兑换码",
+    coupon_code_placeholder: "输入兑换码",
+    coupon_redeem: "兑换",
+    coupon_enter_code: "请输入兑换码",
+    coupon_redeem_success: "兑换成功！优惠券已到账",
+    coupon_redeem_fail: "兑换失败，请检查兑换码",
+    coupon_available: "未使用",
+    coupon_used: "已使用",
+    coupon_expired: "已过期",
+    coupon_expires: "有效期至",
+    coupon_no_expiry: "长期有效",
+    coupon_pct_suffix: "折",
+    coupon_applied_to: "作用于",
+    coupon_dont_use: "不使用优惠券",
+    coupons_empty: "暂无优惠券",
+    coupons_load_fail: "优惠券加载失败，请稍后重试",
+    coupons_login_required: "请先登录后再查看优惠券",
+    coupon_err_not_found: "兑换码不存在，请检查后重试",
+    coupon_err_own: "这个兑换码你已经兑换过了",
+    coupon_err_used: "该兑换码已被使用",
+    coupon_err_expired: "兑换码已过期",
+    account: "账户",
+    logout_btn: "退出登录",
     paypal_loading: "PayPal 加载中，请稍候...",
     paypal_load_fail: "PayPal 加载失败，请刷新页面重试",
     paypal_retry_hint: "⏳ PayPal 加载中（自动重试中...），请稍候或刷新页面",
@@ -4188,6 +5252,55 @@ detailModal.addEventListener("click", (e) => {
     login_success_verify: "Registered! Please check your email to verify your account, then login.",
     login_alert_need_login: "Please login before adding to cart",
     login_alert_checkout: "Please login first",
+    login_alert_view_detail: "Please login to view product details",
+    login_alert_view_artwork: "Please login to view the artwork gallery",
+    login_alert_view_cart: "Please login to view your cart",
+    my_orders: "My Orders",
+    orders_login_required: "Please login to view your orders",
+    orders_loading: "Loading orders...",
+    orders_empty: "No orders yet",
+    orders_load_fail: "Failed to load orders, please try again later",
+    orders_status: "Status",
+    orders_status_processing: "Processing",
+    orders_status_shipped: "Shipped",
+    orders_tracking: "Tracking No.",
+    orders_order_no: "Order No.",
+    orders_date: "Order Date",
+    orders_total: "Total",
+    orders_region: "Shipping Region",
+    orders_phone: "Phone",
+    orders_email: "Email",
+    orders_back: "Back to orders",
+    orders_copy: "Copy",
+    orders_copied: "Copied",
+    my_coupons: "My Coupons",
+    coupon_label: "Coupon",
+    coupon_select: "Select Coupon",
+    coupon_total: "Total",
+    coupon_pick_title: "Select Coupon",
+    coupon_code_label: "Code",
+    coupon_code_placeholder: "Enter redeem code",
+    coupon_redeem: "Redeem",
+    coupon_enter_code: "Please enter the code",
+    coupon_redeem_success: "Redeemed! Coupon added to your account",
+    coupon_redeem_fail: "Redeem failed, please check the code",
+    coupon_available: "Available",
+    coupon_used: "Used",
+    coupon_expired: "Expired",
+    coupon_expires: "Valid until",
+    coupon_no_expiry: "No expiry",
+    coupon_pct_template: "{off}% OFF",
+    coupon_applied_to: "Applied to",
+    coupon_dont_use: "Do not use coupon",
+    coupons_empty: "No coupons yet",
+    coupons_load_fail: "Failed to load coupons, please try again later",
+    coupons_login_required: "Please login to view your coupons",
+    coupon_err_not_found: "Code not found, please check and retry",
+    coupon_err_own: "You have already redeemed this code",
+    coupon_err_used: "This code has already been used",
+    coupon_err_expired: "This code has expired",
+    account: "Account",
+    logout_btn: "Logout",
     paypal_loading: "PayPal loading, please wait...",
     paypal_load_fail: "PayPal failed to load, please refresh",
     paypal_retry_hint: "⏳ PayPal loading (auto-retrying)... please wait or refresh",
@@ -4323,6 +5436,55 @@ detailModal.addEventListener("click", (e) => {
     login_success_verify: "¡Registrado! Por favor verifique su correo electrónico para activar su cuenta, luego inicie sesión.",
     login_alert_need_login: "Por favor inicie sesión antes de agregar al carrito",
     login_alert_checkout: "Por favor inicie sesión primero",
+    login_alert_view_detail: "Por favor inicie sesión para ver los detalles del producto",
+    login_alert_view_artwork: "Por favor inicie sesión para ver la galería de obras",
+    login_alert_view_cart: "Por favor inicie sesión para ver el carrito",
+    my_orders: "Mis Pedidos",
+    orders_login_required: "Por favor inicie sesión para ver sus pedidos",
+    orders_loading: "Cargando pedidos...",
+    orders_empty: "Aún no hay pedidos",
+    orders_load_fail: "Error al cargar pedidos, inténtelo más tarde",
+    orders_status: "Estado",
+    orders_status_processing: "En proceso",
+    orders_status_shipped: "Enviado",
+    orders_tracking: "N.º de Seguimiento",
+    orders_order_no: "N.º de Pedido",
+    orders_date: "Fecha del Pedido",
+    orders_total: "Total",
+    orders_region: "Región de Envío",
+    orders_phone: "Teléfono",
+    orders_email: "Correo",
+    orders_back: "Volver a pedidos",
+    orders_copy: "Copiar",
+    orders_copied: "Copiado",
+    my_coupons: "Mis Cupones",
+    coupon_label: "Cupón",
+    coupon_select: "Seleccionar cupón",
+    coupon_total: "Total",
+    coupon_pick_title: "Seleccionar cupón",
+    coupon_code_label: "Código",
+    coupon_code_placeholder: "Ingrese el código",
+    coupon_redeem: "Canjear",
+    coupon_enter_code: "Por favor ingrese el código",
+    coupon_redeem_success: "¡Canjeado! Cupón agregado a su cuenta",
+    coupon_redeem_fail: "Canje fallido, verifique el código",
+    coupon_available: "Disponible",
+    coupon_used: "Usado",
+    coupon_expired: "Expirado",
+    coupon_expires: "Válido hasta",
+    coupon_no_expiry: "Sin caducidad",
+    coupon_pct_template: "{off}% DTO.",
+    coupon_applied_to: "Aplicado a",
+    coupon_dont_use: "No usar cupón",
+    coupons_empty: "Aún no hay cupones",
+    coupons_load_fail: "Error al cargar cupones, inténtelo más tarde",
+    coupons_login_required: "Por favor inicie sesión para ver sus cupones",
+    coupon_err_not_found: "Código no encontrado, verifique e intente de nuevo",
+    coupon_err_own: "Ya canjeó este código",
+    coupon_err_used: "Este código ya ha sido usado",
+    coupon_err_expired: "Este código ha expirado",
+    account: "Cuenta",
+    logout_btn: "Cerrar sesión",
     paypal_loading: "PayPal cargando, espere por favor...",
     paypal_load_fail: "PayPal no pudo cargar, actualice la página",
     paypal_retry_hint: "⏳ PayPal cargando (reintentando automáticamente)... espere o actualice",
@@ -4396,9 +5558,38 @@ detailModal.addEventListener("click", (e) => {
         renderPayPalButtons(amt, cur);
       }, 200);
     }
+    // 更新语言按钮上的当前语言名
+    var langBtnEl = document.getElementById('langBtn');
+    if (langBtnEl) {
+      var langNames = { zh: '中文', en: 'English', es: 'Español' };
+      langBtnEl.innerHTML = (langNames[lang] || 'English') + ' <span class="lang-caret">▾</span>';
+    }
   }
 
   window.setLanguage = setLanguage;
+
+  // 语言下拉菜单交互（点击展开/收起，点击外部或选择后收起）
+  (function initLangDropdown() {
+    var langBtnEl = document.getElementById('langBtn');
+    var langDropdownEl = document.getElementById('langDropdown');
+    if (!langBtnEl || !langDropdownEl) return;
+    langBtnEl.addEventListener('click', function(e) {
+      e.stopPropagation();
+      langDropdownEl.classList.toggle('active');
+    });
+    langDropdownEl.addEventListener('click', function(e) {
+      e.stopPropagation();
+      langDropdownEl.classList.remove('active');
+      // 移动端：选择语言后顺手关闭展开的汉堡菜单
+      var navMenuEl = document.querySelector('.nav-menu');
+      var hamburgerEl = document.querySelector('.hamburger');
+      if (navMenuEl) navMenuEl.classList.remove('active');
+      if (hamburgerEl) hamburgerEl.classList.remove('active');
+    });
+    document.addEventListener('click', function() {
+      langDropdownEl.classList.remove('active');
+    });
+  })();
 
   const savedLang = localStorage.getItem("lang") || "en";
   setLanguage(savedLang);
@@ -4731,6 +5922,21 @@ async function renderPayPalButtons(amount, currency) {
 
     // 锁定当前商品ID（避免 PayPal 异步回调执行时 currentBuyProduct 已被重置）
     const lockedProductId = typeof currentBuyProduct !== 'undefined' ? currentBuyProduct : null;
+
+    // ===== 优惠券折扣（统一在此应用，所有调用点自动生效） =====
+    let couponDiscount = 0;
+    try {
+        if (typeof appliedCoupon !== 'undefined' && appliedCoupon) {
+            couponDiscount = Number(getCouponDiscount(lockedProductId)) || 0;
+            if (couponDiscount > 0) {
+                amount = Math.round((amount - couponDiscount) * 100) / 100;
+                if (amount < 0.01) amount = 0.01; // 保护：最低收 0.01
+            }
+        }
+    } catch (e) {
+        console.warn('优惠券折扣计算异常:', e);
+        couponDiscount = 0;
+    }
     const lockedProductName = (() => {
         if (lockedProductId && productData[lang] && productData[lang][lockedProductId])
             return productData[lang][lockedProductId].title;
@@ -4797,7 +6003,10 @@ async function renderPayPalButtons(amount, currency) {
                     currency: currencyCode,
                     region: selectedShippingRegion || 'other',
                     _created_at: Date.now(),
-                    cart_summary: cartSummary
+                    cart_summary: cartSummary,
+                    user_id: currentUserId || null,
+                    coupon_code: (typeof appliedCoupon !== 'undefined' && appliedCoupon) ? appliedCoupon.code : null,
+                    coupon_discount: (typeof couponDiscount !== 'undefined' && couponDiscount > 0) ? couponDiscount : null
                 };
                 // 存入 localStorage，标记为待支付
                 let pendingList = [];
@@ -4863,7 +6072,10 @@ async function renderPayPalButtons(amount, currency) {
                                 region: selectedShippingRegion || 'other',
                                 status: 'COMPLETED',
                                 _created_at: Date.now(),
-                                cart_summary: cartSummary
+                                cart_summary: cartSummary,
+                                user_id: currentUserId || null,
+                                coupon_code: (typeof appliedCoupon !== 'undefined' && appliedCoupon) ? appliedCoupon.code : null,
+                                coupon_discount: (typeof couponDiscount !== 'undefined' && couponDiscount > 0) ? couponDiscount : null
                             });
                         }
                         localStorage.setItem('payment_orders', JSON.stringify(paymentOrders));
@@ -4897,7 +6109,10 @@ async function renderPayPalButtons(amount, currency) {
                                     status: 'COMPLETED',
                                     created_at: now.toISOString(),
                                     paypal_details: details || null,
-                                    cart_summary: cartSummary
+                                    cart_summary: cartSummary,
+                                    user_id: currentUserId || null,
+                                    coupon_code: (typeof appliedCoupon !== 'undefined' && appliedCoupon) ? appliedCoupon.code : null,
+                                    coupon_discount: (typeof couponDiscount !== 'undefined' && couponDiscount > 0) ? couponDiscount : null
                                 };
 
                                 // 🔍 DEBUG: 打印完整订单数据
@@ -4934,6 +6149,12 @@ async function renderPayPalButtons(amount, currency) {
 
                                 // 从 localStorage 移除已写入的订单
                                 removeFromPaymentOrders(paypalOrderId);
+
+                                // 核销优惠券（标记已使用，防止重复使用）
+                                if (typeof appliedCoupon !== 'undefined' && appliedCoupon && couponDiscount > 0) {
+                                    await markCouponUsed(appliedCoupon.code);
+                                    appliedCoupon = null;
+                                }
 
                                 // 扣减库存（单件商品）
                                 if (lockedProductId) {
@@ -5094,7 +6315,10 @@ function openPayModal(productId) {
         payModal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
-    // 渲染 PayPal 按钮（先用商品价格，选运费后会重新渲染）
+    // 渲染优惠券区块（异步加载可用券）
+    try { setupPayCouponUI(); } catch (e) { console.warn('优惠券区块初始化异常:', e); }
+
+    // 渲染 PayPal 按钮（先用商品价格，选运费后会重新渲染；折扣在 renderPayPalButtons 内部应用）
     const amount = getCurrentAmount(productId);
     const currency = getCurrentCurrency(productId);
     renderPayPalButtons(amount, currency);
@@ -5111,6 +6335,7 @@ payModal.addEventListener('click', (e) => {
 });
 
 function handleBuyNow() {
+    if (!requireLogin(() => handleBuyNow(), 'login_alert_checkout')) return;
     if (currentBuyProduct) {
         closeDetail();
         setTimeout(() => openPayModal(currentBuyProduct), 300);
@@ -5215,7 +6440,7 @@ closePayModal = function() {
 // ===== 图片加载动画：加载完成前显示 spinner，完成后淡入 =====
 document.addEventListener('DOMContentLoaded', function() {
     // 所有产品图片和 artwork 图片加 loading 效果
-    const images = document.querySelectorAll('.product-image img, .artwork-preview-item');
+    const images = document.querySelectorAll('.product-image img, .artwork-card img');
     images.forEach(function(img) {
         if (img.complete && img.naturalWidth > 0) {
             // 已缓存，直接显示
