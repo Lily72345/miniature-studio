@@ -2624,7 +2624,7 @@ h1, h2, h3 {
                 <!-- 产品卡片 3 -->
                 <div class="product-card" data-category="painted" data-product-id="p3" onclick="openDetail('p3')">
                     <div class="product-image" style="position:relative;">
-                        <span class="stock-badge" data-key="badge_limited" data-i18n>限量 50 体</span>
+                        <span class="stock-badge" data-stock-badge="p3">Limited · 50pcs</span>
                         <img src="weisuo.image/c1.jpg" alt="Orc Family">
                        <div class="product-overlay">
     <button class="view-details" data-product="p3" data-key="btn_view_detail" onclick="event.stopPropagation(); openDetail('p3')">查询详情</button>
@@ -2994,6 +2994,8 @@ h1, h2, h3 {
             console.log('Supabase 初始化成功');
             // 预热库存数据（后台静默查询，不阻塞用户）
             preloadAllStock();
+            // 更新商品卡片上的库存徽章（动态显示剩余/售罄）
+            updateCardStockBadges();
             return true;
         } catch (error) {
             console.error('Supabase 初始化失败:', error);
@@ -3086,16 +3088,28 @@ h1, h2, h3 {
                     var total = pd ? (pd.stock || 999) : 999;
                     return { remaining: total, sold: 0, total, soldOut: false };
                 }
-                // 查询 inventory 表
-                const { data, error } = await supabase
+                // 查询 inventory 表（total 列若尚未创建则自动退回旧查询）
+                let { data, error } = await supabase
                     .from('inventory')
-                    .select('sold')
+                    .select('sold, total')
                     .eq('product_id', productId)
                     .maybeSingle();
+                if (error) {
+                    const fallback = await supabase
+                        .from('inventory')
+                        .select('sold')
+                        .eq('product_id', productId)
+                        .maybeSingle();
+                    data = fallback.data;
+                    error = fallback.error;
+                }
                 
                 var lang2 = localStorage.getItem('lang') || 'en';
                 var product = (productData[lang2] || productData['en'])[productId];
-                var totalStock = product ? (product.stock || 999) : 999;
+                // 总量：优先用数据库的 total（可在后台自行修改），未设置时回退代码里的 stock
+                var totalStock = (data && data.total != null)
+                    ? Number(data.total)
+                    : (product ? (product.stock || 999) : 999);
                 var sold = (data && data.sold) ? data.sold : 0;
                 var remaining = Math.max(0, totalStock - sold);
                 var result = { remaining, sold, total: totalStock, soldOut: remaining <= 0 };
@@ -3130,11 +3144,41 @@ h1, h2, h3 {
             }
             // 清除缓存，下次查询时重新获取
             delete stockCache[productId];
+            // 刷新商品卡片上的库存徽章
+            try { updateCardStockBadges(); } catch (e) {}
             console.log('✅ 库存已扣减 (原子):', productId, '→ sold:', result.data);
             return true;
         } catch(e) {
             console.error('库存扣减异常:', e.message || e);
             return false;
+        }
+    }
+
+    // 商品卡片上的库存徽章动态更新（限量显示剩余、售罄显示 Sold Out、不限量则隐藏）
+    async function updateCardStockBadges() {
+        const badges = document.querySelectorAll('[data-stock-badge]');
+        if (badges.length === 0) return;
+        const lang = localStorage.getItem('lang') || 'en';
+        const t = langData[lang] || langData['en'];
+        for (const el of badges) {
+            const pid = el.getAttribute('data-stock-badge');
+            if (!pid) continue;
+            try {
+                const info = await checkStock(pid);
+                if (info.soldOut) {
+                    el.textContent = t.badge_sold_out || 'Sold Out';
+                    el.classList.add('sold-out');
+                } else if (info.total < 999) {
+                    el.textContent = (t.badge_limited_left || 'Limited · {n} left')
+                        .replace('{n}', info.remaining)
+                        .replace('{total}', info.total);
+                    el.classList.remove('sold-out');
+                } else {
+                    el.style.display = 'none';
+                }
+            } catch (e) {
+                console.warn('库存徽章更新失败:', e);
+            }
         }
     }
 
@@ -5173,6 +5217,7 @@ detailModal.addEventListener("click", (e) => {
     pay_preparing: "正在准备支付，请稍候...",
     btn_view_detail: "查询详情",
     badge_limited: "限量 50 体",
+    badge_limited_left: "限量 · 剩 {n} 件",
     badge_sold_out: "已售罄",
     btn_sold_out: "已售罄",
     features_title: "商品介绍",
@@ -5367,6 +5412,7 @@ detailModal.addEventListener("click", (e) => {
     pay_preparing: "Preparing payment, please wait...",
     btn_view_detail: "View Details",
     badge_limited: "Limited · 50pcs",
+    badge_limited_left: "Limited · {n} left",
     badge_sold_out: "Sold Out",
     btn_sold_out: "Sold Out",
     features_title: "Product Details",
@@ -5554,6 +5600,7 @@ detailModal.addEventListener("click", (e) => {
     pay_preparing: "Preparando el pago, por favor espere...",
     btn_view_detail: "Ver Detalles",
     badge_limited: "Limitado · 50 unidades",
+    badge_limited_left: "Limitado · {n} disponibles",
     badge_sold_out: "Agotado",
     btn_sold_out: "Agotado",
     features_title: "Detalles del Producto",
@@ -5609,6 +5656,8 @@ detailModal.addEventListener("click", (e) => {
       }
     });
     localStorage.setItem("lang", lang);
+    // 刷新商品卡片上的库存徽章文案（限量/剩余/售罄）
+    if (typeof updateCardStockBadges === 'function') setTimeout(updateCardStockBadges, 50);
     // 如果支付弹窗开着，重新渲染 PayPal 按钮（切换语言）
     var payModalEl = document.getElementById('payModal');
     if (payModalEl && payModalEl.classList.contains('active')) {
