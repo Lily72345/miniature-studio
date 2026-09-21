@@ -442,6 +442,7 @@
             background: var(--accent-color);
             color: var(--primary-color);
             z-index: 5;
+            white-space: nowrap;
         }
 
         /* 详情弹窗内 badge 下移，避免与右上角 × 关闭按钮重叠 */
@@ -2591,7 +2592,8 @@ h1, h2, h3 {
             <div class="products-grid">
                 <!-- 产品卡片 1 -->
                 <div class="product-card" data-category="bust" data-product-id="p1" onclick="openDetail('p1')">
-                    <div class="product-image">
+                    <div class="product-image" style="position:relative;">
+                        <span class="stock-badge" data-stock-badge="p1" style="display:none;">Sold Out</span>
                         <img src="weisuo.image/a1.jpg">
                        <div class="product-overlay">
     <button class="view-details" data-product="p1" data-key="btn_view_detail" onclick="event.stopPropagation(); openDetail('p1')">查询详情</button>
@@ -2607,7 +2609,8 @@ h1, h2, h3 {
 
                 <!-- 产品卡片 2 -->
                 <div class="product-card" data-category="bust" data-product-id="p2" onclick="openDetail('p2')">
-                    <div class="product-image">
+                    <div class="product-image" style="position:relative;">
+                        <span class="stock-badge" data-stock-badge="p2" style="display:none;">Sold Out</span>
                         <img src=weisuo.image/b1.jpg>
                        <div class="product-overlay">
     <button class="view-details" data-product="p2" data-key="btn_view_detail" onclick="event.stopPropagation(); openDetail('p2')">查询详情</button>
@@ -2624,7 +2627,7 @@ h1, h2, h3 {
                 <!-- 产品卡片 3 -->
                 <div class="product-card" data-category="painted" data-product-id="p3" onclick="openDetail('p3')">
                     <div class="product-image" style="position:relative;">
-                        <span class="stock-badge" data-stock-badge="p3">Limited · 50pcs</span>
+                        <span class="stock-badge" data-stock-badge="p3" style="display:none;">Limited</span>
                         <img src="weisuo.image/c1.jpg" alt="Orc Family">
                        <div class="product-overlay">
     <button class="view-details" data-product="p3" data-key="btn_view_detail" onclick="event.stopPropagation(); openDetail('p3')">查询详情</button>
@@ -3168,11 +3171,13 @@ h1, h2, h3 {
                 if (info.soldOut) {
                     el.textContent = t.badge_sold_out || 'Sold Out';
                     el.classList.add('sold-out');
+                    el.style.display = '';
                 } else if (info.total < 999) {
                     el.textContent = (t.badge_limited_left || 'Limited · {n} left')
                         .replace('{n}', info.remaining)
                         .replace('{total}', info.total);
                     el.classList.remove('sold-out');
+                    el.style.display = '';
                 } else {
                     el.style.display = 'none';
                 }
