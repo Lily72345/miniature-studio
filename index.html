@@ -2135,6 +2135,36 @@ h1, h2, h3 {
     display: block;
 }
 
+/* ===== 支付成功页 · 订单引导 ===== */
+.pay-success-guide {
+    margin: 1.3rem 0 .5rem;
+    padding: 1rem 1.2rem;
+    background: rgba(126,217,154,.08);
+    border: 1px solid rgba(126,217,154,.3);
+    border-radius: 10px;
+    text-align: center;
+}
+.pay-success-guide-text {
+    color: #c1bab3;
+    font-size: .88rem;
+    line-height: 1.6;
+    margin-bottom: .85rem;
+}
+.pay-success-guide-btn {
+    background: #1a7f37;
+    color: #fff;
+    border: none;
+    padding: .68rem 1.7rem;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: .9rem;
+    font-weight: 600;
+    letter-spacing: .03em;
+    cursor: pointer;
+    transition: background .15s;
+}
+.pay-success-guide-btn:hover { background: #14682c; }
+
 /* ===== Artwork 分类标签 + 作品卡片 ===== */
 .artwork-tabs {
     display: flex;
@@ -3427,6 +3457,12 @@ h1, h2, h3 {
         document.body.style.overflow = '';
     }
 
+    // 支付成功页 → 一键跳到「我的订单」（先关支付弹窗，避免层级遮挡）
+    function goToMyOrders() {
+        if (typeof closePayModal === 'function') closePayModal();
+        setTimeout(function() { openOrdersModal(); }, 120);
+    }
+
     function formatOrderDate(iso) {
         if (!iso) return '-';
         try {
@@ -4425,6 +4461,12 @@ h1, h2, h3 {
                 <h3 data-key="pay_success_order">📦 Order Info</h3>
                 <div id="paySuccessOrder" class="pay-success-order"></div>
             </div>
+
+            <!-- 订单/物流引导 -->
+            <div class="pay-success-guide">
+                <p class="pay-success-guide-text" data-key="pay_success_guide">You can check your order details and shipping progress in "Account → My Orders".</p>
+                <button type="button" class="pay-success-guide-btn" onclick="goToMyOrders()" data-key="pay_success_guide_btn">View My Orders</button>
+            </div>
             
             <p class="pay-success-note" data-key="pay_success_note">We have received your payment and will arrange shipping soon. If you have any questions, please contact us.</p>
             <button class="pay-success-close-btn" onclick="closePayModal()" data-key="pay_success_close">Return to Website</button>
@@ -5136,6 +5178,8 @@ detailModal.addEventListener("click", (e) => {
     pay_or: "— 或使用 —",
     pay_success_title: "支付成功！",
     pay_success_note: "我们已收到您的付款，会尽快安排发货。如有疑问，请联系我们。",
+    pay_success_guide: "您可以在「账户 → 我的订单」中随时查看订单详情和物流进度。",
+    pay_success_guide_btn: "查看我的订单",
     pay_success_close: "返回网站",
     pay_paypal_hint: "⚠️ 如无法打开 PayPal，请使用网络工具（VPN）",
     shipping_label: "🚚 运费地区",
@@ -5327,6 +5371,8 @@ detailModal.addEventListener("click", (e) => {
     pay_or: "— Or pay with —",
     pay_success_title: "Payment Successful!",
     pay_success_note: "We have received your payment and will arrange shipping soon. If you have any questions, please contact us.",
+    pay_success_guide: "You can check your order details and shipping progress anytime in \"Account → My Orders\".",
+    pay_success_guide_btn: "View My Orders",
     pay_success_close: "Return to Website",
     pay_paypal_hint: "⚠️ If PayPal cannot be opened, please use a network tool (VPN)",
     shipping_label: "🚚 Shipping Region",
@@ -5511,6 +5557,8 @@ detailModal.addEventListener("click", (e) => {
     pay_or: "— O paga con —",
     pay_success_title: "¡Pago Exitoso!",
     pay_success_note: "Hemos recibido su pago y organizaremos el envío lo antes posible. Si tiene alguna pregunta, contáctenos.",
+    pay_success_guide: "Puede consultar los detalles de su pedido y el progreso del envío en «Cuenta → Mis Pedidos».",
+    pay_success_guide_btn: "Ver Mis Pedidos",
     pay_success_close: "Volver al Sitio",
     pay_paypal_hint: "⚠️ Si no puedes abrir PayPal, por favor usa una herramienta de red (VPN)",
     shipping_label: "🚚 Región de Envío",
