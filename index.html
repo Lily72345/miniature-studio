@@ -3183,7 +3183,7 @@ h1, h2, h3 {
             id: 'orc-family', category: 'orc', title: 'Orc Family',
             images: [
                 'weisuo.image/art.p5.jpg', 'weisuo.image/art.p6.jpg', 'weisuo.image/art.p7.jpg',
-                'weisuo.image/art.p8.jpg', 'weisuo.image/art.p9.png'
+                'weisuo.image/art.p8.jpg', 'weisuo.image/art.p9.jpg'
             ]
         }
     ];
@@ -3254,6 +3254,8 @@ h1, h2, h3 {
         if (currentArtworkImages.length > 1) {
             currentArtworkImages.forEach((src, i) => {
                 const thumb = document.createElement('img');
+                thumb.loading = 'lazy';
+                thumb.decoding = 'async';
                 thumb.src = src;
                 thumb.className = i === 0 ? 'active' : '';
                 thumb.onclick = () => {
