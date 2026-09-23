@@ -2512,6 +2512,22 @@ h1, h2, h3 {
 
 .order-empty, .order-loading { text-align: center; color: #9a938c; padding: 2.5rem 0; font-size: .9rem; }
 
+/* ===== 小屏弹窗宽度修复（95vw 叠加外层 padding 会溢出屏幕） ===== */
+@media (max-width: 900px) {
+    .detail-modal,
+    .pay-modal {
+        padding: 1rem;
+    }
+    .detail-modal-content,
+    .pay-modal-content {
+        width: 100%;
+        max-width: 100%;
+    }
+    .pay-modal-content {
+        padding: 1.5rem 1.2rem;
+    }
+}
+
     </style>
 </head>
 <body>
