@@ -2531,6 +2531,12 @@ h1, h2, h3 {
     padding: .3rem .7rem; border-radius: 5px; font-size: .75rem; cursor: pointer;
 }
 .order-copy-btn:hover { background: #14682c; }
+.order-track-btn {
+    margin-left: .4rem; background: transparent; color: #7ed99a; border: 1px solid #7ed99a;
+    padding: .3rem .7rem; border-radius: 5px; font-size: .75rem; cursor: pointer;
+}
+.order-track-btn:hover { background: rgba(126,217,154,.15); }
+.order-track-btn:disabled { opacity: .7; cursor: default; }
 
 .order-empty, .order-loading { text-align: center; color: #9a938c; padding: 2.5rem 0; font-size: .9rem; }
 
@@ -3796,7 +3802,8 @@ h1, h2, h3 {
             html += '<div class="order-shipping-box">' +
                 '<div class="order-shipping-label">📦 ' + t.orders_status_shipped + ' · ' + t.orders_tracking + '</div>' +
                 '<div><span class="order-shipping-code">' + o.tracking_number + '</span>' +
-                '<button class="order-copy-btn" onclick="copyTrackingCode(\'' + code + '\', this)">' + t.orders_copy + '</button></div>' +
+                '<button class="order-copy-btn" onclick="copyTrackingCode(\'' + code + '\', this)">' + t.orders_copy + '</button>' +
+                '<button class="order-track-btn" onclick="openTrackingSite(\'' + code + '\', this)">' + t.orders_track + '</button></div>' +
             '</div>';
         }
 
@@ -3907,6 +3914,32 @@ h1, h2, h3 {
         } else {
             fallbackCopyCode(code, done);
         }
+    }
+
+    // 打开快递查询网站（先自动复制单号，方便到网站上直接粘贴查询）
+    const TRACKING_SITE_URL = 'http://47.103.28.217/';
+    function openTrackingSite(code, btn) {
+        const lang = localStorage.getItem("lang") || "en";
+        const t = langData[lang] || langData["en"];
+        const notify = function() {
+            if (btn) {
+                btn.textContent = t.orders_copied;
+                btn.disabled = true;
+                setTimeout(function() {
+                    btn.textContent = t.orders_track;
+                    btn.disabled = false;
+                }, 1500);
+            }
+        };
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(notify).catch(function() { fallbackCopyCode(code, notify); });
+            } else {
+                fallbackCopyCode(code, notify);
+            }
+        } catch (e) {}
+        // 新标签页打开查询网站（失败则当前页跳转）
+        try { window.open(TRACKING_SITE_URL, '_blank'); } catch (e2) { window.location.href = TRACKING_SITE_URL; }
     }
 
     function fallbackCopyCode(text, done) {
@@ -5510,6 +5543,7 @@ detailModal.addEventListener("click", (e) => {
     orders_copy: "复制",
     orders_copied: "已复制",
     cart_stock_exceeded: "库存不足：「{name}」仅剩 {n} 件，请减少数量",
+    orders_track: "查询物流",
     my_coupons: "我的优惠券",
     coupon_label: "优惠券",
     coupon_select: "选择优惠券",
@@ -5712,6 +5746,7 @@ detailModal.addEventListener("click", (e) => {
     orders_copy: "Copy",
     orders_copied: "Copied",
     cart_stock_exceeded: "Not enough stock: only {n} left for \"{name}\", please reduce the quantity",
+    orders_track: "Track Package",
     my_coupons: "My Coupons",
     coupon_label: "Coupon",
     coupon_select: "Select Coupon",
@@ -5907,6 +5942,7 @@ detailModal.addEventListener("click", (e) => {
     orders_copy: "Copiar",
     orders_copied: "Copiado",
     cart_stock_exceeded: "Stock insuficiente: solo quedan {n} unidades de \"{name}\", reduzca la cantidad",
+    orders_track: "Rastrear paquete",
     my_coupons: "Mis Cupones",
     coupon_label: "Cupón",
     coupon_select: "Seleccionar cupón",
