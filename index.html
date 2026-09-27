@@ -2331,6 +2331,7 @@ h1, h2, h3 {
 .pay-coupon-row:hover { border-color: var(--accent-color, #a8181f); }
 .pay-coupon-label { color: #c1bab3; font-size: .9rem; }
 .pay-coupon-value { color: #f0b429; font-size: .9rem; font-weight: 600; text-align: right; }
+.pay-coupon-value.coupon-value-empty { color: #9a938c; font-weight: 400; }
 .pay-coupon-target { color: #9a938c; font-size: .78rem; padding: .4rem .2rem 0; line-height: 1.5; }
 .pay-coupon-total {
     display: flex;
@@ -2482,6 +2483,27 @@ h1, h2, h3 {
 }
 .order-status-badge.processing { background: rgba(240,180,41,.15); color: #f0b429; border: 1px solid rgba(240,180,41,.35); }
 .order-status-badge.shipped { background: rgba(126,217,154,.13); color: #7ed99a; border: 1px solid rgba(126,217,154,.35); }
+.order-status-badge.fee-due { background: rgba(255,159,67,.15); color: #ff9f43; border: 1px solid rgba(255,159,67,.4); }
+.order-status-badge.fee-paid { background: rgba(90,169,255,.13); color: #5aa9ff; border: 1px solid rgba(90,169,255,.35); }
+
+/* 订单详情 · 运费区块 */
+.order-fee-box {
+    background: rgba(255,159,67,.08);
+    border: 1px solid rgba(255,159,67,.35);
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+    margin: .5rem 0 .9rem;
+}
+.order-fee-box.paid {
+    background: rgba(90,169,255,.08);
+    border-color: rgba(90,169,255,.35);
+}
+.order-fee-head { display: flex; justify-content: space-between; align-items: center; gap: .8rem; flex-wrap: wrap; }
+.order-fee-label { color: #c1bab3; font-size: .85rem; }
+.order-fee-amount { color: #ff9f43; font-weight: 700; font-size: 1.05rem; }
+.order-fee-box.paid .order-fee-amount { color: #5aa9ff; }
+.order-fee-note { color: #9a938c; font-size: .78rem; line-height: 1.55; margin-top: .45rem; }
+#shippingPayContainer { margin-top: .8rem; }
 
 .order-detail-row { display: flex; justify-content: space-between; gap: 1rem; padding: .6rem 0; border-bottom: 1px dashed #2e2e33; font-size: .9rem; }
 .order-detail-row:last-child { border-bottom: none; }
@@ -3582,13 +3604,19 @@ h1, h2, h3 {
         if (!supabase) return null;
         let query = supabase
             .from('miniaturebois')
-            .select('id,paypal_order_id,buyer_email,product_id,product_name,amount,currency,region,status,created_at,cart_summary,phone,tracking_number');
-        if (currentUserId) {
-            query = query.eq('user_id', currentUserId);
-        } else {
-            query = query.eq('buyer_email', currentUser);
+            .select('id,paypal_order_id,buyer_email,product_id,product_name,amount,currency,region,status,created_at,cart_summary,phone,tracking_number,shipping_fee,shipping_paid');
+        query = currentUserId ? query.eq('user_id', currentUserId) : query.eq('buyer_email', currentUser);
+        let { data, error } = await query.order('created_at', { ascending: false });
+        if (error) {
+            // 运费字段尚未创建时，自动退回旧字段查询
+            let q2 = supabase
+                .from('miniaturebois')
+                .select('id,paypal_order_id,buyer_email,product_id,product_name,amount,currency,region,status,created_at,cart_summary,phone,tracking_number');
+            q2 = currentUserId ? q2.eq('user_id', currentUserId) : q2.eq('buyer_email', currentUser);
+            const fallback = await q2.order('created_at', { ascending: false });
+            data = fallback.data;
+            error = fallback.error;
         }
-        const { data, error } = await query.order('created_at', { ascending: false });
         if (error) {
             console.error('订单查询失败:', error.message || error);
             return null;
@@ -3613,9 +3641,17 @@ h1, h2, h3 {
         ordersBody.innerHTML = orders.map(o => {
             const summary = getOrderItems(o).map(it => it.name + ' ×' + it.qty).join(', ');
             const shipped = !!(o.tracking_number && String(o.tracking_number).trim());
-            const badge = shipped
-                ? '<span class="order-status-badge shipped">' + t.orders_status_shipped + '</span>'
-                : '<span class="order-status-badge processing">' + t.orders_status_processing + '</span>';
+            const hasFee = (o.shipping_fee != null && Number(o.shipping_fee) > 0);
+            let badge;
+            if (shipped) {
+                badge = '<span class="order-status-badge shipped">' + t.orders_status_shipped + '</span>';
+            } else if (hasFee && o.shipping_paid) {
+                badge = '<span class="order-status-badge fee-paid">' + t.order_status_fee_paid + '</span>';
+            } else if (hasFee) {
+                badge = '<span class="order-status-badge fee-due">' + t.order_status_fee_due + '</span>';
+            } else {
+                badge = '<span class="order-status-badge processing">' + t.orders_status_processing + '</span>';
+            }
             return '<div class="order-card" onclick="showOrderDetail(\'' + o.id + '\')">' +
                 '<div class="order-card-top">' +
                     '<span class="order-card-no">' + (o.paypal_order_id || o.id) + '</span>' +
@@ -3641,6 +3677,21 @@ h1, h2, h3 {
 
         let html = '<button class="order-back-btn" onclick="showOrdersList()">← ' + t.orders_back + '</button>';
 
+        // 运费区块（放在最顶部：待支付时最醒目）
+        const hasFee = (o.shipping_fee != null && Number(o.shipping_fee) > 0);
+        if (hasFee) {
+            const cur = o.currency === 'USD' ? '$' : '€';
+            const feePaid = !!o.shipping_paid || shipped;
+            html += '<div class="order-fee-box' + (feePaid ? ' paid' : '') + '">' +
+                '<div class="order-fee-head">' +
+                    '<span class="order-fee-label">🚚 ' + t.shipping_fee_label + '</span>' +
+                    '<span class="order-fee-amount">' + cur + Number(o.shipping_fee).toFixed(2) + '</span>' +
+                '</div>' +
+                '<div class="order-fee-note">' + (feePaid ? t.shipping_fee_paid_note : t.shipping_fee_due_note) + '</div>' +
+                (feePaid ? '' : '<div id="shippingPayContainer"></div>') +
+            '</div>';
+        }
+
         // 发货信息（有发货码时高亮显示）
         if (shipped) {
             const code = String(o.tracking_number).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
@@ -3660,12 +3711,88 @@ h1, h2, h3 {
         // 订单信息
         html += '<div class="order-detail-row"><span class="order-detail-label">' + t.orders_order_no + '</span><span class="order-detail-value">' + (o.paypal_order_id || '-') + '</span></div>';
         html += '<div class="order-detail-row"><span class="order-detail-label">' + t.orders_date + '</span><span class="order-detail-value">' + formatOrderDate(o.created_at) + '</span></div>';
-        html += '<div class="order-detail-row"><span class="order-detail-label">' + t.orders_status + '</span><span class="order-detail-value">' + (shipped ? t.orders_status_shipped : t.orders_status_processing) + '</span></div>';
+        let statusText;
+        if (shipped) statusText = t.orders_status_shipped;
+        else if (hasFee && o.shipping_paid) statusText = t.order_status_fee_paid;
+        else if (hasFee) statusText = t.order_status_fee_due;
+        else statusText = t.orders_status_processing;
+        html += '<div class="order-detail-row"><span class="order-detail-label">' + t.orders_status + '</span><span class="order-detail-value">' + statusText + '</span></div>';
         if (o.region) html += '<div class="order-detail-row"><span class="order-detail-label">' + t.orders_region + '</span><span class="order-detail-value">' + o.region + '</span></div>';
         if (o.phone) html += '<div class="order-detail-row"><span class="order-detail-label">' + t.orders_phone + '</span><span class="order-detail-value">' + o.phone + '</span></div>';
         if (o.buyer_email) html += '<div class="order-detail-row"><span class="order-detail-label">' + t.orders_email + '</span><span class="order-detail-value">' + o.buyer_email + '</span></div>';
 
         ordersBody.innerHTML = html;
+
+        // 运费待支付 → 渲染 PayPal 支付按钮
+        if (hasFee && !o.shipping_paid && !shipped) {
+            setTimeout(function() { renderShippingPayButton(o); }, 120);
+        }
+    }
+
+    // ===== 支付运费（订单详情内） =====
+    async function renderShippingPayButton(order) {
+        const container = document.getElementById('shippingPayContainer');
+        if (!container) return;
+        const lang = localStorage.getItem('lang') || 'en';
+        const t = langData[lang] || langData['en'];
+        container.innerHTML = '<p class="order-fee-note">' + (t.paypal_loading || 'PayPal loading...') + '</p>';
+        try {
+            if (typeof loadPayPalSDKOnce === 'function') await loadPayPalSDKOnce();
+        } catch (e) {
+            container.innerHTML = '<p class="order-fee-note">' + (t.paypal_load_fail || 'PayPal failed to load') + '</p>';
+            return;
+        }
+        if (typeof paypal === 'undefined' || typeof paypal.Buttons === 'undefined') {
+            container.innerHTML = '<p class="order-fee-note">' + (t.paypal_load_fail || 'PayPal failed to load') + '</p>';
+            return;
+        }
+        const locale = (typeof PAYPAL_LOCALE_MAP !== 'undefined' && PAYPAL_LOCALE_MAP[lang]) ? PAYPAL_LOCALE_MAP[lang] : 'en_US';
+        const amount = Number(order.shipping_fee).toFixed(2);
+        const currencyCode = order.currency || 'EUR';
+        container.innerHTML = '';
+        paypal.Buttons({
+            style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal', locale: locale },
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: { value: amount, currency_code: currencyCode },
+                        description: 'Shipping Fee - ' + (order.paypal_order_id || ''),
+                        custom_id: 'SHIPFEE|' + (order.paypal_order_id || '') + '|' + (currentUser || 'guest')
+                    }]
+                });
+            },
+            onApprove: async function(data, actions) {
+                try {
+                    await actions.order.capture();
+                    await markShippingPaid(order);
+                    showOrderDetail(order.id); // 刷新详情显示
+                } catch (e) {
+                    console.error('运费支付处理失败:', e);
+                }
+            }
+        }).render('#shippingPayContainer');
+    }
+
+    // 标记运费已支付（更新数据库；失败也不影响，商家以 PayPal 收款记录为准）
+    async function markShippingPaid(order) {
+        try {
+            if (!supabase) await initSupabase();
+            if (!supabase) return false;
+            const { error } = await supabase
+                .from('miniaturebois')
+                .update({ shipping_paid: true })
+                .eq('id', order.id);
+            if (error) {
+                console.warn('运费状态更新失败:', error.message || error);
+                return false;
+            }
+            order.shipping_paid = true; // 本地同步
+            console.log('✅ 运费已标记为已支付:', order.paypal_order_id);
+            return true;
+        } catch (e) {
+            console.warn('运费状态更新异常:', e);
+            return false;
+        }
     }
 
     function copyTrackingCode(code, btn) {
@@ -3912,6 +4039,7 @@ h1, h2, h3 {
 
         if (appliedCoupon) {
             const discount = getCouponDiscount(productId);
+            els.value.classList.remove('coupon-value-empty');
             els.value.textContent = couponName(appliedCoupon) + '  -' + symbol + discount.toFixed(2);
             const targetName = getCouponTargetInfo(productId).name;
             if (targetName) {
@@ -3923,7 +4051,14 @@ h1, h2, h3 {
             els.total.style.display = 'flex';
             els.final.textContent = symbol + Math.max(0, baseAmount - discount).toFixed(2);
         } else {
-            els.value.textContent = (t.coupon_select || 'Select coupon') + ' ▾';
+            const usable = myCouponsCache.filter(isCouponUsable);
+            if (usable.length > 0) {
+                els.value.textContent = (t.coupon_select || 'Select coupon') + ' ▾';
+                els.value.classList.remove('coupon-value-empty');
+            } else {
+                els.value.textContent = (t.coupon_none_available || 'No coupons available');
+                els.value.classList.add('coupon-value-empty');
+            }
             els.target.style.display = 'none';
             els.total.style.display = 'none';
         }
@@ -3938,11 +4073,7 @@ h1, h2, h3 {
         const list = await fetchMyCoupons();
         if (list === null) { els.block.style.display = 'none'; return; }
         myCouponsCache = list;
-        const usable = myCouponsCache.filter(isCouponUsable);
-        if (usable.length === 0 && !appliedCoupon) {
-            els.block.style.display = 'none';
-            return;
-        }
+        // 优惠券入口始终显示：有券可选，没券显示"暂无可用优惠券"
         els.block.style.display = 'block';
         renderPayCouponRow();
     }
@@ -5223,6 +5354,7 @@ detailModal.addEventListener("click", (e) => {
     coupon_applied_to: "作用于",
     coupon_dont_use: "不使用优惠券",
     coupons_empty: "暂无优惠券",
+    coupon_none_available: "暂无可用优惠券",
     coupons_load_fail: "优惠券加载失败，请稍后重试",
     coupons_login_required: "请先登录后再查看优惠券",
     coupon_err_not_found: "兑换码不存在，请检查后重试",
@@ -5231,6 +5363,11 @@ detailModal.addEventListener("click", (e) => {
     coupon_err_expired: "兑换码已过期",
     account: "账户",
     logout_btn: "退出登录",
+    order_status_fee_due: "运费待支付",
+    order_status_fee_paid: "运费已付",
+    shipping_fee_label: "运费",
+    shipping_fee_due_note: "请支付运费后，我们将尽快为您安排发货。",
+    shipping_fee_paid_note: "运费已支付，我们将尽快为您安排发货。",
     paypal_loading: "PayPal 加载中，请稍候...",
     paypal_load_fail: "PayPal 加载失败，请刷新页面重试",
     paypal_retry_hint: "⏳ PayPal 加载中（自动重试中...），请稍候或刷新页面",
@@ -5418,6 +5555,7 @@ detailModal.addEventListener("click", (e) => {
     coupon_applied_to: "Applied to",
     coupon_dont_use: "Do not use coupon",
     coupons_empty: "No coupons yet",
+    coupon_none_available: "No coupons available",
     coupons_load_fail: "Failed to load coupons, please try again later",
     coupons_login_required: "Please login to view your coupons",
     coupon_err_not_found: "Code not found, please check and retry",
@@ -5426,6 +5564,11 @@ detailModal.addEventListener("click", (e) => {
     coupon_err_expired: "This code has expired",
     account: "Account",
     logout_btn: "Logout",
+    order_status_fee_due: "Shipping Fee Due",
+    order_status_fee_paid: "Fee Paid",
+    shipping_fee_label: "Shipping Fee",
+    shipping_fee_due_note: "Please pay the shipping fee below and we will arrange shipment soon.",
+    shipping_fee_paid_note: "Shipping fee paid. We will arrange shipment soon.",
     paypal_loading: "PayPal loading, please wait...",
     paypal_load_fail: "PayPal failed to load, please refresh",
     paypal_retry_hint: "⏳ PayPal loading (auto-retrying)... please wait or refresh",
@@ -5606,6 +5749,7 @@ detailModal.addEventListener("click", (e) => {
     coupon_applied_to: "Aplicado a",
     coupon_dont_use: "No usar cupón",
     coupons_empty: "Aún no hay cupones",
+    coupon_none_available: "No hay cupones disponibles",
     coupons_load_fail: "Error al cargar cupones, inténtelo más tarde",
     coupons_login_required: "Por favor inicie sesión para ver sus cupones",
     coupon_err_not_found: "Código no encontrado, verifique e intente de nuevo",
@@ -5614,6 +5758,11 @@ detailModal.addEventListener("click", (e) => {
     coupon_err_expired: "Este código ha expirado",
     account: "Cuenta",
     logout_btn: "Cerrar sesión",
+    order_status_fee_due: "Tarifa pendiente",
+    order_status_fee_paid: "Tarifa pagada",
+    shipping_fee_label: "Tarifa de envío",
+    shipping_fee_due_note: "Pague la tarifa de envío a continuación y organizaremos el envío pronto.",
+    shipping_fee_paid_note: "Tarifa de envío pagada. Organizaremos el envío pronto.",
     paypal_loading: "PayPal cargando, espere por favor...",
     paypal_load_fail: "PayPal no pudo cargar, actualice la página",
     paypal_retry_hint: "⏳ PayPal cargando (reintentando automáticamente)... espere o actualice",
