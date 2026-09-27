@@ -2994,6 +2994,11 @@ h1, h2, h3 {
                 body: JSON.stringify(order)
             });
             if (!response.ok) {
+                // 409 = 唯一冲突（订单已存在）：视为成功，避免重试机制无限失败
+                if (response.status === 409) {
+                    console.warn('订单已存在（重复写入被拦截，视为成功）');
+                    return true;
+                }
                 const text = await response.text();
                 throw new Error('Supabase REST API ' + response.status + ': ' + text);
             }
@@ -3002,6 +3007,14 @@ h1, h2, h3 {
             console.error('fetch 直写 miniaturebois 失败:', e);
             throw e;
         }
+    }
+
+    // 判断是否为"重复订单"错误（唯一索引冲突 23505）—— 视为成功，防止重试机制无限失败
+    function isDuplicateOrderError(err) {
+        if (!err) return false;
+        var code = String(err.code || '');
+        var msg = (String(err.message || '') + ' ' + String(err.details || '')).toLowerCase();
+        return code === '23505' || msg.indexOf('duplicate') !== -1 || msg.indexOf('unique') !== -1;
     }
 
     // ===== Resend 邮件服务配置（API Key 已移至 Supabase Edge Function 环境变量） =====
@@ -3046,6 +3059,27 @@ h1, h2, h3 {
     }
 
     // 页面加载时恢复未写入的支付订单
+    // ===== 待补任务队列（核销券 / 扣库存失败时暂存，页面加载时自动重试） =====
+    function loadPendingTasks(key) {
+        try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) { return []; }
+    }
+    function savePendingTasks(key, list) {
+        try {
+            if (list.length > 0) localStorage.setItem(key, JSON.stringify(list));
+            else localStorage.removeItem(key);
+        } catch (e) {}
+    }
+    function addPendingTask(key, task, dedupeKey) {
+        var list = loadPendingTasks(key);
+        var dk = dedupeKey || '';
+        if (dk && list.some(function(t) { return t.dedupeKey === dk; })) return;
+        task.dedupeKey = dk;
+        task.attempts = 0;
+        task.ts = Date.now();
+        list.push(task);
+        savePendingTasks(key, list);
+    }
+
     async function recoverPendingPayments() {
         const pendingJson = localStorage.getItem('payment_orders');
         if (!pendingJson) return;
@@ -3084,9 +3118,39 @@ h1, h2, h3 {
                     await saveOrderViaFetch(orderPayload);
                 } else {
                     const result = await supabase.from('miniaturebois').insert(orderPayload);
-                    if (result.error) throw new Error(JSON.stringify(result.error));
+                    if (result.error && !isDuplicateOrderError(result.error)) throw new Error(JSON.stringify(result.error));
+                    if (result.error) console.warn('⚠️ 订单已存在（重复写入被拦截，视为恢复成功）:', order.paypal_order_id);
                 }
                 console.log('✅ 订单恢复成功:', order.paypal_order_id);
+
+                // 补核销优惠券（恢复路径原先遗漏，失败会自动进入待补队列）
+                if (order.coupon_code) {
+                    await markCouponUsed(order.coupon_code);
+                }
+
+                // 补扣库存（恢复路径原先遗漏，失败会自动进入待补队列）
+                // 若该订单已有待补扣任务则跳过，避免重复扣减
+                var pendStockList = loadPendingTasks('pending_stock_decrements');
+                var hasPendingDeduct = pendStockList.some(function(t) {
+                    return (t.order_ref || '').indexOf(order.paypal_order_id || '###') === 0;
+                });
+                if (hasPendingDeduct) {
+                    console.warn('该订单已有待补扣库存任务，跳过恢复补扣:', order.paypal_order_id);
+                } else if (order.product_id) {
+                    await decrementStockWithQueue(order.product_id, (order.paypal_order_id || '') + '|recover');
+                } else if (Array.isArray(order.cart_summary) && order.cart_summary.length > 0) {
+                    for (var ri = 0; ri < order.cart_summary.length; ri++) {
+                        var rItem = order.cart_summary[ri];
+                        var rItemId = rItem.product_id || findProductIdByName(rItem.name);
+                        var rQty = rItem.qty || rItem.quantity || 1;
+                        if (rItemId && rQty > 0) {
+                            for (var rq = 0; rq < rQty; rq++) {
+                                await decrementStockWithQueue(rItemId, (order.paypal_order_id || '') + '|recover|' + ri + '|' + rq);
+                            }
+                        }
+                    }
+                }
+
                 recovered.add(order.paypal_order_id);
             } catch(e) {
                 console.error('恢复订单异常:', order.paypal_order_id, e.message || e);
@@ -3195,6 +3259,36 @@ h1, h2, h3 {
         }
     }
 
+    // 扣减库存（带失败补偿：失败自动记录到待补队列，页面加载时自动重试）
+    async function decrementStockWithQueue(productId, orderRef) {
+        const ok = await decrementStock(productId);
+        if (!ok) {
+            addPendingTask('pending_stock_decrements', { product_id: productId, order_ref: orderRef || '' }, orderRef || productId);
+            console.warn('📦 库存扣减失败，已加入待补队列:', productId, orderRef || '');
+        }
+        return ok;
+    }
+
+    // 页面加载时重试"漏扣的库存"（单个任务最多尝试 5 次）
+    async function retryPendingStockDecrements() {
+        const list = loadPendingTasks('pending_stock_decrements');
+        if (list.length === 0) return;
+        if (!supabase) await initSupabase();
+        if (!supabase) return;
+        const remaining = [];
+        for (const t of list) {
+            const ok = await decrementStock(t.product_id);
+            if (ok) {
+                console.log('📦 补扣库存成功:', t.product_id, t.order_ref || '');
+            } else {
+                t.attempts = (t.attempts || 0) + 1;
+                if (t.attempts < 5) remaining.push(t);
+                else console.error('📦 库存补扣多次失败，需人工处理:', t.product_id, t.order_ref || '');
+            }
+        }
+        savePendingTasks('pending_stock_decrements', remaining);
+    }
+
     // 商品卡片上的库存徽章动态更新（限量显示剩余、售罄显示 Sold Out、不限量则隐藏）
     async function updateCardStockBadges() {
         const badges = document.querySelectorAll('[data-stock-badge]');
@@ -3240,20 +3334,24 @@ h1, h2, h3 {
     }
 
     // 批量检查购物车中所有产品的库存
+    // 检查购物车全部商品库存（含数量校验：购买数量不能超过剩余库存）
+    // allAvailable=false 时附带 itemName / requested / remaining 便于提示
     async function checkCartStock() {
         if (cart.length === 0) return { allAvailable: true };
-        var stockChecks = {};
         for (var i = 0; i < cart.length; i++) {
-            // 从商品名反推 productId
-            var itemId = findProductIdByName(cart[i].name);
-            if (itemId && !stockChecks[itemId]) {
-                stockChecks[itemId] = await checkStock(itemId);
-            }
-        }
-        // 检查是否有售罄
-        for (var id in stockChecks) {
-            if (stockChecks[id].soldOut) {
-                return { allAvailable: false, outOfStockItem: id };
+            var item = cart[i];
+            // 优先用购物车项记录的 productId（不随语言变化），旧数据回退用商品名反推
+            var itemId = item.productId || findProductIdByName(item.name);
+            if (!itemId) continue;
+            var info = await checkStock(itemId);
+            if (info.soldOut || item.quantity > info.remaining) {
+                return {
+                    allAvailable: false,
+                    outOfStockItem: itemId,
+                    itemName: item.name,
+                    requested: item.quantity,
+                    remaining: Math.max(0, info.remaining)
+                };
             }
         }
         return { allAvailable: true };
@@ -4152,17 +4250,52 @@ h1, h2, h3 {
     })();
 
     // 支付成功后核销券（走 RPC，只能核销自己名下未使用的券）
+    // 失败时进入待补队列，页面加载时自动重试，避免"券漏核销被重复使用"
     async function markCouponUsed(code) {
         if (!code) return;
         try {
             if (!supabase) await initSupabase();
-            if (!supabase) return;
+            if (!supabase) {
+                addPendingTask('pending_coupon_redeems', { code: code }, code);
+                return;
+            }
             const { data, error } = await supabase.rpc('web_use_coupon', { p_code: code });
-            if (error) console.warn('券核销失败:', error.message || error);
-            else console.log('🎟 券核销结果:', code, data);
+            if (error) {
+                console.warn('券核销失败，已加入待补队列:', error.message || error);
+                addPendingTask('pending_coupon_redeems', { code: code }, code);
+            } else {
+                console.log('🎟 券核销结果:', code, data);
+            }
         } catch (e) {
-            console.warn('券核销异常:', e);
+            console.warn('券核销异常，已加入待补队列:', e);
+            addPendingTask('pending_coupon_redeems', { code: code }, code);
         }
+    }
+
+    // 页面加载时重试"漏核销的券"（单个任务最多尝试 5 次）
+    async function retryPendingCouponRedeems() {
+        const list = loadPendingTasks('pending_coupon_redeems');
+        if (list.length === 0) return;
+        if (!supabase) await initSupabase();
+        if (!supabase) return;
+        const remaining = [];
+        for (const t of list) {
+            try {
+                const { error } = await supabase.rpc('web_use_coupon', { p_code: t.code });
+                if (error) {
+                    t.attempts = (t.attempts || 0) + 1;
+                    if (t.attempts < 5) remaining.push(t);
+                    else console.error('🎟 券补核销多次失败，需人工检查:', t.code, error.message || error);
+                } else {
+                    console.log('🎟 券补核销成功:', t.code);
+                }
+            } catch (e) {
+                t.attempts = (t.attempts || 0) + 1;
+                if (t.attempts < 5) remaining.push(t);
+                else console.error('🎟 券补核销多次异常，需人工检查:', t.code, e);
+            }
+        }
+        savePendingTasks('pending_coupon_redeems', remaining);
     }
 
     loginBtn.addEventListener('click', openLoginModal);
@@ -4373,7 +4506,9 @@ h1, h2, h3 {
             const cardS = this.closest('.product-card');
             const pidStock = cardS ? cardS.dataset.productId : null;
 
-            // 库存检查：始终实时查询，不依赖缓存
+            const existingItem = cart.find(item => item.productId === productId);
+
+            // 库存检查：始终实时查询，不依赖缓存（含"购物车内已有数量 + 本次"的总量校验）
             if (pidStock) {
                 var stockInfo = await checkStock(pidStock);
                 if (stockInfo.soldOut) {
@@ -4381,9 +4516,16 @@ h1, h2, h3 {
                     alert((langData[sl2] || langData['en']).badge_sold_out || 'Sorry, this item is sold out.');
                     return;
                 }
+                var wantQty = (existingItem ? existingItem.quantity : 0) + 1;
+                if (wantQty > stockInfo.remaining) {
+                    var sl2b = localStorage.getItem('lang') || 'en';
+                    var t2 = langData[sl2b] || langData['en'];
+                    alert((t2.cart_stock_exceeded || 'Not enough stock: only {n} left for "{name}", please reduce the quantity')
+                        .replace('{n}', Math.max(0, stockInfo.remaining))
+                        .replace('{name}', name));
+                    return;
+                }
             }
-
-            const existingItem = cart.find(item => item.productId === productId);
 
             if (existingItem) {
                 existingItem.quantity += 1;
@@ -4467,8 +4609,8 @@ h1, h2, h3 {
         updateCart();
     }
 
-    // 调整购物车商品数量 (+1 或 -1)
-    function changeCartQuantity(id, delta) {
+    // 调整购物车商品数量 (+1 或 -1)（增加时校验库存上限）
+    async function changeCartQuantity(id, delta) {
         const target = cart.find(item => item.id === id);
         if (!target) return;
 
@@ -4477,6 +4619,27 @@ h1, h2, h3 {
             removeFromCart(id);
             return;
         }
+
+        // 增加数量时实时查询库存，超出剩余数量则阻止
+        if (delta > 0) {
+            const itemId = target.productId || findProductIdByName(target.name);
+            if (itemId) {
+                const info = await checkStock(itemId);
+                if (newQty > info.remaining) {
+                    const lang = localStorage.getItem('lang') || 'en';
+                    const t = langData[lang] || langData['en'];
+                    if (info.remaining <= 0) {
+                        alert(t.badge_sold_out || 'Sorry, this item is sold out.');
+                    } else {
+                        alert((t.cart_stock_exceeded || 'Not enough stock: only {n} left for "{name}", please reduce the quantity')
+                            .replace('{n}', info.remaining)
+                            .replace('{name}', target.name));
+                    }
+                    return;
+                }
+            }
+        }
+
         target.quantity = newQty;
         saveCart();
         updateCart();
@@ -4575,17 +4738,29 @@ h1, h2, h3 {
         }
     });
 
-    // 初始化 Supabase + 恢复未写入的支付订单
-    initSupabase().then(ok => { if (ok) recoverPendingPayments(); });
+    // 初始化 Supabase + 恢复未写入的支付订单 + 补做失败的任务（核销券 / 扣库存）
+    initSupabase().then(ok => {
+        if (!ok) return;
+        recoverPendingPayments();
+        retryPendingCouponRedeems();
+        retryPendingStockDecrements();
+    });
 
     document.getElementById('cartCheckoutBtn').addEventListener('click', async () => {
         if (cart.length === 0) return;
         if (!requireLogin(() => document.getElementById('cartCheckoutBtn').click(), 'login_alert_checkout')) return;
-        // 结算前检查购物车中所有商品库存
+        // 结算前检查购物车中所有商品库存（含购买数量校验）
         const stockCheck = await checkCartStock();
         if (!stockCheck.allAvailable) {
             const lang = localStorage.getItem("lang") || "en";
-            alert((langData[lang] || langData["en"]).badge_sold_out || 'Some items are sold out, please remove them from cart.');
+            const t = langData[lang] || langData["en"];
+            if (stockCheck.remaining <= 0) {
+                alert(t.badge_sold_out || 'Sorry, this item is sold out.');
+            } else {
+                alert((t.cart_stock_exceeded || 'Not enough stock: only {n} left for "{name}", please reduce the quantity')
+                    .replace('{n}', stockCheck.remaining)
+                    .replace('{name}', stockCheck.itemName || ''));
+            }
             return;
         }
         // 打开支付弹窗
@@ -5334,6 +5509,7 @@ detailModal.addEventListener("click", (e) => {
     orders_back: "返回订单列表",
     orders_copy: "复制",
     orders_copied: "已复制",
+    cart_stock_exceeded: "库存不足：「{name}」仅剩 {n} 件，请减少数量",
     my_coupons: "我的优惠券",
     coupon_label: "优惠券",
     coupon_select: "选择优惠券",
@@ -5535,6 +5711,7 @@ detailModal.addEventListener("click", (e) => {
     orders_back: "Back to orders",
     orders_copy: "Copy",
     orders_copied: "Copied",
+    cart_stock_exceeded: "Not enough stock: only {n} left for \"{name}\", please reduce the quantity",
     my_coupons: "My Coupons",
     coupon_label: "Coupon",
     coupon_select: "Select Coupon",
@@ -5729,6 +5906,7 @@ detailModal.addEventListener("click", (e) => {
     orders_back: "Volver a pedidos",
     orders_copy: "Copiar",
     orders_copied: "Copiado",
+    cart_stock_exceeded: "Stock insuficiente: solo quedan {n} unidades de \"{name}\", reduzca la cantidad",
     my_coupons: "Mis Cupones",
     coupon_label: "Cupón",
     coupon_select: "Seleccionar cupón",
@@ -6420,29 +6598,30 @@ async function renderPayPalButtons(amount, currency) {
                                 } else {
                                     // SDK 可用，使用正常路径
                                     const result = await supabase.from('miniaturebois').insert(orderPayload);
-                                    if (result.error) {
+                                    if (result.error && !isDuplicateOrderError(result.error)) {
                                         console.error('miniaturebois 写入失败 (尝试 #' + attempt + '):', result.error.message);
                                         console.error('   错误详情:', result.error);
                                         return false;
                                     }
-                                    console.log('✅ 订单已写入 miniaturebois:', paypalOrderId);
-                                    console.log('   PayPal Order ID:', paypalOrderId);
-                                    console.log('   PayPal Capture ID:', paypalCaptureId);
-                                    console.log('   用户邮箱:', payerEmail || currentUser);
+                                    if (result.error) {
+                                        console.warn('⚠️ 该订单已存在（重复写入被拦截，视为成功）:', paypalOrderId);
+                                    } else {
+                                        console.log('✅ 订单已写入 miniaturebois:', paypalOrderId);
+                                        console.log('   PayPal Order ID:', paypalOrderId);
+                                        console.log('   PayPal Capture ID:', paypalCaptureId);
+                                        console.log('   用户邮箱:', payerEmail || currentUser);
+                                    }
                                 }
 
-                                // 从 localStorage 移除已写入的订单
-                                removeFromPaymentOrders(paypalOrderId);
-
-                                // 核销优惠券（标记已使用，防止重复使用）
+                                // 核销优惠券（标记已使用，防止重复使用；失败自动进入待补队列）
                                 if (typeof appliedCoupon !== 'undefined' && appliedCoupon && couponDiscount > 0) {
                                     await markCouponUsed(appliedCoupon.code);
                                     appliedCoupon = null;
                                 }
 
-                                // 扣减库存（单件商品）
+                                // 扣减库存（单件商品；失败自动进入待补队列，页面加载时自动重试）
                                 if (lockedProductId) {
-                                    var dOk = await decrementStock(lockedProductId);
+                                    var dOk = await decrementStockWithQueue(lockedProductId, paypalOrderId + '|single');
                                     if (dOk) console.log('📦 库存已扣减:', lockedProductId);
                                 } else if (cartSummary && cartSummary.length > 0) {
                                     for (var ci = 0; ci < cartSummary.length; ci++) {
@@ -6450,11 +6629,15 @@ async function renderPayPalButtons(amount, currency) {
                                         var qty = cartSummary[ci].qty || 1;
                                         if (cartItemId && qty > 0) {
                                             for (var q = 0; q < qty; q++) {
-                                                await decrementStock(cartItemId);
+                                                await decrementStockWithQueue(cartItemId, paypalOrderId + '|' + ci + '|' + q);
                                             }
                                         }
                                     }
                                 }
+
+                                // 核销、扣减全部处理完毕后才从 localStorage 移除
+                                // （若中途关页面，恢复流程会补做；已有待补任务的会自动去重）
+                                removeFromPaymentOrders(paypalOrderId);
                                 return true;
                             } catch (dbErr) {
                                 console.error('Supabase 操作异常 (尝试 #' + attempt + '):', dbErr.message || dbErr);
