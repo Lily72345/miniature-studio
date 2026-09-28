@@ -460,6 +460,13 @@
             color: var(--text-light);
         }
 
+        /* 限时商品徽章（开售中金色） */
+        .stock-badge.limited-gold {
+            background: linear-gradient(135deg, #f7df8b, #d4a017);
+            color: #1a1a1a;
+            font-weight: 700;
+        }
+
         .product-info {
             padding: 1.5rem;
             text-align: center;
@@ -506,6 +513,26 @@
 
         .add-to-cart:disabled {
             opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 限时商品按钮：开售中金色 */
+        .add-to-cart.lt-gold {
+            background: linear-gradient(135deg, #f7df8b, #d4a017);
+            border-color: #d4a017;
+            color: #1a1a1a;
+            font-weight: 700;
+        }
+        .add-to-cart.lt-gold:hover:not(:disabled) {
+            background: linear-gradient(135deg, #f0cf6a, #c08f10);
+            border-color: #c08f10;
+            color: #1a1a1a;
+        }
+        /* 限时商品按钮：未开售 / 已结束灰色（仍可点击查看提示） */
+        .add-to-cart.lt-disabled {
+            background: #555;
+            border-color: #555;
+            color: #c9c9c9;
             cursor: not-allowed;
         }
 
@@ -2634,6 +2661,23 @@ h1, h2, h3 {
         </div>
 
             <div class="products-grid">
+                <!-- 产品卡片 限时新品 KOHAKU -->
+                <div class="product-card" data-category="new" data-product-id="p4" onclick="openDetail('p4')">
+                    <div class="product-image" style="position:relative;">
+                        <span class="stock-badge limited-gold" data-stock-badge="p4" style="display:none;">Limited Time</span>
+                        <img src="weisuo.image/kohaku1.jpg" alt="KOHAKU">
+                       <div class="product-overlay">
+    <button class="view-details" data-product="p4" data-key="btn_view_detail" onclick="event.stopPropagation(); openDetail('p4')">查询详情</button>
+</div>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name" data-key="p4_name">KOHAKU -- GK Version</h3>
+                        <p class="product-scale" data-key="p4_scale">1/6 Scale · 28cm</p>
+                        <p class="product-price">€189</p>
+                        <button class="add-to-cart" data-key="p4_addbutton" onclick="event.stopPropagation();">加入购物车</button>
+                    </div>
+                </div>
+
                 <!-- 产品卡片 1 -->
                 <div class="product-card" data-category="bust" data-product-id="p1" onclick="openDetail('p1')">
                     <div class="product-image" style="position:relative;">
@@ -3295,6 +3339,64 @@ h1, h2, h3 {
         savePendingTasks('pending_stock_decrements', remaining);
     }
 
+    // ===== 限时商品（时间窗销售：未开售 → 开售中 → 已结束）=====
+    // 返回：'before' 未开售 | 'onsale' 开售中 | 'ended' 已结束；非限时商品返回 null
+    function getLimitedSaleState(productId) {
+        if (!productId) return null;
+        var lang = localStorage.getItem('lang') || 'en';
+        var pd = productData[lang] || productData['en'];
+        if (!pd) return null;
+        var p = pd[productId];
+        if (!p || !p.limitedTime) return null;
+        var now = Date.now();
+        var start = p.saleStart ? new Date(p.saleStart).getTime() : 0;
+        var end = p.saleEnd ? new Date(p.saleEnd).getTime() : Infinity;
+        if (isNaN(start)) start = 0;
+        if (isNaN(end)) end = Infinity;
+        if (now < start) return 'before';
+        if (now >= end) return 'ended';
+        return 'onsale';
+    }
+
+    // 更新限时商品的按钮状态（卡片 + 详情弹窗）：未开售/已结束灰色，开售中金色
+    function updateLimitedTimeUI() {
+        var lang = localStorage.getItem('lang') || 'en';
+        var t = langData[lang] || langData['en'];
+        var pd = productData[lang] || productData['en'];
+        if (!pd) return;
+        Object.keys(pd).forEach(function(pid) {
+            var p = pd[pid];
+            if (!p || !p.limitedTime) return;
+            var state = getLimitedSaleState(pid);
+            if (!state) return;
+            var btn = document.querySelector('.product-card[data-product-id="' + pid + '"] .add-to-cart');
+            if (!btn) return;
+            btn.classList.remove('lt-gold', 'lt-disabled');
+            if (state === 'onsale') {
+                btn.textContent = t[pid + '_addbutton'] || 'Add to Cart';
+                btn.classList.add('lt-gold');
+            } else {
+                btn.textContent = (state === 'before') ? (t.btn_coming_soon || 'Coming Soon') : (t.btn_sale_ended || 'Ended');
+                btn.classList.add('lt-disabled');
+            }
+        });
+        // 详情弹窗开着且是限时商品时，同步「立即购买」按钮
+        var detailModalEl = document.getElementById('detailModal');
+        if (detailModalEl && detailModalEl.classList.contains('active') && typeof currentBuyProduct !== 'undefined' && currentBuyProduct) {
+            var dState = getLimitedSaleState(currentBuyProduct);
+            var buyBtn = document.getElementById('buyNowBtn');
+            if (dState && buyBtn) {
+                if (dState === 'onsale') {
+                    buyBtn.disabled = false; buyBtn.style.opacity = ''; buyBtn.style.cursor = '';
+                    buyBtn.textContent = t.pay_buy_now || 'Buy Now';
+                } else {
+                    buyBtn.disabled = true; buyBtn.style.opacity = '0.5'; buyBtn.style.cursor = 'not-allowed';
+                    buyBtn.textContent = (dState === 'before') ? (t.btn_coming_soon || 'Coming Soon') : (t.btn_sale_ended || 'Ended');
+                }
+            }
+        }
+    }
+
     // 商品卡片上的库存徽章动态更新（限量显示剩余、售罄显示 Sold Out、不限量则隐藏）
     async function updateCardStockBadges() {
         const badges = document.querySelectorAll('[data-stock-badge]');
@@ -3304,6 +3406,15 @@ h1, h2, h3 {
         for (const el of badges) {
             const pid = el.getAttribute('data-stock-badge');
             if (!pid) continue;
+            // 限时商品：按时间状态显示「限时」徽章（开售中金色 / 未开售、已结束灰色）
+            const ltState = getLimitedSaleState(pid);
+            if (ltState) {
+                el.textContent = t.badge_limited_time || 'Limited Time';
+                el.classList.remove('sold-out', 'limited-gold');
+                el.classList.add(ltState === 'onsale' ? 'limited-gold' : 'sold-out');
+                el.style.display = '';
+                continue;
+            }
             try {
                 const info = await checkStock(pid);
                 if (info.soldOut) {
@@ -3349,6 +3460,11 @@ h1, h2, h3 {
             // 优先用购物车项记录的 productId（不随语言变化），旧数据回退用商品名反推
             var itemId = item.productId || findProductIdByName(item.name);
             if (!itemId) continue;
+            // 限时商品：未开售 / 已结束不允许结算
+            var ltState = getLimitedSaleState(itemId);
+            if (ltState && ltState !== 'onsale') {
+                return { allAvailable: false, limitedState: ltState, itemName: item.name };
+            }
             var info = await checkStock(itemId);
             if (info.soldOut || item.quantity > info.remaining) {
                 return {
@@ -3803,7 +3919,8 @@ h1, h2, h3 {
                 '<div class="order-shipping-label">📦 ' + t.orders_status_shipped + ' · ' + t.orders_tracking + '</div>' +
                 '<div><span class="order-shipping-code">' + o.tracking_number + '</span>' +
                 '<button class="order-copy-btn" onclick="copyTrackingCode(\'' + code + '\', this)">' + t.orders_copy + '</button>' +
-                '<button class="order-track-btn" onclick="openTrackingSite(\'' + code + '\', this)">' + t.orders_track + '</button></div>' +
+                '<button class="order-track-btn" onclick="openTrackingSite(\'' + code + '\', this)">' + t.orders_track + '</button>' +
+                '<button class="order-track-btn" onclick="openTrackingSite(\'' + code + '\', this, \'17track\')">17TRACK</button></div>' +
             '</div>';
         }
 
@@ -3918,7 +4035,14 @@ h1, h2, h3 {
 
     // 打开快递查询网站（先自动复制单号，方便到网站上直接粘贴查询）
     const TRACKING_SITE_URL = 'http://47.103.28.217/';
-    function openTrackingSite(code, btn) {
+    // 17track 按界面语言打开对应语言版（默认英文）
+    const TRACKING_SITE_17TRACK = {
+        zh: 'https://t.17track.net/zh-cn',
+        en: 'https://t.17track.net/en',
+        es: 'https://t.17track.net/es'
+    };
+    // site: 不传 = 原查件系统；'17track' = 17TRACK
+    function openTrackingSite(code, btn, site) {
         const lang = localStorage.getItem("lang") || "en";
         const t = langData[lang] || langData["en"];
         const notify = function() {
@@ -3926,7 +4050,7 @@ h1, h2, h3 {
                 btn.textContent = t.orders_copied;
                 btn.disabled = true;
                 setTimeout(function() {
-                    btn.textContent = t.orders_track;
+                    btn.textContent = (site === '17track') ? '17TRACK' : t.orders_track;
                     btn.disabled = false;
                 }, 1500);
             }
@@ -3938,8 +4062,11 @@ h1, h2, h3 {
                 fallbackCopyCode(code, notify);
             }
         } catch (e) {}
+        var target = (site === '17track')
+            ? (TRACKING_SITE_17TRACK[lang] || TRACKING_SITE_17TRACK['en'])
+            : TRACKING_SITE_URL;
         // 新标签页打开查询网站（失败则当前页跳转）
-        try { window.open(TRACKING_SITE_URL, '_blank'); } catch (e2) { window.location.href = TRACKING_SITE_URL; }
+        try { window.open(target, '_blank'); } catch (e2) { window.location.href = target; }
     }
 
     function fallbackCopyCode(text, done) {
@@ -4529,6 +4656,17 @@ h1, h2, h3 {
             e.stopPropagation(); // 阻止事件冒泡，防止触发卡片点击
             if (this.disabled) return;
 
+            // 限时商品：未开售 / 已结束不允许加购
+            var ltCard = this.closest('.product-card');
+            var ltPid = ltCard ? ltCard.getAttribute('data-product-id') : '';
+            var ltState = ltPid ? getLimitedSaleState(ltPid) : null;
+            if (ltState === 'before' || ltState === 'ended') {
+                var ltLang = localStorage.getItem('lang') || 'en';
+                var ltT = langData[ltLang] || langData['en'];
+                alert(ltState === 'before' ? ltT.alert_sale_not_started : ltT.alert_sale_ended_msg);
+                return;
+            }
+
             if (!requireLogin(() => this.click(), 'login_alert_need_login')) return;
 
             const card = this.closest('.product-card');
@@ -4779,6 +4917,12 @@ h1, h2, h3 {
         retryPendingStockDecrements();
     });
 
+    // 限时商品状态每分钟自动刷新（跨过开售/结束时刻时，徽章和按钮自动切换）
+    setInterval(function() {
+        try { updateLimitedTimeUI(); } catch (e) {}
+        try { updateCardStockBadges(); } catch (e) {}
+    }, 60000);
+
     document.getElementById('cartCheckoutBtn').addEventListener('click', async () => {
         if (cart.length === 0) return;
         if (!requireLogin(() => document.getElementById('cartCheckoutBtn').click(), 'login_alert_checkout')) return;
@@ -4787,7 +4931,9 @@ h1, h2, h3 {
         if (!stockCheck.allAvailable) {
             const lang = localStorage.getItem("lang") || "en";
             const t = langData[lang] || langData["en"];
-            if (stockCheck.remaining <= 0) {
+            if (stockCheck.limitedState) {
+                alert(stockCheck.limitedState === 'before' ? t.alert_sale_not_started : t.alert_sale_ended_msg);
+            } else if (stockCheck.remaining <= 0) {
                 alert(t.badge_sold_out || 'Sorry, this item is sold out.');
             } else {
                 alert((t.cart_stock_exceeded || 'Not enough stock: only {n} left for "{name}", please reduce the quantity')
@@ -4917,6 +5063,32 @@ h1, h2, h3 {
 <script>
 const productData = {
   zh: {
+    p4: {
+      title: "KOHAKU -- GK Version",
+      price: "Price: €189",
+      scale: "1/6 比例 · 28cm",
+      pieces: "17",
+      more: "Original design",
+      limitedTime: true,
+      saleStart: "2026-10-03T00:00:00+08:00",
+      saleEnd: "2026-10-18T00:00:00+08:00",
+      featuresTitle: "商品介绍",
+      desc: "10月3日–17日限时发售：WF 展会现场购买及线上预售。每件产品均有唯一编号，售出后不再复刻。线上订单预计 50–60 天后发货。",
+      features: [
+        "白色树脂（含两枚头雕）",
+        "原创角色设计",
+        "适合收藏者",
+        "未涂装版本",
+        "已获得艺术家版权授权",
+        "任何非授权渠道销售未涂装树脂套件的行为均属盗版"
+      ],
+      images: ["weisuo.image/kohaku1.jpg",
+            "weisuo.image/kohaku2.jpg",
+            "weisuo.image/kohaku3.jpg",
+            "weisuo.image/kohaku4.png",
+            "weisuo.image/kohaku5.png",
+            "weisuo.image/kohaku6.png"]
+    },
     p1: {
       title: "四神行刑官｜GIPETTO",
       price: "Price: €55",
@@ -5029,6 +5201,32 @@ const productData = {
   },
 
 en: {
+    p4: {
+      title: "KOHAKU -- GK Version",
+      price: "Price: €189",
+      scale: "1/6 Scale · 28cm",
+      pieces: "17",
+      more: "Original design",
+      limitedTime: true,
+      saleStart: "2026-10-03T00:00:00+08:00",
+      saleEnd: "2026-10-18T00:00:00+08:00",
+      featuresTitle: "Product Details",
+      desc: "Oct. 3–17: In-person purchases at WF and online pre-orders. Each product has a unique number and will not be reissued afterward. Online orders are expected to ship in 50–60 days.",
+      features: [
+        "White resin (two head sculpts)",
+        "Original character design",
+        "Suitable for collectors",
+        "Unpainted version",
+        "We have obtained the artists' copyrights",
+        "Any sale of unpainted resin kits by anyone other than authorized distributors is piracy"
+      ],
+      images: ["weisuo.image/kohaku1.jpg",
+            "weisuo.image/kohaku2.jpg",
+            "weisuo.image/kohaku3.jpg",
+            "weisuo.image/kohaku4.png",
+            "weisuo.image/kohaku5.png",
+            "weisuo.image/kohaku6.png"]
+    },
     p1: {
       title: "Anatoly | GIPETTO",
       price: "Price: €55",
@@ -5142,6 +5340,32 @@ en: {
   },
 
     es: {
+    p4: {
+      title: "KOHAKU -- GK Version",
+      price: "Price: €189",
+      scale: "Escala 1/6 · 28cm",
+      pieces: "17",
+      more: "Original design",
+      limitedTime: true,
+      saleStart: "2026-10-03T00:00:00+08:00",
+      saleEnd: "2026-10-18T00:00:00+08:00",
+      featuresTitle: "Detalles del Producto",
+      desc: "3–17 de octubre: compra presencial en WF y preventa en línea. Cada producto tiene un número único y no se reeditará después. Los pedidos en línea se enviarán en 50–60 días.",
+      features: [
+        "Resina blanca (dos esculturas de cabeza)",
+        "Diseño de personaje original",
+        "Adecuado para coleccionistas",
+        "Versión sin pintar",
+        "Hemos obtenido los derechos de autor de los artistas",
+        "Cualquier venta de kits de resina sin pintar por personas ajenas a los distribuidores autorizados es piratería"
+      ],
+      images: ["weisuo.image/kohaku1.jpg",
+            "weisuo.image/kohaku2.jpg",
+            "weisuo.image/kohaku3.jpg",
+            "weisuo.image/kohaku4.png",
+            "weisuo.image/kohaku5.png",
+            "weisuo.image/kohaku6.png"]
+    },
     p1: {
       title: "Anatoly | GIPETTO",
       price: "Precio: €55",
@@ -5353,7 +5577,25 @@ const product = productData[lang][productId];
     var totalStock = product.stock || 0;
     var buyBtn = document.getElementById('buyNowBtn');
     
-    if (totalStock > 0) {
+    var ltDetailState = getLimitedSaleState(productId);
+    if (ltDetailState) {
+        // 限时商品：显示「限时」徽章（开售中金色 / 未开售、已结束灰色），并按状态控制购买按钮
+        var ltLang = localStorage.getItem('lang') || 'en';
+        var ltT = langData[ltLang] || langData['en'];
+        var ltBadge = document.createElement('span');
+        ltBadge.className = 'stock-badge ' + (ltDetailState === 'onsale' ? 'limited-gold' : 'sold-out');
+        ltBadge.textContent = ltT.badge_limited_time || 'Limited Time';
+        imageSection.appendChild(ltBadge);
+        if (buyBtn) {
+            if (ltDetailState === 'onsale') {
+                buyBtn.disabled = false; buyBtn.style.opacity = ''; buyBtn.style.cursor = '';
+                buyBtn.textContent = ltT.pay_buy_now || 'Buy Now';
+            } else {
+                buyBtn.disabled = true; buyBtn.style.opacity = '0.5'; buyBtn.style.cursor = 'not-allowed';
+                buyBtn.textContent = (ltDetailState === 'before') ? (ltT.btn_coming_soon || 'Coming Soon') : (ltT.btn_sale_ended || 'Ended');
+            }
+        }
+    } else if (totalStock > 0) {
         // 异步查询真实库存
         checkStock(productId).then(function(stockInfo) {
             var badgeEl = document.createElement('span');
@@ -5451,6 +5693,14 @@ detailModal.addEventListener("click", (e) => {
     p3_hname:"Orc Family",
     p3_scale:"20cm高 × 9cm宽",
     p3_addbutton:"加入购物车",
+    p4_name:"KOHAKU -- GK Version",
+    p4_scale:"1/6 比例 · 28cm",
+    p4_addbutton:"加入购物车",
+    badge_limited_time:"限时",
+    btn_coming_soon:"即将开售",
+    btn_sale_ended:"已结束",
+    alert_sale_not_started:"限时发售：本商品将于 10 月 3 日 00:00（北京时间）开售，敬请期待。",
+    alert_sale_ended_msg:"该限时商品已结束发售。",
     p_test_name:"运费补差（其他地区）",
     p_test_scale:"€1 / 个 · 按需拍下",
     p_test_addbutton:"加入购物车",
@@ -5653,6 +5903,14 @@ detailModal.addEventListener("click", (e) => {
     p3_name: "Orc Family",
     p3_hname: "Orc Family",
     p3_addbutton: "Add to Cart",
+    p4_name: "KOHAKU -- GK Version",
+    p4_scale: "1/6 Scale · 28cm",
+    p4_addbutton: "Add to Cart",
+    badge_limited_time: "Limited Time",
+    btn_coming_soon: "Coming Soon",
+    btn_sale_ended: "Ended",
+    alert_sale_not_started: "Limited-time release: this item goes on sale on Oct 3, 00:00 (Beijing time). Stay tuned!",
+    alert_sale_ended_msg: "This limited-time sale has ended.",
     p_test_name: "Shipping Fee (Other Regions)",
     p_test_scale: "€1 / unit · Purchase accordingly",
     p_test_addbutton: "Add to Cart",
@@ -5853,6 +6111,14 @@ detailModal.addEventListener("click", (e) => {
     p3_hname: "Orc Family",
     p3_scale: "20cm × 9cm",
     p3_addbutton:"Añadir al Carrito",
+    p4_name:"KOHAKU -- GK Version",
+    p4_scale:"Escala 1/6 · 28cm",
+    p4_addbutton:"Añadir al Carrito",
+    badge_limited_time:"Tiempo Limitado",
+    btn_coming_soon:"Próximamente",
+    btn_sale_ended:"Finalizado",
+    alert_sale_not_started:"Lanzamiento por tiempo limitado: este artículo se pondrá a la venta el 3 de octubre a las 00:00 (hora de Pekín). ¡Permanece atento!",
+    alert_sale_ended_msg:"La venta por tiempo limitado ha finalizado.",
     p_test_name: "Tarifa de Envío (Otras Regiones)",
     p_test_scale: "€1 / unidad · Comprar según corresponda",
     p_test_addbutton: "Añadir al Carrito",
@@ -6042,6 +6308,8 @@ detailModal.addEventListener("click", (e) => {
     localStorage.setItem("lang", lang);
     // 刷新商品卡片上的库存徽章文案（限量/剩余/售罄）
     if (typeof updateCardStockBadges === 'function') setTimeout(updateCardStockBadges, 50);
+    // 刷新限时商品的按钮/徽章状态（未开售 / 开售中 / 已结束）
+    if (typeof updateLimitedTimeUI === 'function') setTimeout(updateLimitedTimeUI, 60);
     // 如果支付弹窗开着，重新渲染 PayPal 按钮（切换语言）
     var payModalEl = document.getElementById('payModal');
     if (payModalEl && payModalEl.classList.contains('active')) {
@@ -6769,6 +7037,16 @@ async function renderPayPalButtons(amount, currency) {
 }
 
 function openPayModal(productId) {
+    // 限时商品保险：未开售 / 已结束不允许进入支付
+    if (productId) {
+        const ltState = getLimitedSaleState(productId);
+        if (ltState === 'before' || ltState === 'ended') {
+            const lang = localStorage.getItem('lang') || 'en';
+            const t = langData[lang] || langData['en'];
+            alert(ltState === 'before' ? t.alert_sale_not_started : t.alert_sale_ended_msg);
+            return;
+        }
+    }
     // 每次打开支付弹窗都清除库存缓存，确保拿到最新库存
     if (productId) delete stockCache[productId];
     // 库存检查：售罄时阻止进入支付
@@ -6838,6 +7116,16 @@ payModal.addEventListener('click', (e) => {
 });
 
 function handleBuyNow() {
+    // 限时商品：未开售 / 已结束不允许购买
+    if (currentBuyProduct) {
+        const ltState = getLimitedSaleState(currentBuyProduct);
+        if (ltState === 'before' || ltState === 'ended') {
+            const lang = localStorage.getItem('lang') || 'en';
+            const t = langData[lang] || langData['en'];
+            alert(ltState === 'before' ? t.alert_sale_not_started : t.alert_sale_ended_msg);
+            return;
+        }
+    }
     if (!requireLogin(() => handleBuyNow(), 'login_alert_checkout')) return;
     if (currentBuyProduct) {
         closeDetail();
