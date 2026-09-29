@@ -2671,10 +2671,44 @@ h1, h2, h3 {
 </div>
                     </div>
                     <div class="product-info">
-                        <h3 class="product-name" data-key="p4_name">KOHAKU -- GK Version</h3>
+                        <h3 class="product-name" data-key="p4_name">Fighting Nun - Amino Howard -- GK Version</h3>
                         <p class="product-scale" data-key="p4_scale">1/6 Scale · 28cm</p>
                         <p class="product-price">€189</p>
                         <button class="add-to-cart" data-key="p4_addbutton" onclick="event.stopPropagation();">加入购物车</button>
+                    </div>
+                </div>
+
+                <!-- 产品卡片 限时新品 Fighting Nun -->
+                <div class="product-card" data-category="new" data-product-id="p5" onclick="openDetail('p5')">
+                    <div class="product-image" style="position:relative;">
+                        <span class="stock-badge limited-gold" data-stock-badge="p5" style="display:none;">Limited Time</span>
+                        <img src="weisuo.image/nun1.jpg" alt="Fighting Nun">
+                       <div class="product-overlay">
+    <button class="view-details" data-product="p5" data-key="btn_view_detail" onclick="event.stopPropagation(); openDetail('p5')">查询详情</button>
+</div>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name" data-key="p5_name">Fighting Nun - Amino Howard -- mini Version</h3>
+                        <p class="product-scale" data-key="p5_scale">1/20 Scale · 90mm</p>
+                        <p class="product-price">€69</p>
+                        <button class="add-to-cart" data-key="p5_addbutton" onclick="event.stopPropagation();">加入购物车</button>
+                    </div>
+                </div>
+
+                <!-- 产品卡片 限时新品 Fighting Nun ALL（大礼包） -->
+                <div class="product-card" data-category="new" data-product-id="p6" onclick="openDetail('p6')">
+                    <div class="product-image" style="position:relative;">
+                        <span class="stock-badge limited-gold" data-stock-badge="p6" style="display:none;">Limited Time</span>
+                        <img src="weisuo.image/all1.jpg" alt="Fighting Nun ALL">
+                       <div class="product-overlay">
+    <button class="view-details" data-product="p6" data-key="btn_view_detail" onclick="event.stopPropagation(); openDetail('p6')">查询详情</button>
+</div>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name" data-key="p6_name">Fighting Nun - Amino Howard -- all</h3>
+                        <p class="product-scale" data-key="p6_scale">mini 1/20 + GK 1/6</p>
+                        <p class="product-price">€259</p>
+                        <button class="add-to-cart" data-key="p6_addbutton" onclick="event.stopPropagation();">加入购物车</button>
                     </div>
                 </div>
 
@@ -5064,7 +5098,7 @@ h1, h2, h3 {
 const productData = {
   zh: {
     p4: {
-      title: "KOHAKU -- GK Version",
+      title: "Fighting Nun - Amino Howard -- GK Version",
       price: "Price: €189",
       scale: "1/6 比例 · 28cm",
       pieces: "17",
@@ -5073,7 +5107,7 @@ const productData = {
       saleStart: "2026-10-03T00:00:00+08:00",
       saleEnd: "2026-10-18T00:00:00+08:00",
       featuresTitle: "商品介绍",
-      desc: "10月3日–17日限时发售：WF 展会现场购买及线上预售。每件产品均有唯一编号，售出后不再复刻。线上订单预计 50–60 天后发货。",
+      desc: "Fighting Nun - Amino Howard -- GK<br>出品：Miniature Bois<br>原画：KOHAKU<br>原型：SNAKE SKIN<br>涂装：欧阳 Moses.yao<br>摄影：欧阳 Moses.yao",
       features: [
         "白色树脂（含两枚头雕）",
         "原创角色设计",
@@ -5088,6 +5122,55 @@ const productData = {
             "weisuo.image/kohaku4.png",
             "weisuo.image/kohaku5.png",
             "weisuo.image/kohaku6.png"]
+    },
+    p5: {
+      title: "Fighting Nun - Amino Howard -- mini Version",
+      price: "Price: €69",
+      scale: "1/20 比例 · 90mm",
+      pieces: "14",
+      more: "Original design",
+      limitedTime: true,
+      saleStart: "2026-10-03T00:00:00+08:00",
+      saleEnd: "2026-10-18T00:00:00+08:00",
+      featuresTitle: "商品介绍",
+      desc: "出品：Miniature Bois<br>原画：KOHAKU<br>原型：SNAKE SKIN<br>涂装：欧阳 Moses.yao<br>摄影：欧阳 Moses.yao",
+      features: [
+        "白色树脂（含两枚头雕）",
+        "原创角色设计",
+        "适合收藏者",
+        "未涂装版本",
+        "已获得艺术家版权授权",
+        "任何非授权渠道销售未涂装树脂套件的行为均属盗版"
+      ],
+      images: ["weisuo.image/nun1.jpg",
+            "weisuo.image/nun2.jpg",
+            "weisuo.image/nun3.png",
+            "weisuo.image/nun4.png"]
+    },
+    p6: {
+      title: "Fighting Nun - Amino Howard -- all",
+      price: "Price: €259",
+      scale: "mini 1/20 · GK 1/6",
+      pieces: "mini 14 / GK 17",
+      more: "Original design",
+      limitedTime: true,
+      saleStart: "2026-10-03T00:00:00+08:00",
+      saleEnd: "2026-10-18T00:00:00+08:00",
+      featuresTitle: "商品介绍",
+      desc: "Fighting Nun - Amino Howard -- mini + GK<br>出品：Miniature Bois<br>原画：KOHAKU<br>原型：SNAKE SKIN<br>涂装：欧阳 Moses.yao<br>摄影：欧阳 Moses.yao",
+      features: [
+        "白色树脂（含两枚头雕）",
+        "原创角色设计",
+        "适合收藏者",
+        "未涂装版本",
+        "已获得艺术家版权授权",
+        "任何非授权渠道销售未涂装树脂套件的行为均属盗版"
+      ],
+      images: ["weisuo.image/all1.jpg",
+            "weisuo.image/all2.jpg",
+            "weisuo.image/all3.jpg",
+            "weisuo.image/all4.jpg",
+            "weisuo.image/all5.jpg"]
     },
     p1: {
       title: "四神行刑官｜GIPETTO",
@@ -5202,7 +5285,7 @@ const productData = {
 
 en: {
     p4: {
-      title: "KOHAKU -- GK Version",
+      title: "Fighting Nun - Amino Howard -- GK Version",
       price: "Price: €189",
       scale: "1/6 Scale · 28cm",
       pieces: "17",
@@ -5211,7 +5294,7 @@ en: {
       saleStart: "2026-10-03T00:00:00+08:00",
       saleEnd: "2026-10-18T00:00:00+08:00",
       featuresTitle: "Product Details",
-      desc: "Oct. 3–17: In-person purchases at WF and online pre-orders. Each product has a unique number and will not be reissued afterward. Online orders are expected to ship in 50–60 days.",
+      desc: "Fighting Nun - Amino Howard -- GK<br>Produced by: Miniature Bois<br>Illustration: KOHAKU<br>Sculpt: SNAKE SKIN<br>Paint: Ouyang Moses.yao<br>Photo: Ouyang Moses.yao",
       features: [
         "White resin (two head sculpts)",
         "Original character design",
@@ -5226,6 +5309,55 @@ en: {
             "weisuo.image/kohaku4.png",
             "weisuo.image/kohaku5.png",
             "weisuo.image/kohaku6.png"]
+    },
+    p5: {
+      title: "Fighting Nun - Amino Howard -- mini Version",
+      price: "Price: €69",
+      scale: "1/20 Scale · 90mm",
+      pieces: "14",
+      more: "Original design",
+      limitedTime: true,
+      saleStart: "2026-10-03T00:00:00+08:00",
+      saleEnd: "2026-10-18T00:00:00+08:00",
+      featuresTitle: "Product Details",
+      desc: "Produced by: Miniature Bois<br>Illustration: KOHAKU<br>Sculpt: SNAKE SKIN<br>Paint: Ouyang Moses.yao<br>Photo: Ouyang Moses.yao",
+      features: [
+        "White resin (two head sculpts)",
+        "Original character design",
+        "Suitable for collectors",
+        "Unpainted version",
+        "We have obtained the artists' copyrights",
+        "Any sale of unpainted resin kits by anyone other than authorized distributors is piracy"
+      ],
+      images: ["weisuo.image/nun1.jpg",
+            "weisuo.image/nun2.jpg",
+            "weisuo.image/nun3.png",
+            "weisuo.image/nun4.png"]
+    },
+    p6: {
+      title: "Fighting Nun - Amino Howard -- all",
+      price: "Price: €259",
+      scale: "mini 1/20 · GK 1/6",
+      pieces: "mini 14 / GK 17",
+      more: "Original design",
+      limitedTime: true,
+      saleStart: "2026-10-03T00:00:00+08:00",
+      saleEnd: "2026-10-18T00:00:00+08:00",
+      featuresTitle: "Product Details",
+      desc: "Fighting Nun - Amino Howard -- mini + GK<br>Produced by: Miniature Bois<br>Illustration: KOHAKU<br>Sculpt: SNAKE SKIN<br>Paint: Ouyang Moses.yao<br>Photo: Ouyang Moses.yao",
+      features: [
+        "White resin (two head sculpts)",
+        "Original character design",
+        "Suitable for collectors",
+        "Unpainted version",
+        "We have obtained the artists' copyrights",
+        "Any sale of unpainted resin kits by anyone other than authorized distributors is piracy"
+      ],
+      images: ["weisuo.image/all1.jpg",
+            "weisuo.image/all2.jpg",
+            "weisuo.image/all3.jpg",
+            "weisuo.image/all4.jpg",
+            "weisuo.image/all5.jpg"]
     },
     p1: {
       title: "Anatoly | GIPETTO",
@@ -5341,7 +5473,7 @@ en: {
 
     es: {
     p4: {
-      title: "KOHAKU -- GK Version",
+      title: "Fighting Nun - Amino Howard -- GK Version",
       price: "Price: €189",
       scale: "Escala 1/6 · 28cm",
       pieces: "17",
@@ -5350,7 +5482,7 @@ en: {
       saleStart: "2026-10-03T00:00:00+08:00",
       saleEnd: "2026-10-18T00:00:00+08:00",
       featuresTitle: "Detalles del Producto",
-      desc: "3–17 de octubre: compra presencial en WF y preventa en línea. Cada producto tiene un número único y no se reeditará después. Los pedidos en línea se enviarán en 50–60 días.",
+      desc: "Fighting Nun - Amino Howard -- GK<br>Producido por: Miniature Bois<br>Ilustración: KOHAKU<br>Escultura: SNAKE SKIN<br>Pintura: Ouyang Moses.yao<br>Fotografía: Ouyang Moses.yao",
       features: [
         "Resina blanca (dos esculturas de cabeza)",
         "Diseño de personaje original",
@@ -5365,6 +5497,55 @@ en: {
             "weisuo.image/kohaku4.png",
             "weisuo.image/kohaku5.png",
             "weisuo.image/kohaku6.png"]
+    },
+    p5: {
+      title: "Fighting Nun - Amino Howard -- mini Version",
+      price: "Price: €69",
+      scale: "Escala 1/20 · 90mm",
+      pieces: "14",
+      more: "Original design",
+      limitedTime: true,
+      saleStart: "2026-10-03T00:00:00+08:00",
+      saleEnd: "2026-10-18T00:00:00+08:00",
+      featuresTitle: "Detalles del Producto",
+      desc: "Producido por: Miniature Bois<br>Ilustración: KOHAKU<br>Escultura: SNAKE SKIN<br>Pintura: Ouyang Moses.yao<br>Fotografía: Ouyang Moses.yao",
+      features: [
+        "Resina blanca (dos esculturas de cabeza)",
+        "Diseño de personaje original",
+        "Adecuado para coleccionistas",
+        "Versión sin pintar",
+        "Hemos obtenido los derechos de autor de los artistas",
+        "Cualquier venta de kits de resina sin pintar por personas ajenas a los distribuidores autorizados es piratería"
+      ],
+      images: ["weisuo.image/nun1.jpg",
+            "weisuo.image/nun2.jpg",
+            "weisuo.image/nun3.png",
+            "weisuo.image/nun4.png"]
+    },
+    p6: {
+      title: "Fighting Nun - Amino Howard -- all",
+      price: "Price: €259",
+      scale: "mini 1/20 · GK 1/6",
+      pieces: "mini 14 / GK 17",
+      more: "Original design",
+      limitedTime: true,
+      saleStart: "2026-10-03T00:00:00+08:00",
+      saleEnd: "2026-10-18T00:00:00+08:00",
+      featuresTitle: "Detalles del Producto",
+      desc: "Fighting Nun - Amino Howard -- mini + GK<br>Producido por: Miniature Bois<br>Ilustración: KOHAKU<br>Escultura: SNAKE SKIN<br>Pintura: Ouyang Moses.yao<br>Fotografía: Ouyang Moses.yao",
+      features: [
+        "Resina blanca (dos esculturas de cabeza)",
+        "Diseño de personaje original",
+        "Adecuado para coleccionistas",
+        "Versión sin pintar",
+        "Hemos obtenido los derechos de autor de los artistas",
+        "Cualquier venta de kits de resina sin pintar por personas ajenas a los distribuidores autorizados es piratería"
+      ],
+      images: ["weisuo.image/all1.jpg",
+            "weisuo.image/all2.jpg",
+            "weisuo.image/all3.jpg",
+            "weisuo.image/all4.jpg",
+            "weisuo.image/all5.jpg"]
     },
     p1: {
       title: "Anatoly | GIPETTO",
@@ -5693,9 +5874,15 @@ detailModal.addEventListener("click", (e) => {
     p3_hname:"Orc Family",
     p3_scale:"20cm高 × 9cm宽",
     p3_addbutton:"加入购物车",
-    p4_name:"KOHAKU -- GK Version",
+    p4_name:"Fighting Nun - Amino Howard -- GK Version",
     p4_scale:"1/6 比例 · 28cm",
     p4_addbutton:"加入购物车",
+    p5_name:"Fighting Nun - Amino Howard -- mini Version",
+    p5_scale:"1/20 比例 · 90mm",
+    p5_addbutton:"加入购物车",
+    p6_name:"Fighting Nun - Amino Howard -- all",
+    p6_scale:"迷你 1/20 + GK 1/6",
+    p6_addbutton:"加入购物车",
     badge_limited_time:"限时",
     btn_coming_soon:"即将开售",
     btn_sale_ended:"已结束",
@@ -5903,9 +6090,15 @@ detailModal.addEventListener("click", (e) => {
     p3_name: "Orc Family",
     p3_hname: "Orc Family",
     p3_addbutton: "Add to Cart",
-    p4_name: "KOHAKU -- GK Version",
+    p4_name: "Fighting Nun - Amino Howard -- GK Version",
     p4_scale: "1/6 Scale · 28cm",
     p4_addbutton: "Add to Cart",
+    p5_name: "Fighting Nun - Amino Howard -- mini Version",
+    p5_scale: "1/20 Scale · 90mm",
+    p5_addbutton: "Add to Cart",
+    p6_name: "Fighting Nun - Amino Howard -- all",
+    p6_scale: "mini 1/20 + GK 1/6",
+    p6_addbutton: "Add to Cart",
     badge_limited_time: "Limited Time",
     btn_coming_soon: "Coming Soon",
     btn_sale_ended: "Ended",
@@ -6111,9 +6304,15 @@ detailModal.addEventListener("click", (e) => {
     p3_hname: "Orc Family",
     p3_scale: "20cm × 9cm",
     p3_addbutton:"Añadir al Carrito",
-    p4_name:"KOHAKU -- GK Version",
+    p4_name:"Fighting Nun - Amino Howard -- GK Version",
     p4_scale:"Escala 1/6 · 28cm",
     p4_addbutton:"Añadir al Carrito",
+    p5_scale:"Escala 1/20 · 90mm",
+    p5_name:"Fighting Nun - Amino Howard -- mini Version",
+    p5_addbutton:"Añadir al Carrito",
+    p6_name:"Fighting Nun - Amino Howard -- all",
+    p6_scale:"mini 1/20 + GK 1/6",
+    p6_addbutton:"Añadir al Carrito",
     badge_limited_time:"Tiempo Limitado",
     btn_coming_soon:"Próximamente",
     btn_sale_ended:"Finalizado",
