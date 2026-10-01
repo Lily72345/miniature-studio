@@ -1500,6 +1500,38 @@ h1, h2, h3 {
     color: #fff;
 }
 
+/* ===== 运费与发货说明 ===== */
+.shipping-notice-section {
+    padding: 3rem 0;
+    background: var(--secondary-color);
+}
+.shipping-notice-card {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 2rem 2.2rem;
+    background: var(--primary-color);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--accent-color);
+    border-radius: 8px;
+}
+.shipping-notice-title {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    color: var(--text-light);
+    margin-bottom: 1rem;
+    letter-spacing: 0.08em;
+}
+.shipping-notice-body {
+    color: var(--text-gray);
+    font-size: 0.92rem;
+    line-height: 1.9;
+    margin: 0;
+}
+@media (max-width: 768px) {
+    .shipping-notice-card { padding: 1.5rem 1.3rem; }
+    .shipping-notice-body { font-size: 0.85rem; }
+}
+
 /* ===== Artwork 区块 ===== */
 .artwork-section {
     padding: 4rem 0;
@@ -2797,8 +2829,18 @@ h1, h2, h3 {
                 </div>
 </section>
 
-    <!-- Artwork 作品展示区块 -->
-    <section class="artwork-section">
+<!-- 运费与发货说明 -->
+<section class="shipping-notice-section">
+    <div class="container">
+        <div class="shipping-notice-card">
+            <h3 class="shipping-notice-title" data-key="shipping_notice_title">关于运费与发货</h3>
+            <p class="shipping-notice-body" data-key="shipping_notice_body">全世界的模玩爱好者们，感谢你们选择 Miniature Bois 的产品。<br><br>由于各个地区的邮费和税率情况差异很大，我们之前也遇到过实际支付的运费远高于网站显示价格的情况。因此，我们调整了发货策略：<br><br>在你们购买模型并填写地址之后，我们会先向货运公司查询具体运费，再把准确价格反馈给你们。等你们支付完运费后，我们才会安排发货。<br><br>虽然这样需要分两次操作，但可以确保每个人的包裹运费都准确无误。我们不希望赚取运费差价，而是希望真实、透明地把运费反映给大家。<br><br>感谢大家的理解与支持。</p>
+        </div>
+    </div>
+</section>
+
+<!-- Artwork 作品展示区块 -->
+<section class="artwork-section">
         <div class="container">
             <h2 class="section-title" data-key="artwork_title">ARTWORK</h2>
             <div class="artwork-tabs" id="artworkTabs"></div>
@@ -5019,7 +5061,7 @@ h1, h2, h3 {
                         <button class="shipping-option" data-region="other" onclick="selectShippingRegion('other')" data-key="shipping_other">Other</button>
                     </div>
                     <p class="shipping-fee-note" id="shippingFeeNote"></p>
-                    <p class="shipping-fee-disclaimer" data-key="shipping_fee_disclaimer">⚠️ The shipping fee above is an estimate only. The exact cost depends on your region. We will notify you by email with the final shipping fee. If the actual fee is higher, you will need to purchase the additional shipping fee difference before we arrange shipment.</p>
+                    <p class="shipping-fee-disclaimer" data-key="shipping_fee_disclaimer">Thank you for choosing Miniature Bois! Since shipping costs vary by region, we'll check the exact shipping fee with the carrier after you place your order, then notify you to pay. Shipment will be arranged once the shipping fee is paid. We don't profit from shipping — just real transparency.</p>
                     <div class="shipping-phone-row">
                         <input type="tel" class="shipping-phone-input" id="shippingPhone" data-key="shipping_phone_placeholder" data-placeholder="shipping_phone_placeholder" placeholder="Phone Number" />
                         <span class="shipping-phone-hint" data-key="shipping_phone_hint">For shipping & delivery contact</span>
@@ -6048,12 +6090,14 @@ detailModal.addEventListener("click", (e) => {
     shipping_europe: "🇪🇺 欧洲",
     shipping_us: "🇺🇸 美国",
     shipping_other: "🌍 其他地区",
-    shipping_fee_europe: "欧洲运费：约 €22（¥175）",
-    shipping_fee_us: "美国运费：约 €25（¥200）",
-    shipping_fee_other: "运费将另行通知，我们会通过邮件联系您",
+    shipping_fee_europe: "已选择欧洲地区，运费将在下单后另行通知",
+    shipping_fee_us: "已选择美国地区，运费将在下单后另行通知",
+    shipping_fee_other: "其他地区：运费将在下单后另行通知，我们会通过邮件联系您",
     shipping_phone_placeholder: "手机号码（用于发货）",
     shipping_phone_hint: "用于物流配送联系",
-    shipping_fee_disclaimer: "⚠️ 以上运费为估算值，实际运费将根据您的地区确定。我们会通过邮件告知您确切的运费；若实际运费高于预估，需要您补拍差额运费，之后我们会尽快为您安排发货。",
+    shipping_fee_disclaimer: "感谢选择 Miniature Bois！由于各地邮费差异较大，下单后我们会先向货运公司查询准确运费，再通知你支付。运费支付完成后即安排发货。我们不赚取运费差价，只为真实透明。",
+    shipping_notice_title: "关于运费与发货",
+    shipping_notice_body: "全世界的模玩爱好者们，感谢你们选择 Miniature Bois 的产品。<br><br>由于各个地区的邮费和税率情况差异很大，我们之前也遇到过实际支付的运费远高于网站显示价格的情况。因此，我们调整了发货策略：<br><br>在你们购买模型并填写地址之后，我们会先向货运公司查询具体运费，再把准确价格反馈给你们。等你们支付完运费后，我们才会安排发货。<br><br>虽然这样需要分两次操作，但可以确保每个人的包裹运费都准确无误。我们不希望赚取运费差价，而是希望真实、透明地把运费反映给大家。<br><br>感谢大家的理解与支持。",
     shipping_phone_required: "请填写电话号码",
     
   },
@@ -6265,12 +6309,14 @@ detailModal.addEventListener("click", (e) => {
     shipping_europe: "🇪🇺 Europe",
     shipping_us: "🇺🇸 United States",
     shipping_other: "🌍 Other",
-    shipping_fee_europe: "Shipping to Europe: approx. €22",
-    shipping_fee_us: "Shipping to USA: approx. €25",
-    shipping_fee_other: "Shipping cost to be notified by email.",
+    shipping_fee_europe: "Europe selected. Shipping will be quoted after ordering.",
+    shipping_fee_us: "United States selected. Shipping will be quoted after ordering.",
+    shipping_fee_other: "Other region. We will email you the shipping fee after ordering.",
     shipping_phone_placeholder: "Phone Number",
     shipping_phone_hint: "For shipping & delivery contact",
-    shipping_fee_disclaimer: "⚠️ The shipping fee above is an estimate only. The exact cost depends on your region. We will notify you by email with the final shipping fee. If the actual fee is higher, you will need to purchase the additional shipping fee difference before we arrange shipment.",
+    shipping_fee_disclaimer: "Thank you for choosing Miniature Bois! Since shipping costs vary by region, we'll check the exact shipping fee with the carrier after you place your order, then notify you to pay. Shipment will be arranged once the shipping fee is paid. We don't profit from shipping — just real transparency.",
+    shipping_notice_title: "Shipping & Delivery Notice",
+    shipping_notice_body: "To figure collectors around the world, thank you for choosing Miniature Bois.<br><br>Shipping costs and taxes vary greatly by region, and we have previously seen actual shipping fees far exceed the price shown on our site. So we've adjusted our shipping process:<br><br>After you purchase a model and enter your address, we'll first check the exact shipping cost with the carrier, then send you the accurate quote. We'll arrange shipment only after you've paid the shipping fee.<br><br>This means a two-step process, but it ensures every package is charged the correct shipping amount. We don't want to profit from shipping — we simply want to reflect the cost honestly and transparently.<br><br>Thank you for your understanding and support.",
     shipping_phone_required: "Please enter your phone number",
 
 
@@ -6475,12 +6521,14 @@ detailModal.addEventListener("click", (e) => {
     shipping_europe: "🇪🇺 Europa",
     shipping_us: "🇺🇸 Estados Unidos",
     shipping_other: "🌍 Otro",
-    shipping_fee_europe: "Envío a Europa: aprox. €22",
-    shipping_fee_us: "Envío a EE.UU.: aprox. €25",
-    shipping_fee_other: "El costo de envío se notificará por correo.",
+    shipping_fee_europe: "Europa seleccionada. El envío se cotizará tras el pedido.",
+    shipping_fee_us: "EE. UU. seleccionado. El envío se cotizará tras el pedido.",
+    shipping_fee_other: "Otra región. Le enviaremos la tarifa de envío por correo tras el pedido.",
     shipping_phone_placeholder: "Número de teléfono",
     shipping_phone_hint: "Para el envío y la entrega",
-    shipping_fee_disclaimer: "⚠️ La tarifa de envío mostrada es solo una estimación. El costo exacto depende de su región. Le notificaremos por correo electrónico la tarifa final. Si la tarifa real es mayor, deberá comprar la diferencia de envío antes de que organicemos el envío.",
+    shipping_fee_disclaimer: "¡Gracias por elegir Miniature Bois! Dado que el costo de envío varía según la región, después de su pedido consultaremos la tarifa exacta con la empresa de mensajería y le notificaremos para pagarla. Organizaremos el envío una vez pagada la tarifa. No obtenemos beneficio del envío, solo transparencia.",
+    shipping_notice_title: "Aviso de envío y entrega",
+    shipping_notice_body: "A los coleccionistas de todo el mundo: gracias por elegir Miniature Bois.<br><br>Los costos de envío y los impuestos varían mucho según la región, y antes hemos visto tarifas de envío reales muy superiores al precio mostrado en nuestro sitio. Por eso hemos ajustado nuestro proceso de envío:<br><br>Después de comprar un modelo e ingresar su dirección, primero consultaremos el costo exacto de envío con la empresa de mensajería y le enviaremos la cotización precisa. Organizaremos el envío solo después de que haya pagado la tarifa de envío.<br><br>Esto implica un proceso en dos pasos, pero garantiza que cada paquete tenga el costo de envío correcto. No queremos obtener beneficio del envío; simplemente queremos reflejarle el costo de forma honesta y transparente.<br><br>Gracias por su comprensión y apoyo.",
     shipping_phone_required: "Por favor ingrese su número de teléfono"
   }
 };
@@ -6732,48 +6780,21 @@ function parsePrice(priceStr) {
 
 // ===== 运费配置 =====
 // 运费统一使用 EUR（约 ¥120 ≈ €15；¥150 ≈ €18）
-const SHIPPING_FEES = {
-    europe: { amount: 22, currency: 'EUR', symbol: '€' },
-    us:     { amount: 25, currency: 'EUR', symbol: '€' },
-    other:  null  // 另行通知
-};
-
 let selectedShippingRegion = null;  // 'europe' | 'us' | 'other' | null
 
+// 选择配送地区：仅记录地区用于下单后查询真实运费，不再把运费加入付款金额
 function selectShippingRegion(region) {
     selectedShippingRegion = region;
     // 更新按钮高亮
     document.querySelectorAll('.shipping-option').forEach(btn => {
         btn.classList.toggle('selected', btn.dataset.region === region);
     });
-    // 更新运费说明
+    // 更新地区说明（运费将在下单后另行通知，不影响本次付款金额）
     const lang = localStorage.getItem('lang') || 'zh';
     const noteEl = document.getElementById('shippingFeeNote');
     if (noteEl) {
         const key = 'shipping_fee_' + region;
         noteEl.textContent = (langData[lang] && langData[lang][key]) ? langData[lang][key] : '';
-    }
-    // 重新渲染 PayPal 按钮（加上运费金额）
-    const productId = typeof currentBuyProduct !== 'undefined' ? currentBuyProduct : null;
-    if (region !== 'other') {
-        const amount = getAmountWithShipping(productId);
-        const currency = getEffectiveCurrency(productId, region);
-        renderPayPalButtons(amount, currency);
-        // 同步更新价格显示为总价
-        if (payProductPrice) {
-            payProductPrice.textContent = currency.symbol + amount.toFixed(2);
-        }
-    } else {
-        // 其他地区：显示提示+邮箱输入，PayPal 按钮渲染商品价格
-        const container = document.getElementById('paypal-button-container');
-        if (container) {
-            // 先清空容器
-            container.innerHTML = '';
-            // 渲染仅商品价格的 PayPal 按钮
-            const amt = getCurrentAmount(productId);
-            const cur = getCurrentCurrency(productId);
-            renderPayPalButtons(amt, cur);
-        }
     }
 }
 
@@ -6788,30 +6809,6 @@ function selectShippingRegion(region) {
         });
     }
 })();
-
-// 获取商品价格+运费 合计
-function getAmountWithShipping(productId) {
-    const base = getCurrentAmount(productId);
-    if (!selectedShippingRegion || selectedShippingRegion === 'other') return base;
-    const fee = SHIPPING_FEES[selectedShippingRegion];
-    if (!fee) return base;
-    // 检查货币是否一致
-    const productCurrency = getCurrentCurrency(productId);
-    if (productCurrency.code === fee.currency) {
-        return base + fee.amount;
-    }
-    // 货币不同：只加商品金额（运费会用不同货币，当前简化：转换运费到商品货币，汇率近似）
-    const conversionRates = { 'EUR_to_USD': 1.08, 'USD_to_EUR': 0.93, 'GBP_to_EUR': 1.18, 'EUR_to_GBP': 0.85 };
-    const key = fee.currency + '_to_' + productCurrency.code;
-    const rate = conversionRates[key] || 1;
-    return base + fee.amount * rate;
-}
-
-// 获取含运费的有效货币（统一使用 EUR）
-function getEffectiveCurrency(productId, region) {
-    if (region === 'europe' || region === 'us') return { symbol: '€', code: 'EUR' };
-    return getCurrentCurrency(productId);
-}
 
 // 检测价格字符串中的货币，返回 { symbol, code } 如 { symbol: '€', code: 'EUR' }
 function detectCurrency(priceStr) {
