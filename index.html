@@ -2744,23 +2744,6 @@ h1, h2, h3 {
                     </div>
                 </div>
 
-                <!-- 产品卡片 限时测试 Test Limited -->
-                <div class="product-card" data-category="test" data-product-id="p7" onclick="openDetail('p7')">
-                    <div class="product-image" style="position:relative;">
-                        <span class="stock-badge limited-gold" data-stock-badge="p7" style="display:none;">Limited Time</span>
-                        <img src="weisuo.image/test1.jpg" alt="Test Limited">
-                       <div class="product-overlay">
-    <button class="view-details" data-product="p7" data-key="btn_view_detail" onclick="event.stopPropagation(); openDetail('p7')">查询详情</button>
-</div>
-                    </div>
-                    <div class="product-info">
-                        <h3 class="product-name" data-key="p7_name">限时测试商品｜Test Limited</h3>
-                        <p class="product-scale" data-key="p7_scale">限时开售 · 10.2 20:00–24:00</p>
-                        <p class="product-price">€1</p>
-                        <button class="add-to-cart" data-key="p7_addbutton" onclick="event.stopPropagation();">加入购物车</button>
-                    </div>
-                </div>
-
                 <!-- 产品卡片 1 -->
                 <div class="product-card" data-category="bust" data-product-id="p1" onclick="openDetail('p1')">
                     <div class="product-image" style="position:relative;">
@@ -3679,7 +3662,6 @@ h1, h2, h3 {
     }
 
     function openArtworkModal(artworkId) {
-        if (!requireLogin(() => openArtworkModal(artworkId), 'login_alert_view_artwork')) return;
         const art = artworkData.find(a => a.id === artworkId);
         if (!art || !art.images || art.images.length === 0) return;
         currentArtworkImages = art.images.slice();
@@ -5231,25 +5213,6 @@ const productData = {
             "weisuo.image/all4.jpg",
             "weisuo.image/all5.jpg"]
     },
-    p7: {
-      title: "限时测试商品｜Test Limited",
-      price: "Price: €1",
-      scale: "限时开售 · 10.2 20:00–24:00（北京时间）",
-      pieces: "1",
-      more: "Test product",
-      limitedTime: true,
-      saleStart: "2026-10-02T20:00:00+08:00",
-      saleEnd: "2026-10-03T00:00:00+08:00",
-      stock: 999,
-      featuresTitle: "商品介绍",
-      desc: "限时测试商品，价格 €1，仅用于测试限时开售流程。<br>开售：2026-10-02 20:00（北京时间）<br>结束：2026-10-02 24:00（北京时间）",
-      features: [
-        "限时测试商品（开售期内不限量）",
-        "开售时间：10 月 2 日 20:00 – 24:00（北京时间）",
-        "仅用于测试，可正常下单支付"
-      ],
-      images: ["weisuo.image/test1.jpg"]
-    },
     p1: {
       title: "四神行刑官｜GIPETTO",
       price: "Price: €55",
@@ -5436,25 +5399,6 @@ en: {
             "weisuo.image/all3.jpg",
             "weisuo.image/all4.jpg",
             "weisuo.image/all5.jpg"]
-    },
-    p7: {
-      title: "Test Limited Product",
-      price: "Price: €1",
-      scale: "Limited-time sale · Oct 2, 20:00–24:00 (GMT+8)",
-      pieces: "1",
-      more: "Test product",
-      limitedTime: true,
-      saleStart: "2026-10-02T20:00:00+08:00",
-      saleEnd: "2026-10-03T00:00:00+08:00",
-      stock: 999,
-      featuresTitle: "Product Details",
-      desc: "A limited-time test product priced at €1, for testing the timed sale flow.<br>Sale opens: Oct 2, 2026, 20:00 (GMT+8)<br>Sale ends: Oct 2, 2026, 24:00 (GMT+8)",
-      features: [
-        "Limited-time test product (unlimited quantity during the sale)",
-        "On sale: Oct 2, 20:00 – 24:00 (GMT+8)",
-        "For testing only — can be ordered and paid normally"
-      ],
-      images: ["weisuo.image/test1.jpg"]
     },
     p1: {
       title: "Anatoly | GIPETTO",
@@ -5644,25 +5588,6 @@ en: {
             "weisuo.image/all4.jpg",
             "weisuo.image/all5.jpg"]
     },
-    p7: {
-      title: "Producto de prueba (tiempo limitado)",
-      price: "Precio: €1",
-      scale: "Venta por tiempo limitado · 2 oct, 20:00–24:00 (GMT+8)",
-      pieces: "1",
-      more: "Producto de prueba",
-      limitedTime: true,
-      saleStart: "2026-10-02T20:00:00+08:00",
-      saleEnd: "2026-10-03T00:00:00+08:00",
-      stock: 999,
-      featuresTitle: "Detalles del producto",
-      desc: "Producto de prueba por tiempo limitado a €1, para probar el flujo de venta temporizada.<br>Apertura: 2 oct 2026, 20:00 (GMT+8)<br>Cierre: 2 oct 2026, 24:00 (GMT+8)",
-      features: [
-        "Producto de prueba por tiempo limitado (cantidad ilimitada durante la venta)",
-        "En venta: 2 de oct, 20:00 – 24:00 (GMT+8)",
-        "Solo para pruebas: se puede pedir y pagar con normalidad"
-      ],
-      images: ["weisuo.image/test1.jpg"]
-    },
     p1: {
       title: "Anatoly | GIPETTO",
       price: "Precio: €55",
@@ -5788,7 +5713,6 @@ const detailMainImage = document.getElementById("detailMainImage");
 const detailThumbs = document.getElementById("detailThumbs");
 
 function openDetail(productId) {
-    if (!requireLogin(() => openDetail(productId), 'login_alert_view_detail')) return;
     const lang = localStorage.getItem("lang") || "en";
 const product = productData[lang][productId];
     if (!product) return;
@@ -5999,9 +5923,6 @@ detailModal.addEventListener("click", (e) => {
     p6_name:"Fighting Nun - Amino Howard -- all",
     p6_scale:"迷你 1/20 + GK 1/6",
     p6_addbutton:"加入购物车",
-    p7_name:"限时测试商品｜Test Limited",
-    p7_scale:"限时开售 · 10.2 20:00–24:00",
-    p7_addbutton:"加入购物车",
     badge_limited_time:"限时",
     btn_coming_soon:"即将开售",
     btn_sale_ended:"已结束",
@@ -6220,9 +6141,6 @@ detailModal.addEventListener("click", (e) => {
     p6_name: "Fighting Nun - Amino Howard -- all",
     p6_scale: "mini 1/20 + GK 1/6",
     p6_addbutton: "Add to Cart",
-    p7_name: "Test Limited Product",
-    p7_scale: "Limited-time sale · Oct 2, 20:00–24:00",
-    p7_addbutton: "Add to Cart",
     badge_limited_time: "Limited Time",
     btn_coming_soon: "Coming Soon",
     btn_sale_ended: "Ended",
@@ -6439,9 +6357,6 @@ detailModal.addEventListener("click", (e) => {
     p6_name:"Fighting Nun - Amino Howard -- all",
     p6_scale:"mini 1/20 + GK 1/6",
     p6_addbutton:"Añadir al Carrito",
-    p7_name:"Producto de prueba (tiempo limitado)",
-    p7_scale:"Venta por tiempo limitado · 2 oct, 20:00–24:00",
-    p7_addbutton:"Añadir al Carrito",
     badge_limited_time:"Tiempo Limitado",
     btn_coming_soon:"Próximamente",
     btn_sale_ended:"Finalizado",
