@@ -4746,9 +4746,16 @@ h1, h2, h3 {
 
             const card = this.closest('.product-card');
             const productId = card.getAttribute('data-product-id') || '';
-            const name = card.querySelector('.product-name').textContent;
-            const price = card.querySelector('.product-price').textContent;
-            const image = card.querySelector('img').src;
+            // 从商品数据源取名字/价格/图片，避免浏览器自动翻译污染（否则韩语等翻译会把价格符号也翻掉）
+            const addLang = localStorage.getItem('lang') || 'en';
+            const prodData = (productData[addLang] || productData['en'])[productId];
+            const name = (prodData && prodData.title) ? prodData.title : card.querySelector('.product-name').textContent;
+            const price = (prodData && prodData.price)
+                ? prodData.price.replace(/^[^€£$]*([€£$])/, '$1')
+                : card.querySelector('.product-price').textContent;
+            const image = (prodData && prodData.images && prodData.images[0])
+                ? prodData.images[0]
+                : card.querySelector('img').src;
             const cardS = this.closest('.product-card');
             const pidStock = cardS ? cardS.dataset.productId : null;
 
