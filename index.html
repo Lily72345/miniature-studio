@@ -6558,7 +6558,11 @@ detailModal.addEventListener("click", (e) => {
       const key = el.getAttribute("data-key");
       if (langData[lang][key]) {
         // 支持 HTML 内容（如 <br> 换行）
-        el.innerHTML = langData[lang][key];
+        // 注意：textarea 除外 —— textarea 的 innerHTML 是它的"默认正文"，
+        // 写入会变成需要手动删除的真实文字（它的提示文字走下方 data-placeholder 分支）
+        if (el.tagName !== 'TEXTAREA') {
+          el.innerHTML = langData[lang][key];
+        }
       }
       // 处理 placeholder
       if (el.hasAttribute("data-placeholder") && langData[lang][key]) {
