@@ -2953,7 +2953,7 @@ h1, h2, h3 {
                         <span class="contact-icon">✉</span>
                         <div>
                             <h4 data-key="contact_email_label">电子邮件</h4>
-                            <p>m15038079877@163.com</p>
+                            <p>16623122936@163.com</p>
                         </div>
                     </div>
                     <div class="contact-item">
@@ -3145,7 +3145,7 @@ h1, h2, h3 {
 
     // ===== Resend 邮件服务配置（API Key 已移至 Supabase Edge Function 环境变量） =====
     const RESEND_FROM = 'Miniature Studio <onboarding@resend.dev>';
-    const RESEND_TO_OWNER = 'm15038079877@163.com'; // 你自己的邮箱，收订单通知
+    const RESEND_TO_OWNER = '16623122936@163.com'; // 你自己的邮箱，收订单通知
 
     // 初始化 Supabase，返回 true/false 表示是否成功
     // 如果 SDK 还没加载完成，最多等待 10 秒
@@ -4921,7 +4921,7 @@ h1, h2, h3 {
         submitBtn.disabled = true;
 
         try {
-            const response = await fetch('https://formspree.io/f/mvzyjvlo', {
+            const response = await fetch('https://formspree.io/f/xyeerwap', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
@@ -6669,7 +6669,7 @@ async function sendOrderConfirmation(details, productName, amount, currency) {
                     '<h2 style="color:#a8181f;margin-bottom:1rem;">🎉 Thank You for Your Order!</h2>' +
                     '<p>Hi ' + (fullName || 'there') + ',</p>' +
                     '<p>Your payment has been received. We will process your order now.<br>Please allow up to a month for us to arrange shipping.</p>' +
-                    '<p style="font-size:0.9rem;color:#666;"><em>International shipping may take another fortnight up to about a month. Thank you for your understanding, if you have questions, contact us m15038079877@163.com</em></p>' +
+                    '<p style="font-size:0.9rem;color:#666;"><em>International shipping may take another fortnight up to about a month. Thank you for your understanding, if you have questions, contact us 16623122936@163.com</em></p>' +
                     '<table style="width:100%;border-collapse:collapse;margin:1.5rem 0;">' +
                     '<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Product</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">' + productName + '</td></tr>' +
                     '<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Amount</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">' + amountStr + '</td></tr>' +
