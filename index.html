@@ -7080,6 +7080,17 @@ async function renderPayPalButtons(amount, currency) {
                                 const payerName = details.payer && details.payer.name
                                     ? [details.payer.name.given_name, details.payer.name.surname].filter(Boolean).join(' ').trim()
                                     : '';
+                                // 提取 PayPal 返回的收货人姓名 + 完整收货地址，自动落库
+                                const shipInfo = details.purchase_units && details.purchase_units[0] && details.purchase_units[0].shipping;
+                                let shippingName = payerName;
+                                let shippingAddress = '';
+                                if (shipInfo && shipInfo.name && shipInfo.name.full_name) {
+                                    shippingName = shipInfo.name.full_name;
+                                }
+                                if (shipInfo && shipInfo.address) {
+                                    const a = shipInfo.address;
+                                    shippingAddress = [a.address_line_1, a.address_line_2, a.admin_area_2, a.admin_area_1, a.postal_code, a.country_code].filter(Boolean).join(', ');
+                                }
                                 const phoneEl = document.getElementById('shippingPhone');
                                 const customerPhone = phoneEl ? phoneEl.value.trim() : '';
 
@@ -7087,6 +7098,8 @@ async function renderPayPalButtons(amount, currency) {
                                     paypal_order_id: paypalOrderId,
                                     buyer_email: payerEmail || currentUser || null,
                                     phone: customerPhone,
+                                    shipping_name: shippingName || null,
+                                    shipping_address: shippingAddress || null,
                                     product_id: lockedProductId,
                                     product_name: lockedProductName,
                                     amount: amount,
