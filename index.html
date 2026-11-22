@@ -3852,7 +3852,9 @@ h1, h2, h3 {
         if (e.target === ordersModal) closeOrdersModal();
     });
 
-    // ===== My Orders 红点：存在待付运费订单时提醒（点开后本次会话消掉，刷新仍在直到付款） =====
+    // ===== My Orders 红点：存在待付运费订单时提醒 =====
+    // "已读"标记用页面级变量（刷新即重置）：点开 My Orders 消掉，刷新后若仍未付款会再次提醒
+    let ordersDotSeen = false;
     async function hasFeeDueOrders() {
         if (!supabase || !currentUserId) return false;
         try {
@@ -3868,7 +3870,7 @@ h1, h2, h3 {
         const dot = document.getElementById('ordersDot');
         if (!dot) return;
         let show = false;
-        if (currentUserId && !sessionStorage.getItem('orders_dot_seen')) {
+        if (currentUserId && !ordersDotSeen) {
             show = await hasFeeDueOrders();
         }
         dot.style.display = show ? 'block' : 'none';
@@ -3876,7 +3878,7 @@ h1, h2, h3 {
 
     function openOrdersModal() {
         if (!requireLogin(openOrdersModal, 'orders_login_required')) return;
-        try { sessionStorage.setItem('orders_dot_seen', '1'); } catch (e) {}
+        ordersDotSeen = true;
         updateOrdersDot();
         ordersModal.classList.add('active');
         document.body.style.overflow = 'hidden';
