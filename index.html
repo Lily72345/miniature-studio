@@ -3899,7 +3899,7 @@ h1, h2, h3 {
         if (!supabase) return null;
         let query = supabase
             .from('miniaturebois')
-            .select('id,paypal_order_id,buyer_email,product_id,product_name,amount,currency,region,status,created_at,cart_summary,phone,tracking_number,shipping_fee,shipping_paid');
+            .select('id,paypal_order_id,buyer_email,product_id,product_name,amount,currency,region,status,created_at,cart_summary,phone,tracking_number,shipping_fee,shipping_paid,shipping_note');
         query = currentUserId ? query.eq('user_id', currentUserId) : query.eq('buyer_email', currentUser);
         let { data, error } = await query.order('created_at', { ascending: false });
         if (error) {
@@ -3983,6 +3983,7 @@ h1, h2, h3 {
                     '<span class="order-fee-amount">' + cur + Number(o.shipping_fee).toFixed(2) + '</span>' +
                 '</div>' +
                 '<div class="order-fee-note">' + (feePaid ? t.shipping_fee_paid_note : t.shipping_fee_due_note) + '</div>' +
+                ((o.shipping_note && String(o.shipping_note).trim()) ? '<div class="order-fee-note"><b>' + (t.shipping_note_label || 'Shipping Note') + ':</b> ' + renderShippingNoteText(o.shipping_note, t) + '</div>' : '') +
                 (feePaid ? '' : '<div id="shippingPayContainer"></div>') +
             '</div>';
         }
@@ -4024,6 +4025,26 @@ h1, h2, h3 {
         if (hasFee && !o.shipping_paid && !shipped) {
             setTimeout(function() { renderShippingPayButton(o); }, 120);
         }
+    }
+
+    // ===== 运费备注（包税/不包税）自动翻译为当前语言 =====
+    // 后台填中文"包税/不包税"或英文 DDP/DDU，前端识别后用客户语言显示；其他文字原样显示
+    function classifyShippingNote(note) {
+        const n = String(note || '').toLowerCase();
+        if (!n.trim()) return 'none';
+        const excluded = n.indexOf('不包税') !== -1 || n.indexOf('不含税') !== -1 || n.indexOf('非包税') !== -1 ||
+            n.indexOf('ddu') !== -1 || n.indexOf('dap') !== -1 || n.indexOf('tax excluded') !== -1 || n.indexOf('not included') !== -1;
+        const included = n.indexOf('包税') !== -1 || n.indexOf('含税') !== -1 ||
+            n.indexOf('ddp') !== -1 || n.indexOf('tax included') !== -1 || n.indexOf('included') !== -1;
+        if (excluded) return 'excluded';
+        if (included) return 'included';
+        return 'other';
+    }
+    function renderShippingNoteText(note, t) {
+        const kind = classifyShippingNote(note);
+        if (kind === 'included') return t.shipping_note_included || String(note);
+        if (kind === 'excluded') return t.shipping_note_excluded || String(note);
+        return String(note);
     }
 
     // ===== 支付运费（订单详情内） =====
@@ -6077,6 +6098,9 @@ detailModal.addEventListener("click", (e) => {
     shipping_fee_label: "运费",
     shipping_fee_due_note: "请支付运费后，我们将尽快为您安排发货。",
     shipping_fee_paid_note: "运费已支付，我们将尽快为您安排发货。",
+    shipping_note_label: "运费说明",
+    shipping_note_included: "本单为包税（DDP）：运费已包含关税，包裹清关无需另行缴税。",
+    shipping_note_excluded: "本单为不包税（DDU）：清关关税需买家自行承担。",
     paypal_loading: "PayPal 加载中，请稍候...",
     paypal_load_fail: "PayPal 加载失败，请刷新页面重试",
     paypal_retry_hint: "⏳ PayPal 加载中（自动重试中...），请稍候或刷新页面",
@@ -6296,6 +6320,9 @@ detailModal.addEventListener("click", (e) => {
     shipping_fee_label: "Shipping Fee",
     shipping_fee_due_note: "Please pay the shipping fee below and we will arrange shipment soon.",
     shipping_fee_paid_note: "Shipping fee paid. We will arrange shipment soon.",
+    shipping_note_label: "Shipping Note",
+    shipping_note_included: "Taxes & duties included (DDP): no extra customs payment needed on delivery.",
+    shipping_note_excluded: "Taxes & duties NOT included (DDU): customs duties, if any, are borne by the buyer.",
     paypal_loading: "PayPal loading, please wait...",
     paypal_load_fail: "PayPal failed to load, please refresh",
     paypal_retry_hint: "⏳ PayPal loading (auto-retrying)... please wait or refresh",
@@ -6508,6 +6535,9 @@ detailModal.addEventListener("click", (e) => {
     shipping_fee_label: "Tarifa de envío",
     shipping_fee_due_note: "Pague la tarifa de envío a continuación y organizaremos el envío pronto.",
     shipping_fee_paid_note: "Tarifa de envío pagada. Organizaremos el envío pronto.",
+    shipping_note_label: "Nota de envío",
+    shipping_note_included: "Impuestos y aranceles incluidos (DDP): no se requieren pagos aduaneros adicionales.",
+    shipping_note_excluded: "Impuestos y aranceles NO incluidos (DDU): los aranceles aduaneros corren por cuenta del comprador.",
     paypal_loading: "PayPal cargando, espere por favor...",
     paypal_load_fail: "PayPal no pudo cargar, actualice la página",
     paypal_retry_hint: "⏳ PayPal cargando (reintentando automáticamente)... espere o actualice",
