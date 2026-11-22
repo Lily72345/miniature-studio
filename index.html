@@ -2434,6 +2434,19 @@ h1, h2, h3 {
     box-shadow: 0 8px 24px rgba(0,0,0,.45);
 }
 .account-dropdown.active { display: block; }
+.account-item { position: relative; }
+/* My Orders 待付运费红点提醒（微信消息风格） */
+.orders-dot {
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    transform: translateY(-50%);
+    width: 9px;
+    height: 9px;
+    background: #e0506a;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(224, 80, 106, .22);
+}
 .account-email {
     padding: .55rem 1rem .6rem;
     color: #9a938c;
@@ -2645,7 +2658,7 @@ h1, h2, h3 {
         <button id="accountBtn" type="button" class="account-btn" data-key="account">Account <span class="lang-caret">▾</span></button>
         <div class="account-dropdown" id="accountDropdown">
             <div class="account-email" id="userEmail"></div>
-            <a href="#" id="myOrdersBtn" class="account-item" data-key="my_orders">我的订单</a>
+            <a href="#" id="myOrdersBtn" class="account-item" data-key="my_orders">我的订单<span class="orders-dot" id="ordersDot" style="display:none;"></span></a>
             <a href="#" id="myCouponsBtn" class="account-item" data-key="my_coupons">我的优惠券</a>
             <button type="button" id="logoutBtn" class="account-item account-logout" data-key="logout_btn">退出登录</button>
         </div>
@@ -3170,6 +3183,7 @@ h1, h2, h3 {
                 localStorage.setItem('currentUserId', currentUserId);
                 updateUserUI();
                 loadCart();
+                updateOrdersDot();
             }
             console.log('Supabase 初始化成功');
             // 预热库存数据（后台静默查询，不阻塞用户）
@@ -3838,8 +3852,32 @@ h1, h2, h3 {
         if (e.target === ordersModal) closeOrdersModal();
     });
 
+    // ===== My Orders 红点：存在待付运费订单时提醒（点开后本次会话消掉，刷新仍在直到付款） =====
+    async function hasFeeDueOrders() {
+        if (!supabase || !currentUserId) return false;
+        try {
+            const { data, error } = await supabase.from('miniaturebois')
+                .select('shipping_fee,shipping_paid').eq('user_id', currentUserId);
+            if (error) return false;
+            return (data || []).some(o => o.shipping_fee && !o.shipping_paid);
+        } catch (e) {
+            return false;
+        }
+    }
+    async function updateOrdersDot() {
+        const dot = document.getElementById('ordersDot');
+        if (!dot) return;
+        let show = false;
+        if (currentUserId && !sessionStorage.getItem('orders_dot_seen')) {
+            show = await hasFeeDueOrders();
+        }
+        dot.style.display = show ? 'block' : 'none';
+    }
+
     function openOrdersModal() {
         if (!requireLogin(openOrdersModal, 'orders_login_required')) return;
+        try { sessionStorage.setItem('orders_dot_seen', '1'); } catch (e) {}
+        updateOrdersDot();
         ordersModal.classList.add('active');
         document.body.style.overflow = 'hidden';
         showOrdersList();
@@ -4628,6 +4666,7 @@ h1, h2, h3 {
                 localStorage.setItem('currentUserId', currentUserId);
                 updateUserUI();
                 loadCart();
+                updateOrdersDot();
                 closeLoginModal();
                 loginEmailInput.value = '';
                 loginPasswordInput.value = '';
@@ -4652,6 +4691,7 @@ h1, h2, h3 {
                     localStorage.setItem('currentUserId', currentUserId);
                     updateUserUI();
                     loadCart();
+                    updateOrdersDot();
                     const lang = localStorage.getItem("lang") || "en";
                     const t = langData[lang] || langData["en"];
                     alert(t.login_success_welcome + email);
@@ -4691,6 +4731,7 @@ h1, h2, h3 {
         cart = [];
         updateUserUI();
         updateCart();
+        updateOrdersDot();
     });
 
     function openCartSidebar() {
