@@ -3938,7 +3938,9 @@ h1, h2, h3 {
             const shipped = !!(o.tracking_number && String(o.tracking_number).trim());
             const hasFee = (o.shipping_fee != null && Number(o.shipping_fee) > 0);
             let badge;
-            if (shipped) {
+            if (shipped && hasFee && !o.shipping_paid) {
+                badge = '<span class="order-status-badge fee-due">' + t.order_status_shipped_fee_due + '</span>';
+            } else if (shipped) {
                 badge = '<span class="order-status-badge shipped">' + t.orders_status_shipped + '</span>';
             } else if (hasFee && o.shipping_paid) {
                 badge = '<span class="order-status-badge fee-paid">' + t.order_status_fee_paid + '</span>';
@@ -3976,7 +3978,7 @@ h1, h2, h3 {
         const hasFee = (o.shipping_fee != null && Number(o.shipping_fee) > 0);
         if (hasFee) {
             const cur = o.currency === 'USD' ? '$' : '€';
-            const feePaid = !!o.shipping_paid || shipped;
+            const feePaid = !!o.shipping_paid;
             html += '<div class="order-fee-box' + (feePaid ? ' paid' : '') + '">' +
                 '<div class="order-fee-head">' +
                     '<span class="order-fee-label">🚚 ' + t.shipping_fee_label + '</span>' +
@@ -4010,7 +4012,8 @@ h1, h2, h3 {
         html += '<div class="order-detail-row"><span class="order-detail-label">' + t.orders_order_no + '</span><span class="order-detail-value">' + (o.paypal_order_id || '-') + '</span></div>';
         html += '<div class="order-detail-row"><span class="order-detail-label">' + t.orders_date + '</span><span class="order-detail-value">' + formatOrderDate(o.created_at) + '</span></div>';
         let statusText;
-        if (shipped) statusText = t.orders_status_shipped;
+        if (shipped && hasFee && !o.shipping_paid) statusText = t.order_status_shipped_fee_due;
+        else if (shipped) statusText = t.orders_status_shipped;
         else if (hasFee && o.shipping_paid) statusText = t.order_status_fee_paid;
         else if (hasFee) statusText = t.order_status_fee_due;
         else statusText = t.orders_status_processing;
@@ -6094,6 +6097,7 @@ detailModal.addEventListener("click", (e) => {
     account: "账户",
     logout_btn: "退出登录",
     order_status_fee_due: "运费待支付",
+    order_status_shipped_fee_due: "已发货 · 运费待支付",
     order_status_fee_paid: "运费已付",
     shipping_fee_label: "运费",
     shipping_fee_due_note: "请支付运费后，我们将尽快为您安排发货。",
@@ -6316,6 +6320,7 @@ detailModal.addEventListener("click", (e) => {
     account: "Account",
     logout_btn: "Logout",
     order_status_fee_due: "Shipping Fee Due",
+    order_status_shipped_fee_due: "Shipped · Shipping Fee Due",
     order_status_fee_paid: "Fee Paid",
     shipping_fee_label: "Shipping Fee",
     shipping_fee_due_note: "Please pay the shipping fee below and we will arrange shipment soon.",
@@ -6531,6 +6536,7 @@ detailModal.addEventListener("click", (e) => {
     account: "Cuenta",
     logout_btn: "Cerrar sesión",
     order_status_fee_due: "Tarifa pendiente",
+    order_status_shipped_fee_due: "Enviado · Envío Pendiente",
     order_status_fee_paid: "Tarifa pagada",
     shipping_fee_label: "Tarifa de envío",
     shipping_fee_due_note: "Pague la tarifa de envío a continuación y organizaremos el envío pronto.",
