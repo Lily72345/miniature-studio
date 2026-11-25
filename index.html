@@ -3075,6 +3075,8 @@ h1, h2, h3 {
         <button id="loginSubmitBtn" class="checkout-btn" data-key="login_submit">登录</button>
         <button id="loginSwitchBtn" class="checkout-btn" style="background:#333; margin-top:0.5rem;" data-key="login_switch">没有账号？点此注册</button>
 
+        <a href="#" id="forgotPwdLink" style="display:block; text-align:center; margin-top:0.9rem; color:#9a938c; font-size:0.85rem;" data-key="forgot_pwd_link">忘记密码？</a>
+
         <div id="loginLoading" style="display:none; text-align:center; margin-top:1rem;">
             <span style="color:#b8b0aa;" data-key="login_loading">加载中...</span>
         </div>
@@ -3098,6 +3100,25 @@ h1, h2, h3 {
 
         <button id="resetPwdSubmitBtn" class="checkout-btn" data-key="reset_pwd_submit">确认设置</button>
         <div id="resetPwdLoading" style="display:none; text-align:center; margin-top:1rem;">
+            <span style="color:#b8b0aa;" data-key="login_loading">加载中...</span>
+        </div>
+    </div>
+</div>
+
+<!-- 忘记密码弹窗 -->
+<div class="detail-modal" id="forgotPwdModal">
+    <div class="detail-modal-content" style="max-width:500px; grid-template-columns:1fr;">
+        <button class="detail-close" id="forgotPwdClose">×</button>
+        <h2 class="detail-title" data-key="forgot_pwd_title">找回密码</h2>
+        <div class="detail-desc" data-key="forgot_pwd_desc">输入注册邮箱，我们会发送一封密码重置邮件</div>
+
+        <input id="forgotPwdEmail" type="email" data-key="forgot_pwd_placeholder" data-placeholder="请输入注册邮箱"
+               style="padding:1rem; background:#1b1b1d; color:#fff; border:1px solid #333; margin:0.5rem 0;" required>
+
+        <div id="forgotPwdError" style="color:#ff6b6b; font-size:0.9rem; margin:0.5rem 0; display:none;"></div>
+
+        <button id="forgotPwdSubmitBtn" class="checkout-btn" data-key="forgot_pwd_submit">发送重置邮件</button>
+        <div id="forgotPwdLoading" style="display:none; text-align:center; margin-top:1rem;">
             <span style="color:#b8b0aa;" data-key="login_loading">加载中...</span>
         </div>
     </div>
@@ -3931,6 +3952,59 @@ h1, h2, h3 {
         }
         resetPwdSubmitBtn.disabled = false;
         resetPwdLoading.style.display = 'none';
+    });
+
+    // ===== 忘记密码（自助发起重置） =====
+    const forgotPwdModal = document.getElementById('forgotPwdModal');
+    const forgotPwdEmail = document.getElementById('forgotPwdEmail');
+    const forgotPwdError = document.getElementById('forgotPwdError');
+    const forgotPwdSubmitBtn = document.getElementById('forgotPwdSubmitBtn');
+    const forgotPwdLoading = document.getElementById('forgotPwdLoading');
+
+    function openForgotPwdModal() {
+        forgotPwdError.style.display = 'none';
+        closeLoginModal();
+        forgotPwdModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeForgotPwdModal() {
+        forgotPwdModal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    forgotPwdClose.addEventListener('click', closeForgotPwdModal);
+    forgotPwdModal.addEventListener('click', (e) => {
+        if (e.target === forgotPwdModal) closeForgotPwdModal();
+    });
+    forgotPwdLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        openForgotPwdModal();
+    });
+
+    forgotPwdSubmitBtn.addEventListener('click', async () => {
+        const lang = localStorage.getItem("lang") || "en";
+        const t = langData[lang] || langData["en"];
+        const email = (forgotPwdEmail.value || '').trim();
+        forgotPwdError.style.display = 'none';
+        if (!email) {
+            forgotPwdError.textContent = t.forgot_pwd_error;
+            forgotPwdError.style.display = 'block';
+            return;
+        }
+        forgotPwdSubmitBtn.disabled = true;
+        forgotPwdLoading.style.display = 'block';
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin
+            });
+            if (error) throw error;
+            closeForgotPwdModal();
+            alert(t.forgot_pwd_sent);
+        } catch (err) {
+            forgotPwdError.textContent = (err && err.message) ? err.message : t.forgot_pwd_error;
+            forgotPwdError.style.display = 'block';
+        }
+        forgotPwdSubmitBtn.disabled = false;
+        forgotPwdLoading.style.display = 'none';
     });
 
     // ===== My Orders 红点：存在待付运费订单时提醒 =====
@@ -6174,6 +6248,13 @@ detailModal.addEventListener("click", (e) => {
     reset_pwd_error_short: "密码至少需要 6 位",
     reset_pwd_error_mismatch: "两次输入的密码不一致",
     reset_pwd_error_fail: "设置失败，请重试",
+    forgot_pwd_link: "忘记密码？",
+    forgot_pwd_title: "找回密码",
+    forgot_pwd_desc: "输入注册邮箱，我们会发送一封密码重置邮件",
+    forgot_pwd_placeholder: "请输入注册邮箱",
+    forgot_pwd_submit: "发送重置邮件",
+    forgot_pwd_sent: "邮件已发送！请查收邮箱（含垃圾箱），点击邮件里的链接设置新密码。",
+    forgot_pwd_error: "发送失败，请确认邮箱是否正确",
     login_error_empty: "请输入邮箱和密码",
     login_error_service: "服务暂不可用，请刷新页面重试",
     login_error_fail: "操作失败，请重试",
@@ -6406,6 +6487,13 @@ detailModal.addEventListener("click", (e) => {
     reset_pwd_error_short: "Password must be at least 6 characters",
     reset_pwd_error_mismatch: "The two passwords do not match",
     reset_pwd_error_fail: "Failed to update, please try again",
+    forgot_pwd_link: "Forgot password?",
+    forgot_pwd_title: "Reset Password",
+    forgot_pwd_desc: "Enter your registered email and we'll send a password reset link.",
+    forgot_pwd_placeholder: "Your registered email",
+    forgot_pwd_submit: "Send Reset Email",
+    forgot_pwd_sent: "Email sent! Check your inbox (and spam) and click the link to set a new password.",
+    forgot_pwd_error: "Failed to send. Please check the email address.",
     login_error_empty: "Please enter your email and password",
     login_error_service: "Service unavailable, please refresh and try again",
     login_error_fail: "Operation failed, please try again",
@@ -6631,6 +6719,13 @@ detailModal.addEventListener("click", (e) => {
     reset_pwd_error_short: "La contraseña debe tener al menos 6 caracteres",
     reset_pwd_error_mismatch: "Las dos contraseñas no coinciden",
     reset_pwd_error_fail: "Error al actualizar, inténtalo de nuevo",
+    forgot_pwd_link: "¿Olvidaste tu contraseña?",
+    forgot_pwd_title: "Restablecer contraseña",
+    forgot_pwd_desc: "Ingresa tu correo registrado y te enviaremos un enlace de restablecimiento.",
+    forgot_pwd_placeholder: "Tu correo registrado",
+    forgot_pwd_submit: "Enviar correo",
+    forgot_pwd_sent: "¡Correo enviado! Revisa tu bandeja (y spam) y haz clic en el enlace para establecer una nueva contraseña.",
+    forgot_pwd_error: "Error al enviar. Verifica la dirección de correo.",
     login_error_empty: "Por favor ingrese su correo y contraseña",
     login_error_service: "Servicio no disponible, actualice la página e intente de nuevo",
     login_error_fail: "Operación fallida, inténtelo de nuevo",
