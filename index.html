@@ -3081,6 +3081,28 @@ h1, h2, h3 {
     </div>
 </div>
 
+<!-- 设置新密码弹窗（密码重置邮件链接跳回后显示） -->
+<div class="detail-modal" id="resetPwdModal">
+    <div class="detail-modal-content" style="max-width:500px; grid-template-columns:1fr;">
+        <button class="detail-close" id="resetPwdClose">×</button>
+        <h2 class="detail-title" data-key="reset_pwd_title">设置新密码</h2>
+        <div class="detail-desc" data-key="reset_pwd_desc">检测到你正在重置密码，请为账号设置一个新密码</div>
+
+        <input id="resetPwdInput" type="password" data-key="reset_pwd_placeholder" data-placeholder="请输入新密码（至少 6 位）"
+               style="padding:1rem; background:#1b1b1d; color:#fff; border:1px solid #333; margin:0.5rem 0;" required>
+
+        <input id="resetPwdInput2" type="password" data-key="reset_pwd_placeholder2" data-placeholder="再输入一次新密码"
+               style="padding:1rem; background:#1b1b1d; color:#fff; border:1px solid #333; margin:0.5rem 0;" required>
+
+        <div id="resetPwdError" style="color:#ff6b6b; font-size:0.9rem; margin:0.5rem 0; display:none;"></div>
+
+        <button id="resetPwdSubmitBtn" class="checkout-btn" data-key="reset_pwd_submit">确认设置</button>
+        <div id="resetPwdLoading" style="display:none; text-align:center; margin-top:1rem;">
+            <span style="color:#b8b0aa;" data-key="login_loading">加载中...</span>
+        </div>
+    </div>
+</div>
+
 <!-- 我的订单弹窗 -->
 <div class="detail-modal" id="ordersModal">
     <div class="detail-modal-content" style="max-width:760px; grid-template-columns:1fr; max-height:88vh;">
@@ -3174,6 +3196,10 @@ h1, h2, h3 {
                 throw new Error('Supabase SDK 未加载（等待超时）');
             }
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            // 监听密码重置事件：用户点邮件里的重置链接跳回网站时，弹出"设置新密码"
+            supabase.auth.onAuthStateChange((event) => {
+                if (event === 'PASSWORD_RECOVERY') openResetPwdModal();
+            });
             // 检查当前 session
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
@@ -3850,6 +3876,61 @@ h1, h2, h3 {
     ordersClose.addEventListener('click', closeOrdersModal);
     ordersModal.addEventListener('click', (e) => {
         if (e.target === ordersModal) closeOrdersModal();
+    });
+
+    // ===== 设置新密码（密码重置邮件链接跳回后显示） =====
+    const resetPwdModal = document.getElementById('resetPwdModal');
+    const resetPwdInput = document.getElementById('resetPwdInput');
+    const resetPwdInput2 = document.getElementById('resetPwdInput2');
+    const resetPwdError = document.getElementById('resetPwdError');
+    const resetPwdSubmitBtn = document.getElementById('resetPwdSubmitBtn');
+    const resetPwdLoading = document.getElementById('resetPwdLoading');
+
+    function openResetPwdModal() {
+        resetPwdError.style.display = 'none';
+        resetPwdModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeResetPwdModal() {
+        resetPwdModal.classList.remove('active');
+        document.body.style.overflow = '';
+        // 清理 URL 中的 recovery hash，避免刷新重复触发
+        try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) {}
+    }
+    resetPwdClose.addEventListener('click', closeResetPwdModal);
+    resetPwdModal.addEventListener('click', (e) => {
+        if (e.target === resetPwdModal) closeResetPwdModal();
+    });
+
+    resetPwdSubmitBtn.addEventListener('click', async () => {
+        const lang = localStorage.getItem("lang") || "en";
+        const t = langData[lang] || langData["en"];
+        const p1 = resetPwdInput.value || '';
+        const p2 = resetPwdInput2.value || '';
+        resetPwdError.style.display = 'none';
+        if (!p1 || p1.length < 6) {
+            resetPwdError.textContent = t.reset_pwd_error_short;
+            resetPwdError.style.display = 'block';
+            return;
+        }
+        if (p1 !== p2) {
+            resetPwdError.textContent = t.reset_pwd_error_mismatch;
+            resetPwdError.style.display = 'block';
+            return;
+        }
+        resetPwdSubmitBtn.disabled = true;
+        resetPwdLoading.style.display = 'block';
+        try {
+            const { error } = await supabase.auth.updateUser({ password: p1 });
+            if (error) throw error;
+            closeResetPwdModal();
+            alert(t.reset_pwd_success);
+        } catch (err) {
+            resetPwdError.textContent = (err && err.message) ? err.message : t.reset_pwd_error_fail;
+            resetPwdError.style.display = 'block';
+        }
+        resetPwdSubmitBtn.disabled = false;
+        resetPwdLoading.style.display = 'none';
     });
 
     // ===== My Orders 红点：存在待付运费订单时提醒 =====
@@ -5064,6 +5145,10 @@ h1, h2, h3 {
         recoverPendingPayments();
         retryPendingCouponRedeems();
         retryPendingStockDecrements();
+        // 兜底：URL 带 recovery 标记但事件未触发时（如缓存），也弹出设置新密码
+        if ((window.location.hash || '').indexOf('type=recovery') !== -1) {
+            setTimeout(openResetPwdModal, 500);
+        }
     });
 
     // 限时商品状态每分钟自动刷新（跨过开售/结束时刻时，徽章和按钮自动切换）
@@ -6080,6 +6165,15 @@ detailModal.addEventListener("click", (e) => {
     login_title_login: "登录",
     login_desc_login: "输入邮箱和密码登录您的账号",
     login_loading: "加载中...",
+    reset_pwd_title: "设置新密码",
+    reset_pwd_desc: "检测到你正在重置密码，请为账号设置一个新密码",
+    reset_pwd_placeholder: "请输入新密码（至少 6 位）",
+    reset_pwd_placeholder2: "再输入一次新密码",
+    reset_pwd_submit: "确认设置",
+    reset_pwd_success: "密码设置成功！请用新密码登录。",
+    reset_pwd_error_short: "密码至少需要 6 位",
+    reset_pwd_error_mismatch: "两次输入的密码不一致",
+    reset_pwd_error_fail: "设置失败，请重试",
     login_error_empty: "请输入邮箱和密码",
     login_error_service: "服务暂不可用，请刷新页面重试",
     login_error_fail: "操作失败，请重试",
@@ -6303,6 +6397,15 @@ detailModal.addEventListener("click", (e) => {
     login_title_login: "Login",
     login_desc_login: "Enter your email and password to login",
     login_loading: "Loading...",
+    reset_pwd_title: "Set a New Password",
+    reset_pwd_desc: "We detected a password reset. Please set a new password for your account.",
+    reset_pwd_placeholder: "New password (at least 6 characters)",
+    reset_pwd_placeholder2: "Repeat the new password",
+    reset_pwd_submit: "Confirm",
+    reset_pwd_success: "Password updated! Please log in with your new password.",
+    reset_pwd_error_short: "Password must be at least 6 characters",
+    reset_pwd_error_mismatch: "The two passwords do not match",
+    reset_pwd_error_fail: "Failed to update, please try again",
     login_error_empty: "Please enter your email and password",
     login_error_service: "Service unavailable, please refresh and try again",
     login_error_fail: "Operation failed, please try again",
@@ -6519,6 +6622,15 @@ detailModal.addEventListener("click", (e) => {
     login_title_login: "Iniciar Sesión",
     login_desc_login: "Ingrese su correo y contraseña para iniciar sesión",
     login_loading: "Cargando...",
+    reset_pwd_title: "Establecer nueva contraseña",
+    reset_pwd_desc: "Hemos detectado un restablecimiento de contraseña. Establece una nueva para tu cuenta.",
+    reset_pwd_placeholder: "Nueva contraseña (mín. 6 caracteres)",
+    reset_pwd_placeholder2: "Repite la nueva contraseña",
+    reset_pwd_submit: "Confirmar",
+    reset_pwd_success: "¡Contraseña actualizada! Inicia sesión con la nueva.",
+    reset_pwd_error_short: "La contraseña debe tener al menos 6 caracteres",
+    reset_pwd_error_mismatch: "Las dos contraseñas no coinciden",
+    reset_pwd_error_fail: "Error al actualizar, inténtalo de nuevo",
     login_error_empty: "Por favor ingrese su correo y contraseña",
     login_error_service: "Servicio no disponible, actualice la página e intente de nuevo",
     login_error_fail: "Operación fallida, inténtelo de nuevo",
